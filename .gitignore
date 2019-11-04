@@ -1,0 +1,22 @@
+# everything individually but not subdirectories
+*
+!*/
+
+# meat and potatoes
+!*.go
+!*.md
+!*.json
+!*.ps1
+!*.sh
+
+# garnish
+.vscode/
+!*.git*
+!*.keep
+!.travis.yml
+!go.mod
+!go.sum
+!LICENSE
+
+# special cases
+!internal/vendor/examples/**
