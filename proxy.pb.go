@@ -4,8 +4,12 @@
 package httpgrpc
 
 import (
+	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -272,4 +276,86 @@ var fileDescriptor_700b50b08ed8dbaf = []byte{
 	0xe0, 0x2b, 0x70, 0x4a, 0x13, 0x1e, 0x3e, 0x99, 0xcf, 0x75, 0xca, 0xec, 0x29, 0xfe, 0x4f, 0x4d,
 	0xb7, 0x4a, 0xae, 0xbe, 0xb9, 0x63, 0xcc, 0xaf, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0xc8, 0x9b,
 	0xb5, 0xd3, 0xf5, 0x01, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// ExposedServiceClient is the client API for ExposedService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type ExposedServiceClient interface {
+	// Proxies a message to the internal GRPC API
+	Proxy(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+}
+
+type exposedServiceClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewExposedServiceClient(cc *grpc.ClientConn) ExposedServiceClient {
+	return &exposedServiceClient{cc}
+}
+
+func (c *exposedServiceClient) Proxy(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/httpgrpc.ExposedService/Proxy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ExposedServiceServer is the server API for ExposedService service.
+type ExposedServiceServer interface {
+	// Proxies a message to the internal GRPC API
+	Proxy(context.Context, *Request) (*Response, error)
+}
+
+// UnimplementedExposedServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedExposedServiceServer struct {
+}
+
+func (*UnimplementedExposedServiceServer) Proxy(ctx context.Context, req *Request) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Proxy not implemented")
+}
+
+func RegisterExposedServiceServer(s *grpc.Server, srv ExposedServiceServer) {
+	s.RegisterService(&_ExposedService_serviceDesc, srv)
+}
+
+func _ExposedService_Proxy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExposedServiceServer).Proxy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/httpgrpc.ExposedService/Proxy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExposedServiceServer).Proxy(ctx, req.(*Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _ExposedService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "httpgrpc.ExposedService",
+	HandlerType: (*ExposedServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Proxy",
+			Handler:    _ExposedService_Proxy_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "proxy.proto",
 }
