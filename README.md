@@ -8,7 +8,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/07f4a4d2a6a69c182e6c/maintainability)](https://codeclimate.com/github/LLKennedy/httpgrpc/maintainability)
 [![GitHub](https://img.shields.io/github/license/LLKennedy/httpgrpc.svg)](https://github.com/LLKennedy/httpgrpc/blob/master/LICENSE)
 
-Microservice API to convert external HTTP endpoints on a proxy to internally exposed GRPC messages. Allows a generic proxy to talk to services via a standard message while still allowing each service to maintain its API using GRPC and protocol buffers.
+Golang Microservice API to convert external HTTP endpoints on a proxy to internally exposed GRPC messages. Allows a generic proxy to talk to services via a standard message while still allowing each service to maintain its API using GRPC and protocol buffers.
 
 There are multiple implemenations that follow this basic intent already (HTTP+JSON reverse proxied to GRPC) but assume your service is directly handling external HTTP traffic, rather than sitting behind load-balanced webservers in a DMZ somewhere separate to your nice safe application server. For example, [here](https://github.com/grpc-ecosystem/grpc-gateway) and [here](https://github.com/weaveworks/common/tree/master/httpgrpc).
 
