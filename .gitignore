@@ -8,6 +8,7 @@
 !*.json
 !*.ps1
 !*.sh
+!*.proto
 
 # garnish
 .vscode/
