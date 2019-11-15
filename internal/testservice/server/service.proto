@@ -1,5 +1,5 @@
 syntax = "proto3";
-package main;
+package server;
 
 // Service is a microservice GRPC API
 service Service {
