@@ -15,7 +15,7 @@ import (
 func NewServer(api, server interface{}, opt ...grpc.ServerOption) (*Server, error) {
 	s := new(Server)
 	s.register(opt...)
-	return s, s.setAPI(api, server)
+	return s, s.setAPIConfig(api, server)
 }
 
 // register registers the server
@@ -24,8 +24,11 @@ func (s *Server) register(opt ...grpc.ServerOption) {
 	httpgrpc.RegisterExposedServiceServer(s.grpcServer, s)
 }
 
-// setAPI sets the server's
-func (s *Server) setAPI(api, server interface{}) (err error) {
+// setAPIConfig validates and sets the inner api and endpoint config
+func (s *Server) setAPIConfig(api, server interface{}) (err error) {
+	wrapErr := func(in error) error {
+		return fmt.Errorf("httpgrpc: %v", in)
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("httpgrpc: caught panic %v", r)
@@ -33,18 +36,22 @@ func (s *Server) setAPI(api, server interface{}) (err error) {
 	}()
 	apiType := reflect.TypeOf(api)
 	serverType := reflect.TypeOf(server)
-	apiMethods := make([]string, apiType.NumMethod())
+	apiMethods := make([]reflect.Method, apiType.NumMethod())
+	// Check every function defined on api
 	for i := range apiMethods {
+		// Each function in api must map exactly to an equivalent on server with the HTTP method stripped off
 		apiMethod := apiType.Method(i)
 		err := validateMethod(apiMethod, serverType)
 		if err != nil {
-			return err
+			// one of the functions didn't match
+			return wrapErr(err)
 		}
+		apiMethods[i] = apiMethod
 	}
-	if err == nil {
-		// Set api details for this server
-	}
-	return
+	// We know all api functions map to server functions, now hold onto the method list and server pointer for later
+	s.setAPI(apiMethods)
+	s.setInnerServer(server)
+	return nil
 }
 
 // Serve starts the server
