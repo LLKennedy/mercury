@@ -12,16 +12,16 @@ import (
 // NewServer creates a proxy from HTTP(S) traffic to server using the methods defined by api
 // api should be the Unimplemented<ServiceName> struct compiled by the protobuf. All methods defined on api MUST start with an HTTP method name
 // server MUST implement the same methods as api without the prepended method names, though it may have others without exposing them to HTTP(S) traffic
-func NewServer(api, server interface{}, opt ...grpc.ServerOption) (*Server, error) {
+func NewServer(api, server interface{}, listener *grpc.Server) (*Server, error) {
 	s := new(Server)
-	s.register(opt...)
+	s.register(listener)
 	return s, s.setAPIConfig(api, server)
 }
 
 // register registers the server
-func (s *Server) register(opt ...grpc.ServerOption) {
-	s.setGrpcServer(grpc.NewServer(opt...))
-	httpgrpc.RegisterExposedServiceServer(s.grpcServer, s)
+func (s *Server) register(listener *grpc.Server) {
+	s.setGrpcServer(listener)
+	httpgrpc.RegisterExposedServiceServer(s.getGrpcServer(), s)
 }
 
 // setAPIConfig validates and sets the inner api and endpoint config
