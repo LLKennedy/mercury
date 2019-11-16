@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"net"
 
@@ -11,6 +13,7 @@ import (
 // Handle is an example GRPC server for a microservice
 type Handle struct {
 	server *grpc.Server
+	photos map[string][]byte
 }
 
 // New creates a new server
@@ -55,10 +58,27 @@ func (h *Handle) Fibonacci(ctx context.Context, in *FibonacciRequest) (*Fibonacc
 
 // GetRandom returns a random integer in the desired range. It may be accessed via a Get request to the proxy at, for example, /api/Service/Random
 func (h *Handle) GetRandom(ctx context.Context, in *RandomRequest) (*RandomResponse, error) {
-	return (&UnimplementedServiceServer{}).GetRandom(ctx, in)
+	// ISO standard
+	return &RandomResponse{Number: 4}, nil
 }
 
 // PostUploadPhoto allows the upload of a photo to some persistence store. It may be accessed via  Post request to the proxy at, for example, /api/Service/UploadPhoto
 func (h *Handle) PostUploadPhoto(ctx context.Context, in *UploadPhotoRequest) (*UploadPhotoResponse, error) {
-	return (&UnimplementedServiceServer{}).PostUploadPhoto(ctx, in)
+	if h.photos == nil {
+		h.photos = map[string][]byte{}
+	}
+	hasher := sha256.New()
+	_, err := hasher.Write(in.GetData())
+	if err != nil {
+		return nil, err
+	}
+	hash := hex.EncodeToString(hasher.Sum(nil))
+	_, found := h.photos[hash]
+	if found {
+		return nil, fmt.Errorf("photo already exists")
+	}
+	h.photos[hash] = in.GetData()
+	return &UploadPhotoResponse{
+		Uuid: hash,
+	}, nil
 }

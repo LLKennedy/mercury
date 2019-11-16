@@ -10,6 +10,7 @@ func main() {
 	s := server.New()
 	startErr := make(chan error)
 	go startServer(s, startErr)
+
 	err := <-startErr
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
