@@ -47,7 +47,7 @@ func Test_validateMethod(t *testing.T) {
 			name:        "invalid matching server method",
 			apiMethod:   reflect.TypeOf(&exposedThingA{}).Method(0),
 			serverType:  reflect.TypeOf(&thingB{}),
-			expectedErr: "api/server arguments do not match for method (PostDoThing/DoThing): api and server arguments mismatch: int vs string",
+			expectedErr: "validation of PostDoThing to DoThing mapping: api and server arguments mismatch: int vs string",
 		},
 	}
 	for _, tt := range tests {

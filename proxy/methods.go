@@ -21,7 +21,7 @@ func validateMethod(apiMethod reflect.Method, serverType reflect.Type) error {
 	foundType := serverMethod.Type
 	err := validateArgs(expectedType, foundType)
 	if err != nil {
-		return fmt.Errorf("api/server arguments do not match for method (%s/%s): %v", name, trueName, err)
+		return fmt.Errorf("validation of %s to %s mapping: %v", name, trueName, err)
 	}
 	return nil
 }
