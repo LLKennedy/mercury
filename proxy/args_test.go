@@ -47,71 +47,60 @@ func Unrelated(a, b, c bool) string {
 
 func TestArgsMatch(t *testing.T) {
 	type test struct {
-		name         string
-		a, b         interface{}
-		expectedBool bool
-		expectedErr  string
+		name, expectedErr string
+		a, b              interface{}
 	}
 	tests := []test{
 		{
-			name:         "matching perfectly",
-			a:            &thingA{},
-			b:            &thingA{},
-			expectedBool: true,
+			name: "matching perfectly",
+			a:    &thingA{},
+			b:    &thingA{},
 		},
 		{
-			name:         "matching, different definition",
-			a:            &thingA{},
-			b:            &thingC{},
-			expectedBool: true,
+			name: "matching, different definition",
+			a:    &thingA{},
+			b:    &thingC{},
 		},
 		{
-			name:         "wrong argument",
-			a:            &thingA{},
-			b:            &thingB{},
-			expectedBool: false,
-			expectedErr:  "api and server arguments mismatch: int vs string",
+			name:        "wrong argument",
+			a:           &thingA{},
+			b:           &thingB{},
+			expectedErr: "api and server arguments mismatch: int vs string",
 		},
 		{
-			name:         "no receiver on one",
-			a:            &thingA{},
-			b:            DoThing,
-			expectedBool: false,
-			expectedErr:  "api and server argument/return counts do not match",
+			name:        "no receiver on one",
+			a:           &thingA{},
+			b:           DoThing,
+			expectedErr: "api and server argument/return counts do not match",
 		},
 		{
-			name:         "no receiver on both",
-			a:            DoThing,
-			b:            DoThing,
-			expectedBool: false,
-			expectedErr:  "no receiver",
+			name:        "no receiver on both",
+			a:           DoThing,
+			b:           DoThing,
+			expectedErr: "no receiver",
 		},
 		{
-			name:         "total mismatch of same in-length",
-			a:            &thingA{},
-			b:            Unrelated,
-			expectedBool: false,
-			expectedErr:  "no receiver",
+			name:        "total mismatch of same in-length",
+			a:           &thingA{},
+			b:           Unrelated,
+			expectedErr: "no receiver",
 		},
 		{
-			name:         "invalid pointer arguments",
-			a:            &thingE{},
-			b:            &thingA{},
-			expectedBool: false,
-			expectedErr:  "api and server arguments mismatch: ptr vs int",
+			name:        "invalid pointer arguments",
+			a:           &thingE{},
+			b:           &thingA{},
+			expectedErr: "api and server arguments mismatch: ptr vs int",
 		},
 		{
-			name:         "valid pointer arguments",
-			a:            &thingE{},
-			b:            &thingE{},
-			expectedBool: true,
+			name: "valid pointer arguments",
+			a:    &thingE{},
+			b:    &thingE{},
 		},
 		{
-			name:         "wrong return",
-			a:            &thingA{},
-			b:            &thingD{},
-			expectedBool: false,
-			expectedErr:  "api and server returns mismatch: bool vs int",
+			name:        "wrong return",
+			a:           &thingA{},
+			b:           &thingD{},
+			expectedErr: "api and server returns mismatch: bool vs int",
 		},
 	}
 	for _, tt := range tests {
@@ -129,8 +118,7 @@ func TestArgsMatch(t *testing.T) {
 			} else {
 				bType = reflect.TypeOf(tt.b)
 			}
-			match, err := argsMatch(aType, bType)
-			assert.Equal(t, tt.expectedBool, match)
+			err := validateArgs(aType, bType)
 			if tt.expectedErr == "" {
 				assert.NoError(t, err)
 			} else {

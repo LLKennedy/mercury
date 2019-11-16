@@ -6,7 +6,6 @@ import (
 	"reflect"
 
 	"github.com/LLKennedy/httpgrpc"
-	"github.com/LLKennedy/httpgrpc/internal/methods"
 	"google.golang.org/grpc"
 )
 
@@ -37,23 +36,9 @@ func (s *Server) setAPI(api, server interface{}) (err error) {
 	apiMethods := make([]string, apiType.NumMethod())
 	for i := range apiMethods {
 		apiMethod := apiType.Method(i)
-		name := apiMethod.Name
-		trueName, valid := methods.MatchAndStrip(name)
-		if !valid {
-			err = fmt.Errorf("httpgrpc: %s does not begin with a valid HTTP method", name)
-			break
-		}
-		serverMethod, found := serverType.MethodByName(trueName)
-		if !found {
-			err = fmt.Errorf("httpgrpc: server is missing method %s", trueName)
-			break
-		}
-		expectedType := apiMethod.Type
-		foundType := serverMethod.Type
-		matching, matchErr := argsMatch(expectedType, foundType)
-		if !matching {
-			err = fmt.Errorf("httpgrpc: api/server arguments do not match for method (%s/%s): %v", name, trueName, matchErr)
-			break
+		err := validateMethod(apiMethod, serverType)
+		if err != nil {
+			return err
 		}
 	}
 	if err == nil {
