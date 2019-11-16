@@ -36,17 +36,20 @@ func (s *Server) setAPIConfig(api, server interface{}) (err error) {
 	}()
 	apiType := reflect.TypeOf(api)
 	serverType := reflect.TypeOf(server)
-	apiMethods := make([]reflect.Method, apiType.NumMethod())
+	apiMethods := map[string]map[string]reflect.Method{}
 	// Check every function defined on api
-	for i := range apiMethods {
+	for i := 0; i < apiType.NumMethod(); i++ {
 		// Each function in api must map exactly to an equivalent on server with the HTTP method stripped off
 		apiMethod := apiType.Method(i)
-		err := validateMethod(apiMethod, serverType)
+		methodString, procedureName, err := validateMethod(apiMethod, serverType)
 		if err != nil {
 			// one of the functions didn't match
 			return wrapErr(err)
 		}
-		apiMethods[i] = apiMethod
+		if _, exists := apiMethods[methodString]; !exists {
+			apiMethods[methodString] = map[string]reflect.Method{}
+		}
+		apiMethods[methodString][procedureName] = apiMethod
 	}
 	// We know all api functions map to server functions, now hold onto the method list and server pointer for later
 	s.setAPI(apiMethods)
