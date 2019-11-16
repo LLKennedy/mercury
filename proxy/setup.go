@@ -36,13 +36,30 @@ func (s *Server) setAPI(api, server interface{}) (err error) {
 	serverType := reflect.TypeOf(server)
 	apiMethods := make([]string, apiType.NumMethod())
 	for i := range apiMethods {
-		name := apiType.Method(i).Name
+		apiMethod := apiType.Method(i)
+		name := apiMethod.Name
 		trueName, valid := methods.MatchAndStrip(name)
 		if !valid {
-			return fmt.Errorf("httpgrpc: %s does not begin with a valid HTTP method", name)
+			err = fmt.Errorf("httpgrpc: %s does not begin with a valid HTTP method", name)
+			break
 		}
-		method, found := serverType.MethodByName(trueName)
+		serverMethod, found := serverType.MethodByName(trueName)
+		if !found {
+			err = fmt.Errorf("httpgrpc: server is missing method %s", trueName)
+			break
+		}
+		expectedType := apiMethod.Type
+		foundType := serverMethod.Type
+		matching, matchErr := argsMatch(expectedType, foundType)
+		if !matching {
+			err = fmt.Errorf("httpgrpc: api/server arguments do not match for method (%s/%s): %v", name, trueName, matchErr)
+			break
+		}
 	}
+	if err == nil {
+		// Set api details for this server
+	}
+	return
 }
 
 // Serve starts the server
