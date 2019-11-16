@@ -6,13 +6,13 @@ import (
 	"reflect"
 
 	"github.com/LLKennedy/httpgrpc"
-	"github.com/LLKennedy/httpgrpc/internal/methods/get"
+	"github.com/LLKennedy/httpgrpc/internal/methods"
 	"google.golang.org/grpc"
 )
 
 // NewServer creates a proxy from HTTP(S) traffic to server using the methods defined by api
 // api should be the Unimplemented<ServiceName> struct compiled by the protobuf. All methods defined on api MUST start with an HTTP method name
-// server MUST implement the same methods as api, though it may have others without exposing them to HTTP(S) traffic
+// server MUST implement the same methods as api without the prepended method names, though it may have others without exposing them to HTTP(S) traffic
 func NewServer(api, server interface{}, opt ...grpc.ServerOption) (*Server, error) {
 	s := new(Server)
 	s.register(opt...)
@@ -33,18 +33,16 @@ func (s *Server) setAPI(api, server interface{}) (err error) {
 		}
 	}()
 	apiType := reflect.TypeOf(api)
+	serverType := reflect.TypeOf(server)
 	apiMethods := make([]string, apiType.NumMethod())
 	for i := range apiMethods {
 		name := apiType.Method(i).Name
-		switch {
-		case get.Match(name):
-			//good
-		default:
-			//bad
+		trueName, valid := methods.MatchAndStrip(name)
+		if !valid {
+			return fmt.Errorf("httpgrpc: %s does not begin with a valid HTTP method", name)
 		}
-		apiMethods[i] = name
+		method, found := serverType.MethodByName(trueName)
 	}
-	serverType := reflect.TypeOf(server)
 }
 
 // Serve starts the server
