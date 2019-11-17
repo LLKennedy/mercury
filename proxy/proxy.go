@@ -112,9 +112,12 @@ func (s *Server) callProc(ctx context.Context, req *httpgrpc.Request, procType r
 	var outJSON []byte
 	if returnValues[0].CanInterface() {
 		outJSON, _ = json.Marshal(returnValues[0].Interface())
+		if string(outJSON) == "null" {
+			outJSON = nil
+		}
 	}
 	if returnValues[1].CanInterface() {
-		err = returnValues[1].Interface().(error)
+		err, _ = returnValues[1].Interface().(error)
 	}
 	res := &httpgrpc.Response{
 		Payload: outJSON,

@@ -11,6 +11,45 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+type exampleGRPCServer struct{}
+
+type request struct {
+	Arg1 string `json:"arg1"`
+	Arg2 int    `json:"arg2"`
+	Arg3 string `json:"arg3"`
+}
+
+func (r *request) GetArg1() string {
+	if r == nil {
+		return ""
+	}
+	return r.Arg1
+}
+
+func (r *request) GetArg2() int {
+	if r == nil {
+		return 0
+	}
+	return r.Arg2
+}
+
+func (r *request) GetArg3() string {
+	if r == nil {
+		return ""
+	}
+	return r.Arg3
+}
+
+type response struct {
+	Arg3 bool `json:"arg3"`
+}
+
+func (s *exampleGRPCServer) DoThing(ctx context.Context, req *request) (*response, error) {
+	return &response{
+		Arg3: req.GetArg1() == "hello" && req.GetArg2() == 3 && req.GetArg3() == "goodbye",
+	}, nil
+}
+
 func TestServer_Proxy(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -35,15 +74,46 @@ func TestServer_Proxy(t *testing.T) {
 				Method:    httpgrpc.Method_POST,
 				Procedure: "Proxy",
 			},
-			want:        &httpgrpc.Response{},
+			want: &httpgrpc.Response{
+				StatusCode: 500,
+			},
 			expectedErr: "rpc error: code = Unimplemented desc = method Proxy not implemented",
 		},
 		{
-			name:        "blank request",
-			s:           &Server{},
-			ctx:         new(mockContext),
-			req:         &httpgrpc.Request{},
-			want:        &httpgrpc.Response{},
+			name: "example grpc call success",
+			s: &Server{
+				api: map[string]map[string]reflect.Method{
+					"POST": {
+						"DoThing": reflect.TypeOf(&exampleGRPCServer{}).Method(0),
+					},
+				},
+				innerServer: &exampleGRPCServer{},
+			},
+			ctx: new(mockContext),
+			req: &httpgrpc.Request{
+				Method:    httpgrpc.Method_POST,
+				Procedure: "DoThing",
+				Payload:   []byte(`{"arg1": "hello","arg2": 3}`),
+				Params: []*httpgrpc.QueryParam{
+					{
+						Key:   "arg3",
+						Value: "goodbye",
+					},
+				},
+			},
+			want: &httpgrpc.Response{
+				StatusCode: 200,
+				Payload:    []byte(`{"arg3":true}`),
+			},
+		},
+		{
+			name: "blank request",
+			s:    &Server{},
+			ctx:  new(mockContext),
+			req:  &httpgrpc.Request{},
+			want: &httpgrpc.Response{
+				StatusCode: 404,
+			},
 			expectedErr: "httpgrpc: unknown HTTP method",
 		},
 		{
@@ -53,7 +123,9 @@ func TestServer_Proxy(t *testing.T) {
 			req: &httpgrpc.Request{
 				Method: httpgrpc.Method_POST,
 			},
-			want:        &httpgrpc.Response{},
+			want: &httpgrpc.Response{
+				StatusCode: 404,
+			},
 			expectedErr: "httpgrpc: no POST methods defined in api",
 		},
 		{
@@ -68,7 +140,9 @@ func TestServer_Proxy(t *testing.T) {
 				Method:    httpgrpc.Method_POST,
 				Procedure: "DoThing",
 			},
-			want:        &httpgrpc.Response{},
+			want: &httpgrpc.Response{
+				StatusCode: 404,
+			},
 			expectedErr: "httpgrpc: no procedure DoThing defined for POST method in api",
 		},
 		{
@@ -86,16 +160,18 @@ func TestServer_Proxy(t *testing.T) {
 				Method:    httpgrpc.Method_POST,
 				Procedure: "DoThing",
 			},
-			want:        &httpgrpc.Response{},
+			want: &httpgrpc.Response{
+				StatusCode: 501,
+			},
 			expectedErr: "httpgrpc: nonstandard grpc signature not implemented",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.s.Proxy(tt.ctx, tt.req)
+			assert.Equal(t, tt.want, got)
 			if tt.expectedErr == "" {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, got)
 			} else {
 				assert.EqualError(t, err, tt.expectedErr)
 			}
