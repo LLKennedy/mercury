@@ -64,11 +64,15 @@ func TestServer_setAPIConfig(t *testing.T) {
 				if assert.Len(t, tt.s.api, len(tt.result.api)) {
 					for key, inMap := range tt.s.api {
 						for procName, method := range inMap {
-							expectedMethod := tt.result.api[key][procName]
-							assert.Equal(t, method.Name, expectedMethod.Name)
-							assert.Equal(t, method.PkgPath, expectedMethod.PkgPath)
-							assert.Equal(t, method.Type, expectedMethod.Type)
-							assert.Equal(t, method.Index, expectedMethod.Index)
+							if _, exists := tt.result.api[key]; assert.True(t, exists) {
+								if _, procExists := tt.result.api[key][procName]; assert.True(t, procExists) {
+									expectedMethod := tt.result.api[key][procName]
+									assert.Equal(t, method.Name, expectedMethod.Name)
+									assert.Equal(t, method.PkgPath, expectedMethod.PkgPath)
+									assert.Equal(t, method.Type, expectedMethod.Type)
+									assert.Equal(t, method.Index, expectedMethod.Index)
+								}
+							}
 						}
 					}
 				}

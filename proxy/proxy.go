@@ -16,7 +16,15 @@ func (s *Server) Proxy(ctx context.Context, req *httpgrpc.Request) (*httpgrpc.Re
 	if err != nil {
 		return nil, wrapErr(err)
 	}
-	_ = methodString
+	methodMap, found := s.getAPI()[methodString]
+	if !found {
+		return nil, wrapErr(fmt.Errorf("no %s methods defined in api", methodString))
+	}
+	method, found := methodMap[req.GetProcedure()]
+	if !found {
+		return nil, wrapErr(fmt.Errorf("no procedure %s defined for %s method in api", req.GetProcedure(), req.GetMethod()))
+	}
+	_ = method
 	return (&httpgrpc.UnimplementedExposedServiceServer{}).Proxy(ctx, req)
 }
 
