@@ -6,7 +6,6 @@ import (
 	"reflect"
 
 	"github.com/LLKennedy/httpgrpc"
-	"google.golang.org/grpc"
 )
 
 // Proxy proxies connections through the server
@@ -22,10 +21,10 @@ func (s *Server) Proxy(ctx context.Context, req *httpgrpc.Request) (*httpgrpc.Re
 	}
 	procType := procedure.Type
 	if procType.NumIn() == 3 && // Check this matches standard GRPC method
-		procType.IsVariadic() && // inputs should be *struct, grpc.CallOption...
-		procType.In(1).Kind() == reflect.Ptr &&
-		procType.In(1).Elem().Kind() == reflect.Struct &&
-		procType.In(2).Implements(reflect.TypeOf((*grpc.CallOption)(nil)).Elem()) &&
+		!procType.IsVariadic() && // inputs should be context.Context, *struct
+		procType.In(1).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) &&
+		procType.In(2).Kind() == reflect.Ptr &&
+		procType.In(2).Elem().Kind() == reflect.Struct &&
 		procType.NumOut() == 2 && // outputs should be *struct, error
 		procType.Out(0).Kind() == reflect.Ptr &&
 		procType.Out(0).Elem().Kind() == reflect.Struct &&

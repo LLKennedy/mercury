@@ -21,6 +21,23 @@ func TestServer_Proxy(t *testing.T) {
 		expectedErr string
 	}{
 		{
+			name: "standard grpc call unimplemented",
+			s: &Server{
+				api: map[string]map[string]reflect.Method{
+					"POST": {
+						"Proxy": reflect.TypeOf(&httpgrpc.UnimplementedExposedServiceServer{}).Method(0),
+					},
+				},
+			},
+			ctx: new(mockContext),
+			req: &httpgrpc.Request{
+				Method:    httpgrpc.Method_POST,
+				Procedure: "Proxy",
+			},
+			want:        &httpgrpc.Response{},
+			expectedErr: "rpc error: code = Unimplemented desc = method Proxy not implemented",
+		},
+		{
 			name:        "blank request",
 			s:           &Server{},
 			ctx:         new(mockContext),
