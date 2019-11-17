@@ -3,8 +3,10 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/LLKennedy/httpgrpc"
+	"google.golang.org/grpc"
 )
 
 // Proxy proxies connections through the server
@@ -12,20 +14,45 @@ func (s *Server) Proxy(ctx context.Context, req *httpgrpc.Request) (*httpgrpc.Re
 	wrapErr := func(err error) error {
 		return fmt.Errorf("httpgrpc: %v", err)
 	}
-	methodString, err := methodToString(req.GetMethod())
+	procedure, err := s.findProc(req.GetMethod(), req.GetProcedure())
 	if err != nil {
-		return nil, wrapErr(err)
+		return &httpgrpc.Response{
+			StatusCode: 404,
+		}, wrapErr(err)
+	}
+	procType := procedure.Type
+	if procType.NumIn() == 3 && // Check this matches standard GRPC method
+		procType.IsVariadic() && // inputs should be *struct, grpc.CallOption...
+		procType.In(1).Kind() == reflect.Ptr &&
+		procType.In(1).Elem().Kind() == reflect.Struct &&
+		procType.In(2).Implements(reflect.TypeOf((*grpc.CallOption)(nil)).Elem()) &&
+		procType.NumOut() == 2 && // outputs should be *struct, error
+		procType.Out(0).Kind() == reflect.Ptr &&
+		procType.Out(0).Elem().Kind() == reflect.Struct &&
+		procType.Out(1).Kind() == reflect.Interface &&
+		procType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+		// This is a normal grpc rpc definition
+		return (&httpgrpc.UnimplementedExposedServiceServer{}).Proxy(ctx, req)
+	}
+	return &httpgrpc.Response{
+		StatusCode: 501, //Unimplemented
+	}, wrapErr(fmt.Errorf("nonstandard grpc signature not implemented"))
+}
+
+func (s *Server) findProc(httpMethod httpgrpc.Method, procName string) (reflect.Method, error) {
+	methodString, err := methodToString(httpMethod)
+	if err != nil {
+		return reflect.Method{}, err
 	}
 	methodMap, found := s.getAPI()[methodString]
 	if !found {
-		return nil, wrapErr(fmt.Errorf("no %s methods defined in api", methodString))
+		return reflect.Method{}, fmt.Errorf("no %s methods defined in api", methodString)
 	}
-	method, found := methodMap[req.GetProcedure()]
+	procedure, found := methodMap[procName]
 	if !found {
-		return nil, wrapErr(fmt.Errorf("no procedure %s defined for %s method in api", req.GetProcedure(), req.GetMethod()))
+		return reflect.Method{}, fmt.Errorf("no procedure %s defined for %s method in api", procName, httpMethod)
 	}
-	_ = method
-	return (&httpgrpc.UnimplementedExposedServiceServer{}).Proxy(ctx, req)
+	return procedure, nil
 }
 
 func methodToString(in httpgrpc.Method) (out string, err error) {
