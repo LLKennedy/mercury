@@ -51,7 +51,7 @@ func TestServer_setAPIConfig(t *testing.T) {
 			api:         specificExposedThing,
 			server:      &thingB{},
 			result:      &Server{},
-			expectedErr: "httpgrpc: validation of PostDoThing to DoThing mapping: api and server arguments mismatch: int vs string",
+			expectedErr: "validation of PostDoThing to DoThing mapping: api and server arguments mismatch: int vs string",
 		},
 	}
 	for _, tt := range tests {

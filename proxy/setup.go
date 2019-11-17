@@ -13,9 +13,16 @@ import (
 // api should be the Unimplemented<ServiceName> struct compiled by the protobuf. All methods defined on api MUST start with an HTTP method name
 // server MUST implement the same methods as api without the prepended method names, though it may have others without exposing them to HTTP(S) traffic
 func NewServer(api, server interface{}, listener *grpc.Server) (*Server, error) {
+	wrapErr := func(in error) error {
+		if in == nil {
+			return nil
+		}
+		return fmt.Errorf("httpgrpc: %v", in)
+	}
 	s := new(Server)
 	s.register(listener)
-	return s, s.setAPIConfig(api, server)
+	err := wrapErr(s.setAPIConfig(api, server))
+	return s, err
 }
 
 // register registers the server
@@ -26,12 +33,9 @@ func (s *Server) register(listener *grpc.Server) {
 
 // setAPIConfig validates and sets the inner api and endpoint config
 func (s *Server) setAPIConfig(api, server interface{}) (err error) {
-	wrapErr := func(in error) error {
-		return fmt.Errorf("httpgrpc: %v", in)
-	}
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("httpgrpc: caught panic %v", r)
+			err = fmt.Errorf("caught panic %v", r)
 		}
 	}()
 	apiType := reflect.TypeOf(api)
@@ -44,7 +48,7 @@ func (s *Server) setAPIConfig(api, server interface{}) (err error) {
 		methodString, procedureName, err := validateMethod(apiMethod, serverType)
 		if err != nil {
 			// one of the functions didn't match
-			return wrapErr(err)
+			return err
 		}
 		if _, exists := apiMethods[methodString]; !exists {
 			apiMethods[methodString] = map[string]reflect.Method{}

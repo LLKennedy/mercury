@@ -28,6 +28,7 @@ func TestServer_Proxy(t *testing.T) {
 						"Proxy": reflect.TypeOf(&httpgrpc.UnimplementedExposedServiceServer{}).Method(0),
 					},
 				},
+				innerServer: &httpgrpc.UnimplementedExposedServiceServer{},
 			},
 			ctx: new(mockContext),
 			req: &httpgrpc.Request{
@@ -78,6 +79,7 @@ func TestServer_Proxy(t *testing.T) {
 						"DoThing": reflect.TypeOf(&thingA{}).Method(0),
 					},
 				},
+				innerServer: &thingA{},
 			},
 			ctx: new(mockContext),
 			req: &httpgrpc.Request{

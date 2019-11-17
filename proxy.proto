@@ -16,7 +16,7 @@ message Request {
     // JSON payload of the request, if present
     bytes payload = 3;
     // Query params of the request, if present
-    repeated QueryParam params = 4;
+    map<string, string> params = 4;
 }
 
 // The response to send to the requestor
