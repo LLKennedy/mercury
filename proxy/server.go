@@ -12,8 +12,8 @@ var defaultServer = &Server{}
 // Server is an HTTP to GRPC proxy server
 type Server struct {
 	grpcServer  *grpc.Server
-	api         []reflect.Method // the api of innerServer
-	innerServer interface{}      // the actual protobuf endpoints we want to use
+	api         map[string]map[string]reflect.Method // the api of innerServer
+	innerServer interface{}                          // the actual protobuf endpoints we want to use
 }
 
 func (s *Server) getGrpcServer() *grpc.Server {
@@ -30,14 +30,14 @@ func (s *Server) setGrpcServer(in *grpc.Server) {
 	s.grpcServer = in
 }
 
-func (s *Server) getAPI() []reflect.Method {
+func (s *Server) getAPI() map[string]map[string]reflect.Method {
 	if s == nil {
 		return defaultServer.api
 	}
 	return s.api
 }
 
-func (s *Server) setAPI(in []reflect.Method) {
+func (s *Server) setAPI(in map[string]map[string]reflect.Method) {
 	if s == nil {
 		defaultServer.api = in
 	}

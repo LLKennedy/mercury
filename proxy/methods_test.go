@@ -21,15 +21,19 @@ func (u *unrelatedThing) Thing(x, y int) bool {
 
 func Test_validateMethod(t *testing.T) {
 	tests := []struct {
-		name        string
-		apiMethod   reflect.Method
-		serverType  reflect.Type
-		expectedErr string
+		name         string
+		apiMethod    reflect.Method
+		serverType   reflect.Type
+		expectedErr  string
+		expectedType string
+		expectedName string
 	}{
 		{
-			name:       "matching",
-			apiMethod:  reflect.TypeOf(&exposedThingA{}).Method(0),
-			serverType: reflect.TypeOf(&thingA{}),
+			name:         "matching",
+			apiMethod:    reflect.TypeOf(&exposedThingA{}).Method(0),
+			serverType:   reflect.TypeOf(&thingA{}),
+			expectedType: "POST",
+			expectedName: "DoThing",
 		},
 		{
 			name:        "no method at the start",
@@ -52,9 +56,11 @@ func Test_validateMethod(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validateMethod(tt.apiMethod, tt.serverType)
+			gotType, gotName, err := validateMethod(tt.apiMethod, tt.serverType)
 			if tt.expectedErr == "" {
 				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedType, gotType)
+				assert.Equal(t, tt.expectedName, gotName)
 			} else {
 				assert.EqualError(t, err, tt.expectedErr)
 			}
