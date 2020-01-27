@@ -58,7 +58,10 @@ func (s *Server) callProc(ctx context.Context, req *proto.Request, procType refl
 	queryMap := map[string]interface{}{}
 	for key, value := range req.GetParams() {
 		// TODO: don't ignore/overwrite duplicate keys here
-		queryMap[key] = value
+		passedValue := ""
+		for _, passedValue = range value.GetValues() {
+		}
+		queryMap[key] = passedValue
 	}
 	var finalJSON []byte
 	var err error

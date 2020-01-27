@@ -94,8 +94,8 @@ func TestServer_Proxy(t *testing.T) {
 				Method:    proto.Method_POST,
 				Procedure: "DoThing",
 				Payload:   []byte(`{"arg1": "hello","arg2": 3}`),
-				Params: map[string]string{
-					"arg3": "goodbye",
+				Params: map[string]*proto.MultiVal{
+					"arg3": {Values: []string{"goodbye"}},
 				},
 			},
 			want: &proto.Response{

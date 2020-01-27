@@ -17,5 +17,6 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 
 // NewServer creates a new server to convert httpgrpc/proto messages to service-specific messages
 func NewServer(api interface{}, server interface{}, listener *grpc.Server) (*proxy.Server, error) {
-	return proxy.NewServer(api, server, listener)
+	s, err := proxy.NewServer(api, server, listener)
+	return s, err
 }
