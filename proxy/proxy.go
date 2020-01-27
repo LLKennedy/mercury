@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/LLKennedy/httpgrpc"
+	"github.com/LLKennedy/httpgrpc/proto"
 	"github.com/peterbourgon/mergemap"
 )
 
 // Proxy proxies connections through the server
-func (s *Server) Proxy(ctx context.Context, req *httpgrpc.Request) (res *httpgrpc.Response, err error) {
+func (s *Server) Proxy(ctx context.Context, req *proto.Request) (res *proto.Response, err error) {
 	wrapErr := func(err error) error {
 		return fmt.Errorf("httpgrpc: %v", err)
 	}
@@ -22,7 +22,7 @@ func (s *Server) Proxy(ctx context.Context, req *httpgrpc.Request) (res *httpgrp
 	}()
 	procType, caller, err := s.findProc(req.GetMethod(), req.GetProcedure())
 	if err != nil {
-		return &httpgrpc.Response{
+		return &proto.Response{
 			StatusCode: 404,
 		}, wrapErr(err)
 	}
@@ -40,12 +40,12 @@ func (s *Server) Proxy(ctx context.Context, req *httpgrpc.Request) (res *httpgrp
 		return s.callProc(ctx, req, procType, caller)
 	}
 	// Currently we require that the methods match a standard auto-generated GRPC server method with no plugins that impact function signature.
-	return &httpgrpc.Response{
+	return &proto.Response{
 		StatusCode: 501, //Unimplemented
 	}, wrapErr(fmt.Errorf("nonstandard grpc signature not implemented"))
 }
 
-func (s *Server) callProc(ctx context.Context, req *httpgrpc.Request, procType reflect.Type, caller reflect.Value) (*httpgrpc.Response, error) {
+func (s *Server) callProc(ctx context.Context, req *proto.Request, procType reflect.Type, caller reflect.Value) (*proto.Response, error) {
 	// Create new instance of struct argument to pass into real implementation
 	builtRequest := reflect.New(procType.In(2).Elem())
 	builtRequestPtr := builtRequest.Interface()
@@ -56,14 +56,14 @@ func (s *Server) callProc(ctx context.Context, req *httpgrpc.Request, procType r
 
 	// First we convert query parameters to a map
 	queryMap := map[string]interface{}{}
-	for _, pair := range req.GetParams() {
+	for key, value := range req.GetParams() {
 		// TODO: don't ignore/overwrite duplicate keys here
-		queryMap[pair.GetKey()] = pair.GetValue()
+		queryMap[key] = value
 	}
 	var finalJSON []byte
 	var err error
 	switch req.GetMethod() {
-	case httpgrpc.Method_CONNECT, httpgrpc.Method_GET, httpgrpc.Method_HEAD, httpgrpc.Method_OPTIONS, httpgrpc.Method_TRACE:
+	case proto.Method_CONNECT, proto.Method_GET, proto.Method_HEAD, proto.Method_OPTIONS, proto.Method_TRACE:
 		// No request body, only query params are possible
 		if len(queryMap) > 0 {
 			finalJSON, err = json.Marshal(queryMap)
@@ -71,7 +71,7 @@ func (s *Server) callProc(ctx context.Context, req *httpgrpc.Request, procType r
 				err = fmt.Errorf("failed to marshal query parameters to JSON: %v", err)
 			}
 		}
-	case httpgrpc.Method_DELETE, httpgrpc.Method_PATCH, httpgrpc.Method_POST, httpgrpc.Method_PUT:
+	case proto.Method_DELETE, proto.Method_PATCH, proto.Method_POST, proto.Method_PUT:
 		// Merge request body with query params
 		bodyJSON := req.GetPayload()
 		if bodyJSON != nil && len(queryMap) > 0 {
@@ -95,14 +95,14 @@ func (s *Server) callProc(ctx context.Context, req *httpgrpc.Request, procType r
 		err = fmt.Errorf("invalid http method")
 	}
 	if err != nil {
-		return &httpgrpc.Response{
+		return &proto.Response{
 			StatusCode: 500,
 		}, err
 	}
 	if finalJSON != nil {
 		err = json.Unmarshal(finalJSON, builtRequestPtr)
 		if err != nil {
-			return &httpgrpc.Response{
+			return &proto.Response{
 				StatusCode: 400,
 			}, fmt.Errorf("failed to marshal request data to procedure argument: %v", err)
 		}
@@ -119,7 +119,7 @@ func (s *Server) callProc(ctx context.Context, req *httpgrpc.Request, procType r
 	if returnValues[1].CanInterface() {
 		err, _ = returnValues[1].Interface().(error)
 	}
-	res := &httpgrpc.Response{
+	res := &proto.Response{
 		Payload: outJSON,
 	}
 	if err == nil {
@@ -130,7 +130,7 @@ func (s *Server) callProc(ctx context.Context, req *httpgrpc.Request, procType r
 	return res, err
 }
 
-func (s *Server) findProc(httpMethod httpgrpc.Method, procName string) (procType reflect.Type, caller reflect.Value, err error) {
+func (s *Server) findProc(httpMethod proto.Method, procName string) (procType reflect.Type, caller reflect.Value, err error) {
 	var methodString string
 	methodString, err = methodToString(httpMethod)
 	if err != nil {
@@ -152,25 +152,25 @@ func (s *Server) findProc(httpMethod httpgrpc.Method, procName string) (procType
 	return
 }
 
-func methodToString(in httpgrpc.Method) (out string, err error) {
+func methodToString(in proto.Method) (out string, err error) {
 	switch in {
-	case httpgrpc.Method_GET:
+	case proto.Method_GET:
 		out = "GET"
-	case httpgrpc.Method_HEAD:
+	case proto.Method_HEAD:
 		out = "HEAD"
-	case httpgrpc.Method_POST:
+	case proto.Method_POST:
 		out = "POST"
-	case httpgrpc.Method_PUT:
+	case proto.Method_PUT:
 		out = "PUT"
-	case httpgrpc.Method_DELETE:
+	case proto.Method_DELETE:
 		out = "DELETE"
-	case httpgrpc.Method_CONNECT:
+	case proto.Method_CONNECT:
 		out = "CONNECT"
-	case httpgrpc.Method_OPTIONS:
+	case proto.Method_OPTIONS:
 		out = "OPTIONS"
-	case httpgrpc.Method_TRACE:
+	case proto.Method_TRACE:
 		out = "TRACE"
-	case httpgrpc.Method_PATCH:
+	case proto.Method_PATCH:
 		out = "PATCH"
 	}
 	if out == "" {

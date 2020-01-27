@@ -5,7 +5,7 @@ import (
 	"net"
 	"reflect"
 
-	"github.com/LLKennedy/httpgrpc"
+	"github.com/LLKennedy/httpgrpc/proto"
 	"google.golang.org/grpc"
 )
 
@@ -28,7 +28,7 @@ func NewServer(api, server interface{}, listener *grpc.Server) (*Server, error) 
 // register registers the server
 func (s *Server) register(listener *grpc.Server) {
 	s.setGrpcServer(listener)
-	httpgrpc.RegisterExposedServiceServer(s.getGrpcServer(), s)
+	proto.RegisterExposedServiceServer(s.getGrpcServer(), s)
 }
 
 // setAPIConfig validates and sets the inner api and endpoint config

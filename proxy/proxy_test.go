@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/LLKennedy/httpgrpc"
+	"github.com/LLKennedy/httpgrpc/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -55,8 +55,8 @@ func TestServer_Proxy(t *testing.T) {
 		name        string
 		s           *Server
 		ctx         context.Context
-		req         *httpgrpc.Request
-		want        *httpgrpc.Response
+		req         *proto.Request
+		want        *proto.Response
 		expectedErr string
 	}{
 		{
@@ -64,17 +64,17 @@ func TestServer_Proxy(t *testing.T) {
 			s: &Server{
 				api: map[string]map[string]reflect.Method{
 					"POST": {
-						"Proxy": reflect.TypeOf(&httpgrpc.UnimplementedExposedServiceServer{}).Method(0),
+						"Proxy": reflect.TypeOf(&proto.UnimplementedExposedServiceServer{}).Method(0),
 					},
 				},
-				innerServer: &httpgrpc.UnimplementedExposedServiceServer{},
+				innerServer: &proto.UnimplementedExposedServiceServer{},
 			},
 			ctx: new(mockContext),
-			req: &httpgrpc.Request{
-				Method:    httpgrpc.Method_POST,
+			req: &proto.Request{
+				Method:    proto.Method_POST,
 				Procedure: "Proxy",
 			},
-			want: &httpgrpc.Response{
+			want: &proto.Response{
 				StatusCode: 500,
 			},
 			expectedErr: "rpc error: code = Unimplemented desc = method Proxy not implemented",
@@ -90,18 +90,15 @@ func TestServer_Proxy(t *testing.T) {
 				innerServer: &exampleGRPCServer{},
 			},
 			ctx: new(mockContext),
-			req: &httpgrpc.Request{
-				Method:    httpgrpc.Method_POST,
+			req: &proto.Request{
+				Method:    proto.Method_POST,
 				Procedure: "DoThing",
 				Payload:   []byte(`{"arg1": "hello","arg2": 3}`),
-				Params: []*httpgrpc.QueryParam{
-					{
-						Key:   "arg3",
-						Value: "goodbye",
-					},
+				Params: map[string]string{
+					"arg3": "goodbye",
 				},
 			},
-			want: &httpgrpc.Response{
+			want: &proto.Response{
 				StatusCode: 200,
 				Payload:    []byte(`{"arg3":true}`),
 			},
@@ -110,8 +107,8 @@ func TestServer_Proxy(t *testing.T) {
 			name: "blank request",
 			s:    &Server{},
 			ctx:  new(mockContext),
-			req:  &httpgrpc.Request{},
-			want: &httpgrpc.Response{
+			req:  &proto.Request{},
+			want: &proto.Response{
 				StatusCode: 404,
 			},
 			expectedErr: "httpgrpc: unknown HTTP method",
@@ -120,10 +117,10 @@ func TestServer_Proxy(t *testing.T) {
 			name: "unregistered method",
 			s:    &Server{},
 			ctx:  new(mockContext),
-			req: &httpgrpc.Request{
-				Method: httpgrpc.Method_POST,
+			req: &proto.Request{
+				Method: proto.Method_POST,
 			},
-			want: &httpgrpc.Response{
+			want: &proto.Response{
 				StatusCode: 404,
 			},
 			expectedErr: "httpgrpc: no POST methods defined in api",
@@ -136,11 +133,11 @@ func TestServer_Proxy(t *testing.T) {
 				},
 			},
 			ctx: new(mockContext),
-			req: &httpgrpc.Request{
-				Method:    httpgrpc.Method_POST,
+			req: &proto.Request{
+				Method:    proto.Method_POST,
 				Procedure: "DoThing",
 			},
-			want: &httpgrpc.Response{
+			want: &proto.Response{
 				StatusCode: 404,
 			},
 			expectedErr: "httpgrpc: no procedure DoThing defined for POST method in api",
@@ -156,11 +153,11 @@ func TestServer_Proxy(t *testing.T) {
 				innerServer: &thingA{},
 			},
 			ctx: new(mockContext),
-			req: &httpgrpc.Request{
-				Method:    httpgrpc.Method_POST,
+			req: &proto.Request{
+				Method:    proto.Method_POST,
 				Procedure: "DoThing",
 			},
-			want: &httpgrpc.Response{
+			want: &proto.Response{
 				StatusCode: 501,
 			},
 			expectedErr: "httpgrpc: nonstandard grpc signature not implemented",
@@ -256,65 +253,65 @@ func Test_methodToString(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		in      httpgrpc.Method
+		in      proto.Method
 		wantOut string
 		wantErr string
 	}{
 		{
 			name:    "invalid",
-			in:      httpgrpc.Method(100),
+			in:      proto.Method(100),
 			wantOut: "",
 			wantErr: "unknown HTTP method",
 		},
 		{
 			name:    "unknown",
-			in:      httpgrpc.Method_UNKNOWN,
+			in:      proto.Method_UNKNOWN,
 			wantOut: "",
 			wantErr: "unknown HTTP method",
 		},
 		{
 			name:    "CONNECT",
-			in:      httpgrpc.Method_CONNECT,
+			in:      proto.Method_CONNECT,
 			wantOut: "CONNECT",
 		},
 		{
 			name:    "DELETE",
-			in:      httpgrpc.Method_DELETE,
+			in:      proto.Method_DELETE,
 			wantOut: "DELETE",
 		},
 		{
 			name:    "GET",
-			in:      httpgrpc.Method_GET,
+			in:      proto.Method_GET,
 			wantOut: "GET",
 		},
 		{
 			name:    "HEAD",
-			in:      httpgrpc.Method_HEAD,
+			in:      proto.Method_HEAD,
 			wantOut: "HEAD",
 		},
 		{
 			name:    "OPTIONS",
-			in:      httpgrpc.Method_OPTIONS,
+			in:      proto.Method_OPTIONS,
 			wantOut: "OPTIONS",
 		},
 		{
 			name:    "PATCH",
-			in:      httpgrpc.Method_PATCH,
+			in:      proto.Method_PATCH,
 			wantOut: "PATCH",
 		},
 		{
 			name:    "POST",
-			in:      httpgrpc.Method_POST,
+			in:      proto.Method_POST,
 			wantOut: "POST",
 		},
 		{
 			name:    "PUT",
-			in:      httpgrpc.Method_PUT,
+			in:      proto.Method_PUT,
 			wantOut: "PUT",
 		},
 		{
 			name:    "TRACE",
-			in:      httpgrpc.Method_TRACE,
+			in:      proto.Method_TRACE,
 			wantOut: "TRACE",
 		},
 	}

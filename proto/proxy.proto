@@ -1,5 +1,5 @@
 syntax = "proto3";
-package httpgrpc;
+package proto;
 
 // ExposedService is a microservice exposed to the outside world via an HTTPS reverse-proxy
 service ExposedService {
@@ -39,12 +39,4 @@ enum Method {
     OPTIONS = 7;
     TRACE = 8;
     PATCH = 9;
-}
-
-// Clearly defined parmaterisation
-message QueryParam {
-    // URL-decoded query param key
-    string key = 1;
-    // URL-decoded query param value
-    string value = 2;
 }
