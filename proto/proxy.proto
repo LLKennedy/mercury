@@ -17,6 +17,8 @@ message Request {
     bytes payload = 3;
     // Query params of the request, if present
     map<string, string> params = 4;
+    // Headers won't be automatically translated into the GRPC requests, but they should be delivered in case manual conversion is needed
+    map<string, string> headers = 5;
 }
 
 // The response to send to the requestor
@@ -25,6 +27,8 @@ message Response {
     uint32 status_code = 1;
     // JSON data to return to the requestor
     bytes payload = 2;
+    // Headers won't be automatically returned from GRPC requests, but they should be accepted in case manual conversion is needed
+    map<string, string> write_headers = 6;
 }
 
 // All valid HTTP method names
