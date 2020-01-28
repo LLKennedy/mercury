@@ -1,4 +1,4 @@
-package server
+package service
 
 import (
 	"context"
@@ -36,6 +36,11 @@ func (h *Handle) Start() error {
 // Stop stops the server
 func (h *Handle) Stop() {
 	h.server.GracefulStop()
+}
+
+// MakeClientConn returns a client connection to this service
+func (h *Handle) MakeClientConn() (*grpc.ClientConn, error) {
+	return grpc.Dial(":8953", grpc.WithInsecure())
 }
 
 // Fibonacci returns the nth number in the Fibonacci sequence. It does not start with an HTTP method and is therefore not exposed
