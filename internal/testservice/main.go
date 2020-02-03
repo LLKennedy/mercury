@@ -2,6 +2,7 @@ package main
 
 import (
 	fmt "fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -10,7 +11,11 @@ import (
 )
 
 func main() {
-	s := service.New()
+	s, err := service.New()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
 	startErr1 := make(chan error)
 	startErr2 := make(chan error)
 	go startServer(s, startErr1)
@@ -32,6 +37,7 @@ func main() {
 		Method: http.MethodGet,
 		URL: &url.URL{
 			Host:   "localhost:4848",
+			Path:   "/Random",
 			Scheme: "http",
 		},
 	}
@@ -39,7 +45,9 @@ func main() {
 	if err != nil {
 		fmt.Printf("error sending web request: %v\n", err)
 	} else {
-		fmt.Printf("http response: %v\n", res)
+		fmt.Printf("http response: %+v\n", res)
+		body, _ := ioutil.ReadAll(res.Body)
+		fmt.Printf("http response body: %s\n", body)
 	}
 
 	select {

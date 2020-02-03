@@ -21,25 +21,21 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 	req.Payload = bodyBytes
 	// Forward the actual GRPC request
 	res, err := proto.NewExposedServiceClient(conn).Proxy(ctx, req)
-	var errStatusCode int
 	if err != nil {
 		// GRPC call failed, let's log it, process an error status
 		for _, logger := range loggers {
 			logger.LogErrorf(txid, "httpgrpc: received error from target service: %v", err)
 		}
 		errStatus, ok := status.FromError(err)
-		if ok {
+		if !ok {
 			// Can't get proper status code, return bad gateway
-			errStatusCode = http.StatusBadGateway
+			w.WriteHeader(http.StatusBadGateway)
 		} else {
-			errStatusCode = GRPCStatusToHTTPStatusCode(errStatus.Code())
+			w.WriteHeader(GRPCStatusToHTTPStatusCode(errStatus.Code()))
 		}
-	}
-	// Write status code
-	if errStatusCode == 0 {
-		w.WriteHeader(int(res.GetStatusCode()))
 	} else {
-		w.WriteHeader(errStatusCode)
+		// No grpc error, get (presumably) success code from response
+		w.WriteHeader(int(res.GetStatusCode()))
 	}
 	// Write response body
 	w.Write(res.GetPayload())

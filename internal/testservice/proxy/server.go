@@ -2,8 +2,8 @@ package proxy
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/LLKennedy/httpgrpc"
 	"github.com/google/uuid"
@@ -29,17 +29,7 @@ func (h *Handle) Start() error {
 
 // ServeHTTP serves HTTP requests and proxies them to the service
 func (h *Handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("got HTTP request")
-	// w.WriteHeader(200)
-	// return
 	txid := uuid.New().String()
-	procedure := ""
-	switch r.URL.Path {
-	case "something":
-		procedure = "something"
-	default:
-		fmt.Printf("method: %s\n", r.URL.Path)
-
-	}
+	procedure := strings.TrimLeft(r.URL.Path, "/")
 	httpgrpc.ProxyRequest(context.Background(), w, r, procedure, h.conn, txid)
 }
