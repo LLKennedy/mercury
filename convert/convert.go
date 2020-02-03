@@ -18,34 +18,36 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 	req := RequestFromRequest(r)
 	req.Procedure = procedure
 	bodyBytes, err := ioutil.ReadAll(r.Body)
-	for _, logger := range loggers {
-		logger.LogErrorf(txid, "httpgrpc: failed to read body from HTTP request: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
 	req.Payload = bodyBytes
+	// Forward the actual GRPC request
 	res, err := proto.NewExposedServiceClient(conn).Proxy(ctx, req)
+	var errStatusCode int
 	if err != nil {
+		// GRPC call failed, let's log it, process an error status
 		for _, logger := range loggers {
 			logger.LogErrorf(txid, "httpgrpc: received error from target service: %v", err)
 		}
 		errStatus, ok := status.FromError(err)
-		if !ok {
+		if ok {
 			// Can't get proper status code, return bad gateway
-			w.WriteHeader(http.StatusBadGateway)
-			return
+			errStatusCode = http.StatusBadGateway
+		} else {
+			errStatusCode = GRPCStatusToHTTPStatusCode(errStatus.Code())
 		}
-		status.New(codes.FailedPrecondition, "test")
-		w.WriteHeader(GRPCStatusToHTTPStatusCode(errStatus.Code()))
-		return
 	}
+	// Write status code
+	if errStatusCode == 0 {
+		w.WriteHeader(int(res.GetStatusCode()))
+	} else {
+		w.WriteHeader(errStatusCode)
+	}
+	// Write response body
+	w.Write(res.GetPayload())
 	for name, values := range res.GetWriteHeaders() {
 		for _, value := range values.GetValues() {
 			w.Header().Add(name, value)
 		}
 	}
-	w.Write(res.GetPayload())
-	w.WriteHeader(int(res.GetStatusCode()))
 	return
 }
 
@@ -69,29 +71,45 @@ func RequestFromRequest(r *http.Request) *proto.Request {
 }
 
 // GRPCStatusToHTTPStatusCode converts a GRPC status to an HTTP Status Code
-func GRPCStatusToHTTPStatusCode(grpcStatus codes.Code) (httpStatusCode int) {
-	httpStatusCode = http.StatusInternalServerError // Default to internal error in case something goes wrong
+func GRPCStatusToHTTPStatusCode(grpcStatus codes.Code) (c int) {
+	c = http.StatusInternalServerError // Default to internal error in case something goes wrong
 	switch grpcStatus {
 	case codes.Aborted:
+		c = http.StatusBadGateway
 	case codes.AlreadyExists:
+		c = http.StatusNotModified
 	case codes.Canceled:
+		c = http.StatusGatewayTimeout
 	case codes.DataLoss:
+		c = http.StatusBadGateway
 	case codes.DeadlineExceeded:
+		c = http.StatusGatewayTimeout
 	case codes.FailedPrecondition:
+		c = http.StatusPreconditionFailed
 	case codes.Internal:
+		c = http.StatusBadGateway
 	case codes.InvalidArgument:
+		c = http.StatusBadRequest
 	case codes.NotFound:
+		c = http.StatusNotFound
 	case codes.OK:
+		c = http.StatusOK
 	case codes.OutOfRange:
+		c = http.StatusBadRequest
 	case codes.PermissionDenied:
+		c = http.StatusForbidden
 	case codes.ResourceExhausted:
+		c = http.StatusTooManyRequests
 	case codes.Unauthenticated:
+		c = http.StatusUnauthorized
 	case codes.Unavailable:
+		c = http.StatusServiceUnavailable
 	case codes.Unimplemented:
+		c = http.StatusNotImplemented
 	case codes.Unknown:
-		fallthrough
+		c = http.StatusBadGateway
 	default:
-		httpStatusCode = http.StatusInternalServerError
+		c = http.StatusInternalServerError
 	}
 	return
 }

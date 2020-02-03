@@ -4,7 +4,6 @@ import (
 	fmt "fmt"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/LLKennedy/httpgrpc/internal/testservice/proxy"
 	"github.com/LLKennedy/httpgrpc/internal/testservice/service"
@@ -25,7 +24,7 @@ func main() {
 	p := proxy.New(client)
 	go startServer(p, startErr2)
 
-	time.Sleep(5 * time.Second)
+	// time.Sleep(1 * time.Second)
 	fmt.Println("Sending HTTP request")
 
 	webClient := &http.Client{}
