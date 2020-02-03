@@ -36,31 +36,8 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 			return
 		}
 		status.New(codes.FailedPrecondition, "test")
-		statusCode := http.StatusInternalServerError // Default to 500 if we can't parse it here
-		errStatus.Proto().GetCode()
-		switch errStatus.Code() {
-		case codes.Aborted:
-		case codes.AlreadyExists:
-		case codes.Canceled:
-		case codes.DataLoss:
-		case codes.DeadlineExceeded:
-		case codes.FailedPrecondition:
-		case codes.Internal:
-		case codes.InvalidArgument:
-		case codes.NotFound:
-		case codes.OK:
-		case codes.OutOfRange:
-		case codes.PermissionDenied:
-		case codes.ResourceExhausted:
-		case codes.Unauthenticated:
-		case codes.Unavailable:
-		case codes.Unimplemented:
-		case codes.Unknown:
-			fallthrough
-		default:
-		}
-		w.WriteHeader(statusCode)
-
+		w.WriteHeader(GRPCStatusToHTTPStatusCode(errStatus.Code()))
+		return
 	}
 	for name, values := range res.GetWriteHeaders() {
 		for _, value := range values.GetValues() {
@@ -89,6 +66,34 @@ func RequestFromRequest(r *http.Request) *proto.Request {
 		req.Params[name] = newParam
 	}
 	return req
+}
+
+// GRPCStatusToHTTPStatusCode converts a GRPC status to an HTTP Status Code
+func GRPCStatusToHTTPStatusCode(grpcStatus codes.Code) (httpStatusCode int) {
+	httpStatusCode = http.StatusInternalServerError // Default to internal error in case something goes wrong
+	switch grpcStatus {
+	case codes.Aborted:
+	case codes.AlreadyExists:
+	case codes.Canceled:
+	case codes.DataLoss:
+	case codes.DeadlineExceeded:
+	case codes.FailedPrecondition:
+	case codes.Internal:
+	case codes.InvalidArgument:
+	case codes.NotFound:
+	case codes.OK:
+	case codes.OutOfRange:
+	case codes.PermissionDenied:
+	case codes.ResourceExhausted:
+	case codes.Unauthenticated:
+	case codes.Unavailable:
+	case codes.Unimplemented:
+	case codes.Unknown:
+		fallthrough
+	default:
+		httpStatusCode = http.StatusInternalServerError
+	}
+	return
 }
 
 // MethodFromString converts a method string to a proto.Method

@@ -30,6 +30,8 @@ func (h *Handle) Start() error {
 // ServeHTTP serves HTTP requests and proxies them to the service
 func (h *Handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("got HTTP request")
+	// w.WriteHeader(200)
+	// return
 	txid := uuid.New().String()
 	procedure := ""
 	switch r.URL.Path {

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	fmt "fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/LLKennedy/httpgrpc/internal/testservice/proxy"
@@ -25,10 +25,23 @@ func main() {
 	p := proxy.New(client)
 	go startServer(p, startErr2)
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 	fmt.Println("Sending HTTP request")
 
-	http.Post("localhost:4848", "application/json", bytes.NewReader([]byte("{}")))
+	webClient := &http.Client{}
+	req := &http.Request{
+		Method: http.MethodGet,
+		URL: &url.URL{
+			Host:   "localhost:4848",
+			Scheme: "http",
+		},
+	}
+	res, err := webClient.Do(req)
+	if err != nil {
+		fmt.Printf("error sending web request: %v\n", err)
+	} else {
+		fmt.Printf("http response: %v\n", res)
+	}
 
 	select {
 	case err = <-startErr1:

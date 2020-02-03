@@ -1,6 +1,5 @@
 syntax = "proto3";
 package service;
-// import "google/api/annotations.proto";
 
 // Service is a microservice GRPC API
 service Service {
@@ -8,13 +7,8 @@ service Service {
     rpc Fibonacci(FibonacciRequest) returns (FibonacciResponse) {}
     // GetRandom returns a random integer in the desired range. It may be accessed via a Get request to the proxy at, for example, /api/Service/Random
     rpc GetRandom(RandomRequest) returns (RandomResponse) {}
-    // UploadPhoto allows the upload of a photo to some persistence store. It may be accessed via  Post request to the proxy at, for example, /api/Service/UploadPhoto
-    rpc UploadPhoto(UploadPhotoRequest) returns (UploadPhotoResponse) {
-        // option (google.api.http) = {
-        //     post: "/v1/photos/upload"
-        //     body: "*"
-        // };
-    }
+    // PostUploadPhoto allows the upload of a photo to some persistence store. It may be accessed via  Post request to the proxy at, for example, /api/Service/UploadPhoto
+    rpc PostUploadPhoto(UploadPhotoRequest) returns (UploadPhotoResponse) {}
 }
 
 message FibonacciRequest {
