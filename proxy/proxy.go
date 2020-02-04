@@ -15,6 +15,9 @@ import (
 // Proxy proxies connections through the server
 func (s *Server) Proxy(ctx context.Context, req *proto.Request) (res *proto.Response, err error) {
 	wrapErr := func(code codes.Code, err error) error {
+		if err == nil {
+			return nil
+		}
 		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
 	}
 	defer func() {
@@ -32,26 +35,46 @@ func (s *Server) Proxy(ctx context.Context, req *proto.Request) (res *proto.Resp
 	return s.callProc(ctx, req, procType, caller, pattern)
 }
 
-func (s *Server) callProc(ctx context.Context, req *proto.Request, procType reflect.Type, caller reflect.Value, pattern apiMethodPattern) (*proto.Response, error) {
-	// Create new instance of struct argument to pass into real implementation
-	builtRequest := reflect.New(procType.In(2).Elem())
-	builtRequestPtr := builtRequest.Interface()
+func (s *Server) callProc(ctx context.Context, req *proto.Request, procType reflect.Type, caller reflect.Value, pattern apiMethodPattern) (res *proto.Response, err error) {
+	wrapErr := func(code codes.Code, err error) error {
+		if err == nil {
+			return nil
+		}
+		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
+	}
 	// We're going to rely on JSON unmarshalling logic to get data from the request to the new struct
 	// Maybe one day there will be custom marshalling/unmarshalling capability here with tag parsing and method analysis for custom functions, but probably not
 	// JSON tags are pretty much fit for purpose
 	// We just have to make sure we have json to work with first
-	inputJSON, err := parseRequest(req)
+	var inputJSON []byte
+	inputJSON, err = parseRequest(req)
 	if err != nil {
-		return &proto.Response{
-			StatusCode: 500,
-		}, err
+		return &proto.Response{}, wrapErr(codes.Internal, err)
 	}
+	switch pattern {
+	case apiMethodPatternStructStruct:
+		res, err = s.callStructStruct(ctx, inputJSON, procType, caller)
+	default:
+		// This should be truly impossible during normal operation, we've checked for this like 20 times before this point
+		res, err = &proto.Response{}, wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
+	}
+	return
+}
+
+func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *proto.Response, err error) {
+	wrapErr := func(code codes.Code, err error) error {
+		if err == nil {
+			return nil
+		}
+		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
+	}
+	// Create new instance of struct argument to pass into real implementation
+	builtRequest := reflect.New(procType.In(2).Elem())
+	builtRequestPtr := builtRequest.Interface()
 	if inputJSON != nil {
 		err = json.Unmarshal(inputJSON, builtRequestPtr)
 		if err != nil {
-			return &proto.Response{
-				StatusCode: 400,
-			}, fmt.Errorf("failed to marshal request data to procedure argument: %v", err)
+			return &proto.Response{}, wrapErr(codes.InvalidArgument, err)
 		}
 	}
 	// Actually call the inner procedure
@@ -66,7 +89,7 @@ func (s *Server) callProc(ctx context.Context, req *proto.Request, procType refl
 	if returnValues[1].CanInterface() {
 		err, _ = returnValues[1].Interface().(error)
 	}
-	res := &proto.Response{
+	res = &proto.Response{
 		Payload: outJSON,
 	}
 	if err == nil {
