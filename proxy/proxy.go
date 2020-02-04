@@ -136,6 +136,14 @@ func callStructStream(ctx context.Context, inputJSON []byte, procType reflect.Ty
 		}
 	}
 	// Actually call the inner procedure
+	// This is impossible - we need to construct a new type which satisfies the stream interface, but that's not currently possible using go reflection
+	// https://github.com/golang/go/issues/16522 is where discussion on this topic is ongoing, though it started as early as 2012
+	// This problem will make all stream interfaces impossible to manage through pure reflection, though it may be possible to require
+	// users to pass in their own types that can satisfy all necessary stream interfaces. This will be a really awkward solution, since
+	// protobufs don't expose these interfaces by default. If the compiled protobufs are in the same package this is fine, but for separate
+	// protobuf packages to the application service you'll need to manually expose those types or create new ones that have to be manually maintained.
+	// Everything about this sucks.
+
 	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
 	var outJSON []byte
 	if returnValues[0].CanInterface() {
