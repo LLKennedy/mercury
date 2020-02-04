@@ -8,41 +8,30 @@ import (
 
 	"github.com/LLKennedy/httpgrpc/proto"
 	"github.com/peterbourgon/mergemap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Proxy proxies connections through the server
 func (s *Server) Proxy(ctx context.Context, req *proto.Request) (res *proto.Response, err error) {
-	wrapErr := func(err error) error {
-		return fmt.Errorf("httpgrpc: %v", err)
+	wrapErr := func(code codes.Code, err error) error {
+		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
 	}
 	defer func() {
 		if r := recover(); r != nil {
-			err = wrapErr(fmt.Errorf("caught panic %v", r))
+			err = wrapErr(codes.Internal, fmt.Errorf("caught panic %v", r))
 		}
 	}()
-	procType, caller, err := s.findProc(req.GetMethod(), req.GetProcedure())
+	procType, caller, pattern, err := s.findProc(req.GetMethod(), req.GetProcedure())
 	if err != nil {
-		return &proto.Response{
-			StatusCode: 404,
-		}, wrapErr(err)
+		return &proto.Response{}, wrapErr(codes.Unimplemented, err)
 	}
-	if procType.NumIn() == 3 && // Check this matches standard GRPC method
-		!procType.IsVariadic() && // inputs should be context.Context, *struct
-		procType.In(1).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) &&
-		procType.In(2).Kind() == reflect.Ptr &&
-		procType.In(2).Elem().Kind() == reflect.Struct &&
-		procType.NumOut() == 2 && // outputs should be *struct, error
-		procType.Out(0).Kind() == reflect.Ptr &&
-		procType.Out(0).Elem().Kind() == reflect.Struct &&
-		procType.Out(1).Kind() == reflect.Interface &&
-		procType.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
-		// This is a normal grpc rpc definition
+	switch pattern {
+	case apiMethodPatternStructStruct:
 		return s.callProc(ctx, req, procType, caller)
+	default:
+		return &proto.Response{}, wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
 	}
-	// Currently we require that the methods match a standard auto-generated GRPC server method with no plugins that impact function signature.
-	return &proto.Response{
-		StatusCode: 501, //Unimplemented
-	}, wrapErr(fmt.Errorf("nonstandard grpc signature not implemented"))
 }
 
 func (s *Server) callProc(ctx context.Context, req *proto.Request, procType reflect.Type, caller reflect.Value) (*proto.Response, error) {
@@ -133,7 +122,7 @@ func (s *Server) callProc(ctx context.Context, req *proto.Request, procType refl
 	return res, err
 }
 
-func (s *Server) findProc(httpMethod proto.Method, procName string) (procType reflect.Type, caller reflect.Value, err error) {
+func (s *Server) findProc(httpMethod proto.Method, procName string) (procType reflect.Type, caller reflect.Value, pattern apiMethodPattern, err error) {
 	var methodString string
 	methodString, err = methodToString(httpMethod)
 	if err != nil {
@@ -151,6 +140,7 @@ func (s *Server) findProc(httpMethod proto.Method, procName string) (procType re
 		return
 	}
 	procType = apiProc.reflection.Type
+	pattern = apiProc.pattern
 	caller = reflect.ValueOf(s.getInnerServer()).MethodByName(procName)
 	return
 }
