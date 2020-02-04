@@ -144,13 +144,13 @@ func (s *Server) findProc(httpMethod proto.Method, procName string) (procType re
 		err = fmt.Errorf("no %s methods defined in api", methodString)
 		return
 	}
-	var apiProc reflect.Method
+	var apiProc apiMethod
 	apiProc, found = methodMap[procName]
 	if !found {
 		err = fmt.Errorf("no procedure %s defined for %s method in api", procName, httpMethod)
 		return
 	}
-	procType = apiProc.Type
+	procType = apiProc.reflection.Type
 	caller = reflect.ValueOf(s.getInnerServer()).MethodByName(procName)
 	return
 }

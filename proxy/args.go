@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 )
@@ -10,38 +11,44 @@ func validateArgs(expected, found reflect.Type) error {
 	expectedOutLen := expected.NumOut()
 	foundInLen := found.NumIn()
 	foundOutLen := found.NumOut()
-	if expectedInLen != foundInLen || expectedOutLen != foundOutLen {
-		return fmt.Errorf("api and server argument/return counts do not match")
+	expectedIn := []reflect.Type{}
+	for i := 0; i < expectedInLen; i++ {
+		expectedIn = append(expectedIn, expected.In(i))
 	}
-	if expectedInLen == 0 || !isStructPtr(expected.In(0)) || !isStructPtr(found.In(0)) {
-		return fmt.Errorf("no receiver")
+	expectedOut := []reflect.Type{}
+	for i := 0; i < expectedOutLen; i++ {
+		expectedOut = append(expectedOut, expected.Out(i))
 	}
-	for j := 1; j < expectedInLen; j++ {
-		expectedIn := expected.In(j)
-		foundIn := found.In(j)
-		if !typesMatch(expectedIn, foundIn) {
-			return fmt.Errorf("api and server arguments mismatch: %s vs %s", expectedIn.Kind(), foundIn.Kind())
-		}
+	foundIn := []reflect.Type{}
+	for i := 0; i < foundInLen; i++ {
+		foundIn = append(foundIn, found.In(i))
 	}
-	for j := 0; j < expectedOutLen; j++ {
-		expectedOut := expected.Out(j)
-		foundOut := found.Out(j)
-		if !typesMatch(expectedOut, foundOut) {
-			return fmt.Errorf("api and server returns mismatch: %s vs %s", expectedOut.Kind(), foundOut.Kind())
+	foundOut := []reflect.Type{}
+	for i := 0; i < foundOutLen; i++ {
+		foundOut = append(foundOut, found.Out(i))
+	}
+	if expectedInLen < 2 || foundInLen < 2 {
+		return fmt.Errorf("cannot exclude receiver from argument checks if receiver is the only argument: expected >= 2 input argments, found %d and %d", expectedInLen, foundInLen)
+	}
+	// Don't check receivers, those don't have to be the same type
+	err := typesMatch(expectedIn[1:], foundIn[1:])
+	if err != nil {
+		return err
+	}
+	err = typesMatch(expectedOut, foundOut)
+	return err
+}
+
+func typesMatch(expected, found []reflect.Type) error {
+	if len(expected) != len(found) {
+		return fmt.Errorf("argument lengths did not match: expected %d but found %d", len(expected), len(found))
+	}
+	for i := range expected {
+		if expected[i].Kind() != found[i].Kind() {
+			return fmt.Errorf("argments mismatch in position %d: %s vs %s", i, expected[i].Kind(), found[i].Kind())
 		}
 	}
 	return nil
-}
-
-func typesMatch(expected, found reflect.Type) bool {
-	for expected.Kind() == reflect.Ptr {
-		if found.Kind() != reflect.Ptr {
-			return false
-		}
-		expected = expected.Elem()
-		found = found.Elem()
-	}
-	return expected == found
 }
 
 // isStructPtr returns true if the pointer stack exists and resolves to a struct
@@ -53,4 +60,10 @@ func isStructPtr(in reflect.Type) bool {
 		}
 	}
 	return false
+}
+
+func getPattern(in reflect.Type) apiMethodPattern {
+	if !(expected.In(1).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) && isStructPtr(expected.In(2))) {
+		return fmt.Errorf("expected (context, *request), got (%s, %s)", expected.In(1).Kind(), expected.In(2).Kind())
+	}
 }
