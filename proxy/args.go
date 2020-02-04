@@ -116,7 +116,7 @@ func getPattern(args reflect.Type) (pattern apiMethodPattern) {
 		switch {
 		case isContext(args.In(1)):
 			// We've got an explicit context, this can only be StructStruct, now we just need to confirm
-			if args.NumIn() == 3 && isStructPtr(args.In(2)) && args.NumOut() == 2 && isStructPtr(args.Out(2)) && isError(args.Out(1)) {
+			if args.NumIn() == 3 && isStructPtr(args.In(2)) && args.NumOut() == 2 && isStructPtr(args.Out(0)) && isError(args.Out(1)) {
 				pattern = apiMethodPatternStructStruct
 			}
 		case isStructPtr(args.In(1)):
