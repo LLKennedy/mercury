@@ -53,7 +53,7 @@ func (s *Server) callProc(ctx context.Context, req *proto.Request, procType refl
 	}
 	switch pattern {
 	case apiMethodPatternStructStruct:
-		res, err = s.callStructStruct(ctx, inputJSON, procType, caller)
+		res, err = callStructStruct(ctx, inputJSON, procType, caller)
 	default:
 		// This should be truly impossible during normal operation, we've checked for this like 20 times before this point
 		res, err = &proto.Response{}, wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
@@ -61,20 +61,140 @@ func (s *Server) callProc(ctx context.Context, req *proto.Request, procType refl
 	return
 }
 
-func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *proto.Response, err error) {
-	wrapErr := func(code codes.Code, err error) error {
-		if err == nil {
-			return nil
-		}
-		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
+func (s *Server) findProc(httpMethod proto.Method, procName string) (procType reflect.Type, caller reflect.Value, pattern apiMethodPattern, err error) {
+	var methodString string
+	methodString, err = methodToString(httpMethod)
+	if err != nil {
+		return
 	}
+	methodMap, found := s.getAPI()[methodString]
+	if !found {
+		err = fmt.Errorf("no %s methods defined in api", methodString)
+		return
+	}
+	var apiProc apiMethod
+	apiProc, found = methodMap[procName]
+	if !found {
+		err = fmt.Errorf("no procedure %s defined for %s method in api", procName, httpMethod)
+		return
+	}
+	procType = apiProc.reflection.Type
+	pattern = apiProc.pattern
+	caller = reflect.ValueOf(s.getInnerServer()).MethodByName(procName)
+	return
+}
+
+// One struct in, one struct out
+func callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *proto.Response, err error) {
 	// Create new instance of struct argument to pass into real implementation
 	builtRequest := reflect.New(procType.In(2).Elem())
 	builtRequestPtr := builtRequest.Interface()
 	if inputJSON != nil {
 		err = json.Unmarshal(inputJSON, builtRequestPtr)
 		if err != nil {
-			return &proto.Response{}, wrapErr(codes.InvalidArgument, err)
+			return &proto.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
+		}
+	}
+	// Actually call the inner procedure
+	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
+	var outJSON []byte
+	if returnValues[0].CanInterface() {
+		outJSON, _ = json.Marshal(returnValues[0].Interface())
+		if string(outJSON) == "null" {
+			outJSON = nil
+		}
+	}
+	if returnValues[1].CanInterface() {
+		err, _ = returnValues[1].Interface().(error)
+	}
+	res = &proto.Response{
+		Payload: outJSON,
+	}
+	if err == nil {
+		res.StatusCode = 200 // TODO: parse status code specifically from outJSON
+	} else {
+		res.StatusCode = 500
+	}
+	return res, err
+}
+
+// One struct in, stream of structs out
+func callStructStream(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *proto.Response, err error) {
+	// Create new instance of struct argument to pass into real implementation
+	builtRequest := reflect.New(procType.In(2).Elem())
+	builtRequestPtr := builtRequest.Interface()
+	if inputJSON != nil {
+		err = json.Unmarshal(inputJSON, builtRequestPtr)
+		if err != nil {
+			return &proto.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
+		}
+	}
+	// Actually call the inner procedure
+	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
+	var outJSON []byte
+	if returnValues[0].CanInterface() {
+		outJSON, _ = json.Marshal(returnValues[0].Interface())
+		if string(outJSON) == "null" {
+			outJSON = nil
+		}
+	}
+	if returnValues[1].CanInterface() {
+		err, _ = returnValues[1].Interface().(error)
+	}
+	res = &proto.Response{
+		Payload: outJSON,
+	}
+	if err == nil {
+		res.StatusCode = 200 // TODO: parse status code specifically from outJSON
+	} else {
+		res.StatusCode = 500
+	}
+	return res, err
+}
+
+// Stream of structs in, one struct out
+func callStreamStruct(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *proto.Response, err error) {
+	// Create new instance of struct argument to pass into real implementation
+	builtRequest := reflect.New(procType.In(2).Elem())
+	builtRequestPtr := builtRequest.Interface()
+	if inputJSON != nil {
+		err = json.Unmarshal(inputJSON, builtRequestPtr)
+		if err != nil {
+			return &proto.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
+		}
+	}
+	// Actually call the inner procedure
+	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
+	var outJSON []byte
+	if returnValues[0].CanInterface() {
+		outJSON, _ = json.Marshal(returnValues[0].Interface())
+		if string(outJSON) == "null" {
+			outJSON = nil
+		}
+	}
+	if returnValues[1].CanInterface() {
+		err, _ = returnValues[1].Interface().(error)
+	}
+	res = &proto.Response{
+		Payload: outJSON,
+	}
+	if err == nil {
+		res.StatusCode = 200 // TODO: parse status code specifically from outJSON
+	} else {
+		res.StatusCode = 500
+	}
+	return res, err
+}
+
+// Stram of structs in, stream of structs out
+func callStreamStream(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *proto.Response, err error) {
+	// Create new instance of struct argument to pass into real implementation
+	builtRequest := reflect.New(procType.In(2).Elem())
+	builtRequestPtr := builtRequest.Interface()
+	if inputJSON != nil {
+		err = json.Unmarshal(inputJSON, builtRequestPtr)
+		if err != nil {
+			return &proto.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
 		}
 	}
 	// Actually call the inner procedure
@@ -142,29 +262,6 @@ func parseRequest(req *proto.Request) (finalJSON []byte, err error) {
 		// It shouldn't be possible to hit this normally, we do validation before we reach this point
 		err = fmt.Errorf("invalid http method")
 	}
-	return
-}
-
-func (s *Server) findProc(httpMethod proto.Method, procName string) (procType reflect.Type, caller reflect.Value, pattern apiMethodPattern, err error) {
-	var methodString string
-	methodString, err = methodToString(httpMethod)
-	if err != nil {
-		return
-	}
-	methodMap, found := s.getAPI()[methodString]
-	if !found {
-		err = fmt.Errorf("no %s methods defined in api", methodString)
-		return
-	}
-	var apiProc apiMethod
-	apiProc, found = methodMap[procName]
-	if !found {
-		err = fmt.Errorf("no procedure %s defined for %s method in api", procName, httpMethod)
-		return
-	}
-	procType = apiProc.reflection.Type
-	pattern = apiProc.pattern
-	caller = reflect.ValueOf(s.getInnerServer()).MethodByName(procName)
 	return
 }
 
