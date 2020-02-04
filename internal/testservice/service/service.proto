@@ -1,0 +1,50 @@
+syntax = "proto3";
+package service;
+
+// Service is a microservice GRPC API
+service Service {
+    // Fibonacci returns the nth number in the Fibonacci sequence. It does not start with an HTTP method and is therefore not exposed
+    rpc Fibonacci(FibonacciRequest) returns (FibonacciResponse) {}
+    // Random returns a random integer in the desired range. It may be accessed via a Get request to the proxy at, for example, /api/Service/Random
+    rpc Random(RandomRequest) returns (RandomResponse) {}
+    // UploadPhoto allows the upload of a photo to some persistence store. It may be accessed via  Post request to the proxy at, for example, /api/Service/UploadPhoto
+    rpc UploadPhoto(UploadPhotoRequest) returns (UploadPhotoResponse) {}
+}
+
+// ExposedService is the exposed HTTP(S) endpoints of Service
+service ExposedService {
+    rpc GetRandom(RandomRequest) returns (RandomResponse) {}
+    rpc PostUploadPhoto(UploadPhotoRequest) returns (UploadPhotoResponse) {}
+}
+
+message FibonacciRequest {
+    // The 1-indexed point in the Fibonacci sequence
+    uint64 n = 1;
+}
+
+message FibonacciResponse {
+    // The number found in the nth place of the sequence
+    uint64 number = 1;
+}
+
+message RandomRequest {
+    // The lowest inclusive integer for the resulting random number
+    int64 lower_bound = 1;
+    // The highest inclusive integer for the resulting random number
+    int64 upper_bound = 2;
+}
+
+message RandomResponse {
+    // The generated number
+    int64 number = 1;
+}
+
+message UploadPhotoRequest {
+    // The raw bytes of the photo
+    bytes data = 1;
+}
+
+message UploadPhotoResponse {
+    // The uuid generated to identify and retreive this photo
+    string uuid = 1; 
+}

@@ -1,0 +1,50 @@
+syntax = "proto3";
+package proto;
+
+// ExposedService is a microservice exposed to the outside world via an HTTPS reverse-proxy
+service ExposedService {
+    // Proxies a message to the internal GRPC API
+    rpc Proxy(Request) returns (Response) {}
+}
+
+// The request data from the HTTP request
+message Request {
+    // HTTP method from requestor
+    Method method = 1;
+    // Desired procedure name
+    string procedure = 2;
+    // JSON payload of the request, if present
+    bytes payload = 3;
+    // Query params of the request, if present
+    map<string, MultiVal> params = 4;
+    // Headers won't be automatically translated into the GRPC requests, but they should be delivered in case manual conversion is needed
+    map<string, MultiVal> headers = 5;
+}
+
+// The response to send to the requestor
+message Response {
+    // Manually set status code rather than rely on error-handling at the proxy
+    uint32 status_code = 1;
+    // JSON data to return to the requestor
+    bytes payload = 2;
+    // Headers won't be automatically returned from GRPC requests, but they should be accepted in case manual conversion is needed
+    map<string, MultiVal> write_headers = 6;
+}
+
+message MultiVal {
+    repeated string values = 1;
+}
+
+// All valid HTTP method names
+enum Method {
+    UNKNOWN = 0;
+    GET = 1;
+    HEAD = 2;
+    POST = 3;
+    PUT = 4;
+    DELETE = 5;
+    CONNECT = 6;
+    OPTIONS = 7;
+    TRACE = 8;
+    PATCH = 9;
+}
