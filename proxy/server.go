@@ -26,6 +26,7 @@ func (s *Server) getGrpcServer() *grpc.Server {
 func (s *Server) setGrpcServer(in *grpc.Server) {
 	if s == nil {
 		defaultServer.grpcServer = in
+		return
 	}
 	s.grpcServer = in
 }
@@ -40,6 +41,7 @@ func (s *Server) getAPI() map[string]map[string]reflect.Method {
 func (s *Server) setAPI(in map[string]map[string]reflect.Method) {
 	if s == nil {
 		defaultServer.api = in
+		return
 	}
 	s.api = in
 }
@@ -54,6 +56,7 @@ func (s *Server) getInnerServer() interface{} {
 func (s *Server) setInnerServer(in interface{}) {
 	if s == nil {
 		defaultServer.innerServer = in
+		return
 	}
 	s.innerServer = in
 }
