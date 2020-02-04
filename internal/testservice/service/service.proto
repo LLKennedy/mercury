@@ -1,8 +1,8 @@
 syntax = "proto3";
 package service;
 
-// Service is a microservice GRPC API
-service Service {
+// App is a microservice GRPC API
+service App {
     // Fibonacci returns the nth number in the Fibonacci sequence. It does not start with an HTTP method and is therefore not exposed
     rpc Fibonacci(FibonacciRequest) returns (FibonacciResponse) {}
     // Random returns a random integer in the desired range. It may be accessed via a Get request to the proxy at, for example, /api/Service/Random
@@ -11,8 +11,8 @@ service Service {
     rpc UploadPhoto(UploadPhotoRequest) returns (UploadPhotoResponse) {}
 }
 
-// ExposedService is the exposed HTTP(S) endpoints of Service
-service ExposedService {
+// ExposedApp is the exposed HTTP(S) endpoints of Service
+service ExposedApp {
     rpc GetRandom(RandomRequest) returns (RandomResponse) {}
     rpc PostUploadPhoto(UploadPhotoRequest) returns (UploadPhotoResponse) {}
 }
