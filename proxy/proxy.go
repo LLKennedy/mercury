@@ -26,15 +26,13 @@ func (s *Server) Proxy(ctx context.Context, req *proto.Request) (res *proto.Resp
 	if err != nil {
 		return &proto.Response{}, wrapErr(codes.Unimplemented, err)
 	}
-	switch pattern {
-	case apiMethodPatternStructStruct:
-		return s.callProc(ctx, req, procType, caller)
-	default:
+	if pattern == apiMethodPatternUnknown {
 		return &proto.Response{}, wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
 	}
+	return s.callProc(ctx, req, procType, caller, pattern)
 }
 
-func (s *Server) callProc(ctx context.Context, req *proto.Request, procType reflect.Type, caller reflect.Value) (*proto.Response, error) {
+func (s *Server) callProc(ctx context.Context, req *proto.Request, procType reflect.Type, caller reflect.Value, pattern apiMethodPattern) (*proto.Response, error) {
 	// Create new instance of struct argument to pass into real implementation
 	builtRequest := reflect.New(procType.In(2).Elem())
 	builtRequestPtr := builtRequest.Interface()
@@ -42,7 +40,44 @@ func (s *Server) callProc(ctx context.Context, req *proto.Request, procType refl
 	// Maybe one day there will be custom marshalling/unmarshalling capability here with tag parsing and method analysis for custom functions, but probably not
 	// JSON tags are pretty much fit for purpose
 	// We just have to make sure we have json to work with first
+	inputJSON, err := parseRequest(req)
+	if err != nil {
+		return &proto.Response{
+			StatusCode: 500,
+		}, err
+	}
+	if inputJSON != nil {
+		err = json.Unmarshal(inputJSON, builtRequestPtr)
+		if err != nil {
+			return &proto.Response{
+				StatusCode: 400,
+			}, fmt.Errorf("failed to marshal request data to procedure argument: %v", err)
+		}
+	}
+	// Actually call the inner procedure
+	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
+	var outJSON []byte
+	if returnValues[0].CanInterface() {
+		outJSON, _ = json.Marshal(returnValues[0].Interface())
+		if string(outJSON) == "null" {
+			outJSON = nil
+		}
+	}
+	if returnValues[1].CanInterface() {
+		err, _ = returnValues[1].Interface().(error)
+	}
+	res := &proto.Response{
+		Payload: outJSON,
+	}
+	if err == nil {
+		res.StatusCode = 200 // TODO: parse status code specifically from outJSON
+	} else {
+		res.StatusCode = 500
+	}
+	return res, err
+}
 
+func parseRequest(req *proto.Request) (finalJSON []byte, err error) {
 	// First we convert query parameters to a map
 	queryMap := map[string]interface{}{}
 	for key, value := range req.GetParams() {
@@ -52,8 +87,6 @@ func (s *Server) callProc(ctx context.Context, req *proto.Request, procType refl
 		}
 		queryMap[key] = passedValue
 	}
-	var finalJSON []byte
-	var err error
 	switch req.GetMethod() {
 	case proto.Method_CONNECT, proto.Method_GET, proto.Method_HEAD, proto.Method_OPTIONS, proto.Method_TRACE:
 		// No request body, only query params are possible
@@ -86,40 +119,7 @@ func (s *Server) callProc(ctx context.Context, req *proto.Request, procType refl
 		// It shouldn't be possible to hit this normally, we do validation before we reach this point
 		err = fmt.Errorf("invalid http method")
 	}
-	if err != nil {
-		return &proto.Response{
-			StatusCode: 500,
-		}, err
-	}
-	if finalJSON != nil {
-		err = json.Unmarshal(finalJSON, builtRequestPtr)
-		if err != nil {
-			return &proto.Response{
-				StatusCode: 400,
-			}, fmt.Errorf("failed to marshal request data to procedure argument: %v", err)
-		}
-	}
-	// Actually call the inner procedure
-	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
-	var outJSON []byte
-	if returnValues[0].CanInterface() {
-		outJSON, _ = json.Marshal(returnValues[0].Interface())
-		if string(outJSON) == "null" {
-			outJSON = nil
-		}
-	}
-	if returnValues[1].CanInterface() {
-		err, _ = returnValues[1].Interface().(error)
-	}
-	res := &proto.Response{
-		Payload: outJSON,
-	}
-	if err == nil {
-		res.StatusCode = 200 // TODO: parse status code specifically from outJSON
-	} else {
-		res.StatusCode = 500
-	}
-	return res, err
+	return
 }
 
 func (s *Server) findProc(httpMethod proto.Method, procName string) (procType reflect.Type, caller reflect.Value, pattern apiMethodPattern, err error) {
