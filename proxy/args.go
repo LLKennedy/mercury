@@ -81,7 +81,7 @@ func isOutStream(in reflect.Type) bool {
 		return false
 	}
 	send := sendMethod.Type
-	return in.Implements(reflect.TypeOf((*grpc.ServerStream)(nil)).Elem()) && send.NumIn() == 2 && send.NumOut() == 1 && isStructPtr(send.In(1)) && isError(send.Out(0))
+	return in.Implements(reflect.TypeOf((*grpc.ServerStream)(nil)).Elem()) && send.NumIn() == 1 && send.NumOut() == 1 && isStructPtr(send.In(0)) && isError(send.Out(0))
 }
 
 func isInStream(in reflect.Type) bool {
@@ -90,7 +90,7 @@ func isInStream(in reflect.Type) bool {
 		return false
 	}
 	recv := recvMethod.Type
-	return in.Implements(reflect.TypeOf((*grpc.ServerStream)(nil)).Elem()) && recv.NumIn() == 1 && recv.NumOut() == 2 && isStructPtr(recv.Out(0)) && isError(recv.Out(1))
+	return in.Implements(reflect.TypeOf((*grpc.ServerStream)(nil)).Elem()) && recv.NumIn() == 0 && recv.NumOut() == 2 && isStructPtr(recv.Out(0)) && isError(recv.Out(1))
 }
 
 // SendAndClose only applies to StreamStruct patterns
@@ -100,7 +100,7 @@ func hasSendAndClose(in reflect.Type) bool {
 		return false
 	}
 	send := sendCloseMethod.Type
-	return send.NumIn() == 2 && send.NumOut() == 1 && isStructPtr(send.In(1)) && isError(send.Out(0))
+	return send.NumIn() == 1 && send.NumOut() == 1 && isStructPtr(send.In(0)) && isError(send.Out(0))
 }
 
 func getPattern(args reflect.Type) (pattern apiMethodPattern) {
