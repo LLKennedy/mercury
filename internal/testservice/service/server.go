@@ -23,11 +23,11 @@ func New() (*Handle, error) {
 	s := new(Handle)
 	s.server = grpc.NewServer()
 	var err error
-	s.proxy, err = httpgrpc.NewServer(&UnimplementedExposedServiceServer{}, s, s.server)
+	s.proxy, err = httpgrpc.NewServer(&UnimplementedExposedAppServer{}, s, s.server)
 	if err != nil {
 		return nil, err
 	}
-	RegisterServiceServer(s.server, s)
+	RegisterAppServer(s.server, s)
 	return s, nil
 }
 
