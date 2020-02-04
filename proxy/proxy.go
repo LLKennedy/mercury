@@ -54,6 +54,12 @@ func (s *Server) callProc(ctx context.Context, req *proto.Request, procType refl
 	switch pattern {
 	case apiMethodPatternStructStruct:
 		res, err = callStructStruct(ctx, inputJSON, procType, caller)
+	case apiMethodPatternStructStream:
+		res, err = callStructStream(ctx, inputJSON, procType, caller)
+	case apiMethodPatternStreamStruct:
+		res, err = callStreamStruct(ctx, inputJSON, procType, caller)
+	case apiMethodPatternStreamStream:
+		res, err = callStreamStream(ctx, inputJSON, procType, caller)
 	default:
 		// This should be truly impossible during normal operation, we've checked for this like 20 times before this point
 		res, err = &proto.Response{}, wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
