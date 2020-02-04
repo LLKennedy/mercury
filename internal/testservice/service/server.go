@@ -5,10 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"net"
 
 	"github.com/LLKennedy/httpgrpc"
 	"google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Handle is an example GRPC server for a microservice
@@ -96,4 +99,65 @@ func (h *Handle) UploadPhoto(ctx context.Context, in *UploadPhotoRequest) (*Uplo
 	return &UploadPhotoResponse{
 		Uuid: hash,
 	}, nil
+}
+
+// Feed handles streamed inputs
+func (h *Handle) Feed(stream App_FeedServer) error {
+	data, err := stream.Recv()
+	for err == nil && data != nil {
+		fmt.Println("Received FeedData...")
+		fmt.Printf("%+v\n", data)
+		data, err = stream.Recv()
+	}
+	if err != nil && err.Error() == "EOF" {
+		err = nil
+	}
+	if err == nil {
+		err = stream.SendAndClose(&FeedResponse{})
+	}
+	if err != nil {
+		return status.Error(codes.Aborted, fmt.Sprintf("failed to receive all data and send response: %v", err))
+	}
+	return nil
+}
+
+// Broadcast asks the App to broadcast data in a stream
+func (h *Handle) Broadcast(in *BroadcastRequest, stream App_BroadcastServer) error {
+	fmt.Printf("Received BroadcastRequest: %+v\n", in)
+	var err error
+	numToSend := rand.Intn(5)
+	fmt.Printf("Sending %d responses\n", numToSend)
+	for i := 0; i < numToSend && err == nil; i++ {
+		data := &BroadcastData{
+			RawData: []byte(fmt.Sprintf("%d", i)),
+		}
+		err = stream.Send(data)
+	}
+	if err != nil {
+		return status.Error(codes.Aborted, fmt.Sprintf("failed to send all data: %v", err))
+	}
+	return nil
+}
+
+// ConvertToString streams conversions of the input stream to strings
+func (h *Handle) ConvertToString(stream App_ConvertToStringServer) error {
+	data, err := stream.Recv()
+	for err == nil && data != nil {
+		fmt.Println("Received ConvertInput...")
+		fmt.Printf("%+v\n", data)
+		sendErr := stream.Send(&ConvertOutput{
+			ConvertedData: fmt.Sprintf("%x", data.GetRawData()),
+		})
+		if sendErr != nil {
+			return status.Error(codes.Aborted, fmt.Sprintf("failed to send all data: %v", err))
+		}
+		data, err = stream.Recv()
+	}
+	if err != nil && err.Error() == "EOF" {
+		err = nil
+	}
+	if err != nil {
+		return status.Error(codes.Aborted, fmt.Sprintf("failed to send/receive all data: %v", err))
+	}
+	return nil
 }
