@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -9,8 +10,10 @@ import (
 
 type exposedThingA struct{}
 
-func (a *exposedThingA) PostDoThing(x, y int) bool {
-	return true
+func (a *exposedThingA) PostDoThing(context.Context, *thingAIn) (*thingAOut, error) {
+	return &thingAOut{
+		res: false,
+	}, nil
 }
 
 type unrelatedThing struct{}
@@ -30,11 +33,12 @@ func Test_validateMethod(t *testing.T) {
 		expectedPattern apiMethodPattern
 	}{
 		{
-			name:         "matching",
-			apiMethod:    reflect.TypeOf(&exposedThingA{}).Method(0),
-			serverType:   reflect.TypeOf(&thingA{}),
-			expectedType: "POST",
-			expectedName: "DoThing",
+			name:            "matching",
+			apiMethod:       reflect.TypeOf(&exposedThingA{}).Method(0),
+			serverType:      reflect.TypeOf(&thingA{}),
+			expectedType:    "POST",
+			expectedName:    "DoThing",
+			expectedPattern: apiMethodPatternStructStruct,
 		},
 		{
 			name:        "no method at the start",
@@ -52,7 +56,7 @@ func Test_validateMethod(t *testing.T) {
 			name:        "invalid matching server method",
 			apiMethod:   reflect.TypeOf(&exposedThingA{}).Method(0),
 			serverType:  reflect.TypeOf(&thingB{}),
-			expectedErr: "validation of PostDoThing to DoThing mapping: api and server arguments mismatch: int vs string",
+			expectedErr: "validation of PostDoThing to DoThing mapping: argments mismatch in position 0: interface vs int",
 		},
 	}
 	for _, tt := range tests {

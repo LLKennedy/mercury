@@ -1,16 +1,27 @@
 package proxy
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+type thingAIn struct {
+	x, y int
+}
+
+type thingAOut struct {
+	res bool
+}
+
 type thingA struct{}
 
-func (a *thingA) DoThing(x, y int) bool {
-	return false
+func (a *thingA) DoThing(context.Context, *thingAIn) (*thingAOut, error) {
+	return &thingAOut{
+		res: false,
+	}, nil
 }
 
 type thingB struct{}
@@ -37,6 +48,12 @@ func (e *thingE) DoThing(x, y *int) bool {
 	return false
 }
 
+type thingF struct{}
+
+func (c *thingF) DoThing(x int, y int) bool {
+	return true
+}
+
 func DoThing(x, y int) bool {
 	return true
 }
@@ -58,20 +75,20 @@ func TestArgsMatch(t *testing.T) {
 		},
 		{
 			name: "matching, different definition",
-			a:    &thingA{},
+			a:    &thingF{},
 			b:    &thingC{},
 		},
 		{
 			name:        "wrong argument",
-			a:           &thingA{},
+			a:           &thingC{},
 			b:           &thingB{},
-			expectedErr: "api and server arguments mismatch: int vs string",
+			expectedErr: "argments mismatch in position 1: int vs string",
 		},
 		{
 			name:        "no receiver on one",
-			a:           &thingA{},
+			a:           &thingC{},
 			b:           DoThing,
-			expectedErr: "api and server argument/return counts do not match",
+			expectedErr: "no receiver",
 		},
 		{
 			name:        "no receiver on both",
@@ -81,15 +98,15 @@ func TestArgsMatch(t *testing.T) {
 		},
 		{
 			name:        "total mismatch of same in-length",
-			a:           &thingA{},
+			a:           &thingC{},
 			b:           Unrelated,
 			expectedErr: "no receiver",
 		},
 		{
 			name:        "invalid pointer arguments",
 			a:           &thingE{},
-			b:           &thingA{},
-			expectedErr: "api and server arguments mismatch: ptr vs int",
+			b:           &thingC{},
+			expectedErr: "argments mismatch in position 0: ptr vs int",
 		},
 		{
 			name: "valid pointer arguments",
@@ -98,9 +115,9 @@ func TestArgsMatch(t *testing.T) {
 		},
 		{
 			name:        "wrong return",
-			a:           &thingA{},
+			a:           &thingC{},
 			b:           &thingD{},
-			expectedErr: "api and server returns mismatch: bool vs int",
+			expectedErr: "argments mismatch in position 0: bool vs int",
 		},
 	}
 	for _, tt := range tests {

@@ -35,6 +35,9 @@ func validateArgs(expected, found reflect.Type) error {
 	if expectedInLen < 2 || foundInLen < 2 {
 		return fmt.Errorf("cannot exclude receiver from argument checks if receiver is the only argument: expected >= 2 input argments, found %d and %d", expectedInLen, foundInLen)
 	}
+	if !isStructPtr(expectedIn[0]) || !isStructPtr(foundIn[0]) {
+		return fmt.Errorf("no receiver")
+	}
 	// Don't check receivers, those don't have to be the same type
 	err := typesMatch(expectedIn[1:], foundIn[1:])
 	if err != nil {
