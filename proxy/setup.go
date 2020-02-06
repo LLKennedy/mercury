@@ -25,6 +25,13 @@ func NewServer(api, server interface{}, listener *grpc.Server) (*Server, error) 
 	return s, err
 }
 
+// SetExceptionHandler sets a function which is called before auto-proxying a request.
+// This function may return handled = false to indicate it did not handle the request and it should be auto-proxied as usual.
+// If handled is returned true, the proxy will assume the request has been handled already and will immediately return res and error
+func (s *Server) SetExceptionHandler(handler ExceptionHandler) {
+
+}
+
 // register registers the server
 func (s *Server) register(listener *grpc.Server) {
 	s.setGrpcServer(listener)
