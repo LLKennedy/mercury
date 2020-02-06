@@ -23,7 +23,7 @@ service App {
     rpc AddThing (Thing) returns (ThingID) {}
 }
 
-serve ExposedApp {
+service ExposedApp {
     rpc GetListThings (ListThingsRequest) returns (ListThingsResponse) {}
 }
 ```
