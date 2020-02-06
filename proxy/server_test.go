@@ -18,11 +18,9 @@ func TestGettersAndSetters(t *testing.T) {
 		})
 		t.Run("set defaults", func(t *testing.T) {
 			s.setGrpcServer(&grpc.Server{})
-			exampleMap := map[string]map[string]reflect.Method{
+			exampleMap := map[string]map[string]apiMethod{
 				"test": {
-					"other": {
-						Name: "method",
-					},
+					"other": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.Method{Name: "method"}},
 				},
 			}
 			s.setAPI(exampleMap)
@@ -41,11 +39,9 @@ func TestGettersAndSetters(t *testing.T) {
 		})
 		t.Run("set values", func(t *testing.T) {
 			s.setGrpcServer(&grpc.Server{})
-			exampleMap := map[string]map[string]reflect.Method{
+			exampleMap := map[string]map[string]apiMethod{
 				"test": {
-					"other": {
-						Name: "method",
-					},
+					"other": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.Method{Name: "method"}},
 				},
 			}
 			s.setAPI(exampleMap)

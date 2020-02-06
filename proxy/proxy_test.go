@@ -62,9 +62,9 @@ func TestServer_Proxy(t *testing.T) {
 		{
 			name: "standard grpc call unimplemented",
 			s: &Server{
-				api: map[string]map[string]reflect.Method{
+				api: map[string]map[string]apiMethod{
 					"POST": {
-						"Proxy": reflect.TypeOf(&proto.UnimplementedExposedServiceServer{}).Method(0),
+						"Proxy": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.TypeOf(&proto.UnimplementedExposedServiceServer{}).Method(0)},
 					},
 				},
 				innerServer: &proto.UnimplementedExposedServiceServer{},
@@ -82,9 +82,9 @@ func TestServer_Proxy(t *testing.T) {
 		{
 			name: "example grpc call success",
 			s: &Server{
-				api: map[string]map[string]reflect.Method{
+				api: map[string]map[string]apiMethod{
 					"POST": {
-						"DoThing": reflect.TypeOf(&exampleGRPCServer{}).Method(0),
+						"DoThing": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.TypeOf(&exampleGRPCServer{}).Method(0)},
 					},
 				},
 				innerServer: &exampleGRPCServer{},
@@ -128,7 +128,7 @@ func TestServer_Proxy(t *testing.T) {
 		{
 			name: "unregistered method",
 			s: &Server{
-				api: map[string]map[string]reflect.Method{
+				api: map[string]map[string]apiMethod{
 					"POST": {},
 				},
 			},
@@ -145,9 +145,9 @@ func TestServer_Proxy(t *testing.T) {
 		{
 			name: "non-standard grpc call",
 			s: &Server{
-				api: map[string]map[string]reflect.Method{
+				api: map[string]map[string]apiMethod{
 					"POST": {
-						"DoThing": reflect.TypeOf(&thingA{}).Method(0),
+						"DoThing": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.TypeOf(&thingA{}).Method(0)},
 					},
 				},
 				innerServer: &thingA{},

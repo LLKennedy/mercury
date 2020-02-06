@@ -28,7 +28,7 @@ func TestServer_setAPIConfig(t *testing.T) {
 			api:    &emptyThing{},
 			server: &emptyThing{},
 			result: &Server{
-				api:         map[string]map[string]reflect.Method{},
+				api:         map[string]map[string]apiMethod{},
 				innerServer: &emptyThing{},
 			},
 			expectedErr: "",
@@ -39,9 +39,9 @@ func TestServer_setAPIConfig(t *testing.T) {
 			api:    specificExposedThing,
 			server: &thingA{},
 			result: &Server{
-				api: map[string]map[string]reflect.Method{
+				api: map[string]map[string]apiMethod{
 					"POST": {
-						"DoThing": reflect.TypeOf(specificExposedThing).Method(0),
+						"DoThing": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.TypeOf(specificExposedThing).Method(0)},
 					},
 				},
 				innerServer: &thingA{},
@@ -70,10 +70,10 @@ func TestServer_setAPIConfig(t *testing.T) {
 							if _, exists := tt.result.api[key]; assert.True(t, exists) {
 								if _, procExists := tt.result.api[key][procName]; assert.True(t, procExists) {
 									expectedMethod := tt.result.api[key][procName]
-									assert.Equal(t, method.Name, expectedMethod.Name)
-									assert.Equal(t, method.PkgPath, expectedMethod.PkgPath)
-									assert.Equal(t, method.Type, expectedMethod.Type)
-									assert.Equal(t, method.Index, expectedMethod.Index)
+									assert.Equal(t, method.reflection.Name, expectedMethod.reflection.Name)
+									assert.Equal(t, method.reflection.PkgPath, expectedMethod.reflection.PkgPath)
+									assert.Equal(t, method.reflection.Type, expectedMethod.reflection.Type)
+									assert.Equal(t, method.reflection.Index, expectedMethod.reflection.Index)
 								}
 							}
 						}

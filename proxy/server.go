@@ -27,8 +27,8 @@ type ExceptionHandler func(ctx context.Context, req *proto.Request) (handled boo
 // Server is an HTTP to GRPC proxy server
 type Server struct {
 	grpcServer       *grpc.Server
-	api         map[string]map[string]apiMethod // the api of innerServer
-	innerServer      interface{}                          // the actual protobuf endpoints we want to use
+	api              map[string]map[string]apiMethod // the api of innerServer
+	innerServer      interface{}                     // the actual protobuf endpoints we want to use
 	exceptionHandler ExceptionHandler
 }
 
