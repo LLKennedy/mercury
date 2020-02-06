@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -9,6 +10,8 @@ import (
 	"github.com/LLKennedy/httpgrpc/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type exampleGRPCServer struct{}
@@ -104,14 +107,12 @@ func TestServer_Proxy(t *testing.T) {
 			},
 		},
 		{
-			name: "blank request",
-			s:    &Server{},
-			ctx:  new(mockContext),
-			req:  &proto.Request{},
-			want: &proto.Response{
-				StatusCode: 404,
-			},
-			expectedErr: "httpgrpc: unknown HTTP method",
+			name:        "blank request",
+			s:           &Server{},
+			ctx:         new(mockContext),
+			req:         &proto.Request{},
+			want:        &proto.Response{},
+			expectedErr: fmt.Sprintf("%v", status.Error(codes.Unimplemented, "httpgrpc: unknown HTTP method")),
 		},
 		{
 			name: "unregistered method",
@@ -120,10 +121,8 @@ func TestServer_Proxy(t *testing.T) {
 			req: &proto.Request{
 				Method: proto.Method_POST,
 			},
-			want: &proto.Response{
-				StatusCode: 404,
-			},
-			expectedErr: "httpgrpc: no POST methods defined in api",
+			want:        &proto.Response{},
+			expectedErr: fmt.Sprintf("%v", status.Error(codes.Unimplemented, "httpgrpc: no POST methods defined in api")),
 		},
 		{
 			name: "unregistered method",
@@ -137,31 +136,29 @@ func TestServer_Proxy(t *testing.T) {
 				Method:    proto.Method_POST,
 				Procedure: "DoThing",
 			},
-			want: &proto.Response{
-				StatusCode: 404,
-			},
-			expectedErr: "httpgrpc: no procedure DoThing defined for POST method in api",
+			want:        &proto.Response{},
+			expectedErr: fmt.Sprintf("%v", status.Error(codes.Unimplemented, "httpgrpc: no procedure DoThing defined for POST method in api")),
 		},
-		{
-			name: "non-standard grpc call",
-			s: &Server{
-				api: map[string]map[string]apiMethod{
-					"POST": {
-						"DoThing": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.TypeOf(&thingA{}).Method(0)},
-					},
-				},
-				innerServer: &thingA{},
-			},
-			ctx: new(mockContext),
-			req: &proto.Request{
-				Method:    proto.Method_POST,
-				Procedure: "DoThing",
-			},
-			want: &proto.Response{
-				StatusCode: 501,
-			},
-			expectedErr: "httpgrpc: nonstandard grpc signature not implemented",
-		},
+		// {
+		// 	name: "non-standard grpc call",
+		// 	s: &Server{
+		// 		api: map[string]map[string]apiMethod{
+		// 			"POST": {
+		// 				"DoThing": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.TypeOf(&thingA{}).Method(0)},
+		// 			},
+		// 		},
+		// 		innerServer: &thingA{},
+		// 	},
+		// 	ctx: new(mockContext),
+		// 	req: &proto.Request{
+		// 		Method:    proto.Method_POST,
+		// 		Procedure: "DoThing",
+		// 	},
+		// 	want: &proto.Response{
+		// 		StatusCode: 501,
+		// 	},
+		// 	expectedErr: "httpgrpc: nonstandard grpc signature not implemented",
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
