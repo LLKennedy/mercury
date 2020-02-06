@@ -132,112 +132,41 @@ func callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Ty
 
 // One struct in, stream of structs out
 func callStructStream(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *proto.Response, err error) {
-	// Create new instance of struct argument to pass into real implementation
-	builtRequest := reflect.New(procType.In(2).Elem())
-	builtRequestPtr := builtRequest.Interface()
-	if inputJSON != nil {
-		err = json.Unmarshal(inputJSON, builtRequestPtr)
-		if err != nil {
-			return &proto.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
-		}
-	}
 	// Actually call the inner procedure
-	// This is impossible - we need to construct a new type which satisfies the stream interface, but that's not currently possible using go reflection
+	// This is impossible - we need to construct a new type which satisfies the stream interface, but that's not currently possible using go reflection.
 	// https://github.com/golang/go/issues/16522 is where discussion on this topic is ongoing, though it started as early as 2012
 	// This problem will make all stream interfaces impossible to manage through pure reflection, though it may be possible to require
 	// users to pass in their own types that can satisfy all necessary stream interfaces. This will be a really awkward solution, since
 	// protobufs don't expose these interfaces by default. If the compiled protobufs are in the same package this is fine, but for separate
 	// protobuf packages to the application service you'll need to manually expose those types or create new ones that have to be manually maintained.
 	// Everything about this sucks.
-
-	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
-	var outJSON []byte
-	if returnValues[0].CanInterface() {
-		outJSON, _ = json.Marshal(returnValues[0].Interface())
-		if string(outJSON) == "null" {
-			outJSON = nil
-		}
-	}
-	if returnValues[1].CanInterface() {
-		err, _ = returnValues[1].Interface().(error)
-	}
-	res = &proto.Response{
-		Payload: outJSON,
-	}
-	if err == nil {
-		res.StatusCode = 200 // TODO: parse status code specifically from outJSON
-	} else {
-		res.StatusCode = 500
-	}
-	return res, err
+	return nil, status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Struct In, Stream Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
 }
 
 // Stream of structs in, one struct out
 func callStreamStruct(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *proto.Response, err error) {
-	// Create new instance of struct argument to pass into real implementation
-	builtRequest := reflect.New(procType.In(2).Elem())
-	builtRequestPtr := builtRequest.Interface()
-	if inputJSON != nil {
-		err = json.Unmarshal(inputJSON, builtRequestPtr)
-		if err != nil {
-			return &proto.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
-		}
-	}
 	// Actually call the inner procedure
-	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
-	var outJSON []byte
-	if returnValues[0].CanInterface() {
-		outJSON, _ = json.Marshal(returnValues[0].Interface())
-		if string(outJSON) == "null" {
-			outJSON = nil
-		}
-	}
-	if returnValues[1].CanInterface() {
-		err, _ = returnValues[1].Interface().(error)
-	}
-	res = &proto.Response{
-		Payload: outJSON,
-	}
-	if err == nil {
-		res.StatusCode = 200 // TODO: parse status code specifically from outJSON
-	} else {
-		res.StatusCode = 500
-	}
-	return res, err
+	// This is impossible - we need to construct a new type which satisfies the stream interface, but that's not currently possible using go reflection.
+	// https://github.com/golang/go/issues/16522 is where discussion on this topic is ongoing, though it started as early as 2012
+	// This problem will make all stream interfaces impossible to manage through pure reflection, though it may be possible to require
+	// users to pass in their own types that can satisfy all necessary stream interfaces. This will be a really awkward solution, since
+	// protobufs don't expose these interfaces by default. If the compiled protobufs are in the same package this is fine, but for separate
+	// protobuf packages to the application service you'll need to manually expose those types or create new ones that have to be manually maintained.
+	// Everything about this sucks.
+	return nil, status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Stream In, Struct Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
 }
 
 // Stram of structs in, stream of structs out
 func callStreamStream(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *proto.Response, err error) {
-	// Create new instance of struct argument to pass into real implementation
-	builtRequest := reflect.New(procType.In(2).Elem())
-	builtRequestPtr := builtRequest.Interface()
-	if inputJSON != nil {
-		err = json.Unmarshal(inputJSON, builtRequestPtr)
-		if err != nil {
-			return &proto.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
-		}
-	}
 	// Actually call the inner procedure
-	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
-	var outJSON []byte
-	if returnValues[0].CanInterface() {
-		outJSON, _ = json.Marshal(returnValues[0].Interface())
-		if string(outJSON) == "null" {
-			outJSON = nil
-		}
-	}
-	if returnValues[1].CanInterface() {
-		err, _ = returnValues[1].Interface().(error)
-	}
-	res = &proto.Response{
-		Payload: outJSON,
-	}
-	if err == nil {
-		res.StatusCode = 200 // TODO: parse status code specifically from outJSON
-	} else {
-		res.StatusCode = 500
-	}
-	return res, err
+	// This is impossible - we need to construct a new type which satisfies the stream interface, but that's not currently possible using go reflection.
+	// https://github.com/golang/go/issues/16522 is where discussion on this topic is ongoing, though it started as early as 2012
+	// This problem will make all stream interfaces impossible to manage through pure reflection, though it may be possible to require
+	// users to pass in their own types that can satisfy all necessary stream interfaces. This will be a really awkward solution, since
+	// protobufs don't expose these interfaces by default. If the compiled protobufs are in the same package this is fine, but for separate
+	// protobuf packages to the application service you'll need to manually expose those types or create new ones that have to be manually maintained.
+	// Everything about this sucks.
+	return nil, status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Stream In, Stream Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
 }
 
 func parseRequest(req *proto.Request) (finalJSON []byte, err error) {
