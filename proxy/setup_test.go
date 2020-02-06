@@ -1,9 +1,12 @@
 package proxy
 
 import (
+	"context"
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/LLKennedy/httpgrpc/proto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -81,4 +84,27 @@ func TestServer_setAPIConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSetExceptionHandler(t *testing.T) {
+	t.Run("use default handler", func(t *testing.T) {
+		s := &Server{}
+		handled, res, err := s.handleExceptions(nil, nil)
+		assert.False(t, handled)
+		assert.Nil(t, res)
+		assert.NoError(t, err)
+	})
+	t.Run("simple exception handler catching all methods", func(t *testing.T) {
+		s := &Server{}
+		fixedResponse := &proto.Response{
+			StatusCode: 111,
+			Payload:    []byte("testdata"),
+		}
+		s.SetExceptionHandler(func(ctx context.Context, req *proto.Request) (handled bool, res *proto.Response, err error) {
+			return true, fixedResponse, fmt.Errorf("some error")
+		})
+		res, err := s.Proxy(nil, nil)
+		assert.Equal(t, fixedResponse, res)
+		assert.EqualError(t, err, "some error")
+	})
 }

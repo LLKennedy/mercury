@@ -25,6 +25,12 @@ func (s *Server) Proxy(ctx context.Context, req *proto.Request) (res *proto.Resp
 			err = wrapErr(codes.Internal, fmt.Errorf("caught panic %v", r))
 		}
 	}()
+	var handled bool
+	handled, res, err = s.handleExceptions(ctx, req)
+	if handled {
+		// The user-defined exception handler already processes this request, we don't have to deal with it
+		return
+	}
 	procType, caller, pattern, err := s.findProc(req.GetMethod(), req.GetProcedure())
 	if err != nil {
 		return &proto.Response{}, wrapErr(codes.Unimplemented, err)

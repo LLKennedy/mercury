@@ -1,8 +1,10 @@
 package proxy
 
 import (
+	"context"
 	"reflect"
 
+	"github.com/LLKennedy/httpgrpc/proto"
 	"google.golang.org/grpc"
 )
 
@@ -19,11 +21,15 @@ const (
 // We use defaultServer in the case that s is nil
 var defaultServer = &Server{}
 
+// ExceptionHandler is an exception handler function
+type ExceptionHandler func(ctx context.Context, req *proto.Request) (handled bool, res *proto.Response, err error)
+
 // Server is an HTTP to GRPC proxy server
 type Server struct {
-	grpcServer  *grpc.Server
+	grpcServer       *grpc.Server
 	api         map[string]map[string]apiMethod // the api of innerServer
-	innerServer interface{}                     // the actual protobuf endpoints we want to use
+	innerServer      interface{}                          // the actual protobuf endpoints we want to use
+	exceptionHandler ExceptionHandler
 }
 
 type apiMethod struct {
@@ -74,4 +80,12 @@ func (s *Server) setInnerServer(in interface{}) {
 		return
 	}
 	s.innerServer = in
+}
+
+func (s *Server) handleExceptions(ctx context.Context, req *proto.Request) (handled bool, res *proto.Response, err error) {
+	if s == nil || s.exceptionHandler == nil {
+		handled = false
+		return
+	}
+	return s.exceptionHandler(ctx, req)
 }
