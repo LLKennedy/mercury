@@ -29,7 +29,7 @@ func NewServer(api, server interface{}, listener *grpc.Server) (*Server, error) 
 // This function may return handled = false to indicate it did not handle the request and it should be auto-proxied as usual.
 // If handled is returned true, the proxy will assume the request has been handled already and will immediately return res and error
 func (s *Server) SetExceptionHandler(handler ExceptionHandler) {
-
+	s.exceptionHandler = handler
 }
 
 // register registers the server
