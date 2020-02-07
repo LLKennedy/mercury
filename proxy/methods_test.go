@@ -22,6 +22,12 @@ func (u *unrelatedThing) Thing(x, y int) bool {
 	return false
 }
 
+type exposedThingB struct{}
+
+func (b *exposedThingB) PostDoThing(x, y int) bool {
+	return false
+}
+
 func Test_validateMethod(t *testing.T) {
 	tests := []struct {
 		name            string
@@ -58,6 +64,12 @@ func Test_validateMethod(t *testing.T) {
 			serverType:  reflect.TypeOf(&thingB{}),
 			expectedErr: "validation of PostDoThing to DoThing mapping: argments mismatch in position 0: interface vs int",
 		},
+		{
+			name:        "invalid pattern",
+			apiMethod:   reflect.TypeOf(&exposedThingB{}).Method(0),
+			serverType:  reflect.TypeOf(&thingC{}),
+			expectedErr: "method PostDoThing did not match standard GRPC patterns (stream or struct pointer in and out, plus error out where applicable)",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -70,6 +82,35 @@ func Test_validateMethod(t *testing.T) {
 			} else {
 				assert.EqualError(t, err, tt.expectedErr)
 			}
+		})
+	}
+}
+
+func Test_stripInsensitive(t *testing.T) {
+	type args struct {
+		methodName string
+		httpType   string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      string
+		wantPanic bool
+	}{
+		{
+			name:      "empty",
+			wantPanic: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got string
+			if tt.wantPanic {
+				assert.Panics(t, func() { got = stripInsensitive(tt.args.methodName, tt.args.httpType) })
+			} else {
+				assert.NotPanics(t, func() { got = stripInsensitive(tt.args.methodName, tt.args.httpType) })
+			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

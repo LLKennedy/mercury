@@ -3,11 +3,13 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"net"
 	"reflect"
 	"testing"
 
 	"github.com/LLKennedy/httpgrpc/proto"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 type emptyThing struct{}
@@ -107,4 +109,117 @@ func TestSetExceptionHandler(t *testing.T) {
 		assert.Equal(t, fixedResponse, res)
 		assert.EqualError(t, err, "some error")
 	})
+}
+
+func TestNewServer(t *testing.T) {
+	gS := grpc.NewServer()
+	type args struct {
+		api      interface{}
+		server   interface{}
+		listener *grpc.Server
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *Server
+		wantErr string
+	}{
+		{
+			name:    "empty",
+			want:    &Server{},
+			wantErr: "httpgrpc: caught panic creating new server: runtime error: invalid memory address or nil pointer dereference",
+		},
+		{
+			name: "success",
+			args: args{
+				api:      &exposedThingA{},
+				server:   &thingA{},
+				listener: gS,
+			},
+			want: &Server{
+				api: map[string]map[string]apiMethod{
+					"POST": {
+						"DoThing": {
+							pattern:    apiMethodPatternStructStruct,
+							reflection: func() reflect.Method { t, _ := reflect.TypeOf(&exposedThingA{}).MethodByName("PostDoThing"); return t }(),
+						},
+					},
+				},
+				innerServer: &thingA{},
+				grpcServer:  gS,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewServer(tt.args.api, tt.args.server, tt.args.listener)
+			if tt.want == nil {
+				assert.Nil(t, got)
+			} else {
+				// Go really doesn't want to compare want and got successfully
+				assert.NotNil(t, got)
+			}
+			if tt.wantErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+type badListener struct{}
+
+type badAddr struct{}
+
+func (a *badAddr) Network() string {
+	return ""
+}
+func (a *badAddr) String() string {
+	return ""
+}
+
+func (b *badListener) Accept() (net.Conn, error) {
+	return nil, fmt.Errorf("some error")
+}
+func (b *badListener) Close() error {
+	return fmt.Errorf("close error")
+}
+func (b *badListener) Addr() net.Addr {
+	return &badAddr{}
+}
+
+func TestServer_Serve(t *testing.T) {
+	tests := []struct {
+		name     string
+		s        *Server
+		listener net.Listener
+		wantErr  string
+	}{
+		{
+			name:    "empty",
+			wantErr: "httpgrpc: cannot serve on nil Server",
+		},
+		{
+			name:    "nil listener",
+			s:       &Server{grpcServer: grpc.NewServer()},
+			wantErr: "httpgrpc: cannot serve on nil Server",
+		},
+		{
+			name:     "bad listener",
+			s:        &Server{grpcServer: grpc.NewServer()},
+			listener: &badListener{},
+			wantErr:  "some error",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.s.Serve(tt.listener)
+			if tt.wantErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.wantErr)
+			}
+		})
+	}
 }
