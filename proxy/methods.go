@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func validateMethod(apiMethod reflect.Method, serverType reflect.Type) (methodType string, procedureName string, err error) {
+func validateMethod(apiMethod reflect.Method, serverType reflect.Type) (methodType string, procedureName string, pattern apiMethodPattern, err error) {
 	name := apiMethod.Name
 	httpType, trueName, valid := matchAndStrip(name)
 	if !valid {
@@ -20,6 +20,11 @@ func validateMethod(apiMethod reflect.Method, serverType reflect.Type) (methodTy
 	}
 	expectedType := apiMethod.Type
 	foundType := serverMethod.Type
+	pattern = getPattern(expectedType)
+	if pattern == apiMethodPatternUnknown {
+		err = fmt.Errorf("method %s did not match standard GRPC patterns (stream or struct pointer in and out, plus error out where applicable)", name)
+		return
+	}
 	err = validateArgs(expectedType, foundType)
 	if err != nil {
 		err = fmt.Errorf("validation of %s to %s mapping: %v", name, trueName, err)

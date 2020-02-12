@@ -35,20 +35,20 @@ jobs:
     - stage: "Build"
       if: branch = master OR branch = develop OR branch =~ /release\/.*/ OR branch =~ /hotfix\/.*/ OR branch =~ /v[0-9]+[0-9.]*/
       os: linux
-      go: 1.13.x
+      go: 1.12.x
       script: go build
     - stage: "Test"
       if: branch = master OR branch = develop OR branch =~ /release\/.*/ OR branch =~ /hotfix\/.*/ OR branch =~ /v[0-9]+[0-9.]*/
       os: linux
-      go: 1.13.x
+      go: 1.12.x
       script: go test ./... -race
     - stage: "Build"
       os: linux
-      go: 1.12.x
+      go: 1.13.x
       script: go build
     - stage: "Test"
       os: linux
-      go: 1.12.x
+      go: 1.13.x
       before_install: go get github.com/mattn/goveralls
       before_script:
         - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
@@ -61,9 +61,9 @@ jobs:
         - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
     - stage: "Build"
       os: osx
-      go: 1.12.x
+      go: 1.13.x
       script: go build
     - stage: "Test"
       os: osx
-      go: 1.12.x
+      go: 1.13.x
       script: go test ./... -race

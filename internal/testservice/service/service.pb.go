@@ -24,6 +24,248 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type FeedData struct {
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DataType             uint64   `protobuf:"varint,2,opt,name=data_type,json=dataType,proto3" json:"data_type,omitempty"`
+	RawData              []byte   `protobuf:"bytes,3,opt,name=raw_data,json=rawData,proto3" json:"raw_data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *FeedData) Reset()         { *m = FeedData{} }
+func (m *FeedData) String() string { return proto.CompactTextString(m) }
+func (*FeedData) ProtoMessage()    {}
+func (*FeedData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{0}
+}
+
+func (m *FeedData) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FeedData.Unmarshal(m, b)
+}
+func (m *FeedData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FeedData.Marshal(b, m, deterministic)
+}
+func (m *FeedData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FeedData.Merge(m, src)
+}
+func (m *FeedData) XXX_Size() int {
+	return xxx_messageInfo_FeedData.Size(m)
+}
+func (m *FeedData) XXX_DiscardUnknown() {
+	xxx_messageInfo_FeedData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FeedData proto.InternalMessageInfo
+
+func (m *FeedData) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *FeedData) GetDataType() uint64 {
+	if m != nil {
+		return m.DataType
+	}
+	return 0
+}
+
+func (m *FeedData) GetRawData() []byte {
+	if m != nil {
+		return m.RawData
+	}
+	return nil
+}
+
+type FeedResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *FeedResponse) Reset()         { *m = FeedResponse{} }
+func (m *FeedResponse) String() string { return proto.CompactTextString(m) }
+func (*FeedResponse) ProtoMessage()    {}
+func (*FeedResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{1}
+}
+
+func (m *FeedResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FeedResponse.Unmarshal(m, b)
+}
+func (m *FeedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FeedResponse.Marshal(b, m, deterministic)
+}
+func (m *FeedResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FeedResponse.Merge(m, src)
+}
+func (m *FeedResponse) XXX_Size() int {
+	return xxx_messageInfo_FeedResponse.Size(m)
+}
+func (m *FeedResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_FeedResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FeedResponse proto.InternalMessageInfo
+
+type BroadcastRequest struct {
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *BroadcastRequest) Reset()         { *m = BroadcastRequest{} }
+func (m *BroadcastRequest) String() string { return proto.CompactTextString(m) }
+func (*BroadcastRequest) ProtoMessage()    {}
+func (*BroadcastRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{2}
+}
+
+func (m *BroadcastRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BroadcastRequest.Unmarshal(m, b)
+}
+func (m *BroadcastRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BroadcastRequest.Marshal(b, m, deterministic)
+}
+func (m *BroadcastRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BroadcastRequest.Merge(m, src)
+}
+func (m *BroadcastRequest) XXX_Size() int {
+	return xxx_messageInfo_BroadcastRequest.Size(m)
+}
+func (m *BroadcastRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_BroadcastRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BroadcastRequest proto.InternalMessageInfo
+
+func (m *BroadcastRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+type BroadcastData struct {
+	RawData              []byte   `protobuf:"bytes,1,opt,name=raw_data,json=rawData,proto3" json:"raw_data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *BroadcastData) Reset()         { *m = BroadcastData{} }
+func (m *BroadcastData) String() string { return proto.CompactTextString(m) }
+func (*BroadcastData) ProtoMessage()    {}
+func (*BroadcastData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{3}
+}
+
+func (m *BroadcastData) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BroadcastData.Unmarshal(m, b)
+}
+func (m *BroadcastData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BroadcastData.Marshal(b, m, deterministic)
+}
+func (m *BroadcastData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BroadcastData.Merge(m, src)
+}
+func (m *BroadcastData) XXX_Size() int {
+	return xxx_messageInfo_BroadcastData.Size(m)
+}
+func (m *BroadcastData) XXX_DiscardUnknown() {
+	xxx_messageInfo_BroadcastData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BroadcastData proto.InternalMessageInfo
+
+func (m *BroadcastData) GetRawData() []byte {
+	if m != nil {
+		return m.RawData
+	}
+	return nil
+}
+
+type ConvertInput struct {
+	RawData              []byte   `protobuf:"bytes,1,opt,name=raw_data,json=rawData,proto3" json:"raw_data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ConvertInput) Reset()         { *m = ConvertInput{} }
+func (m *ConvertInput) String() string { return proto.CompactTextString(m) }
+func (*ConvertInput) ProtoMessage()    {}
+func (*ConvertInput) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{4}
+}
+
+func (m *ConvertInput) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ConvertInput.Unmarshal(m, b)
+}
+func (m *ConvertInput) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ConvertInput.Marshal(b, m, deterministic)
+}
+func (m *ConvertInput) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConvertInput.Merge(m, src)
+}
+func (m *ConvertInput) XXX_Size() int {
+	return xxx_messageInfo_ConvertInput.Size(m)
+}
+func (m *ConvertInput) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConvertInput.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConvertInput proto.InternalMessageInfo
+
+func (m *ConvertInput) GetRawData() []byte {
+	if m != nil {
+		return m.RawData
+	}
+	return nil
+}
+
+type ConvertOutput struct {
+	ConvertedData        string   `protobuf:"bytes,1,opt,name=converted_data,json=convertedData,proto3" json:"converted_data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ConvertOutput) Reset()         { *m = ConvertOutput{} }
+func (m *ConvertOutput) String() string { return proto.CompactTextString(m) }
+func (*ConvertOutput) ProtoMessage()    {}
+func (*ConvertOutput) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a0b84a42fa06f626, []int{5}
+}
+
+func (m *ConvertOutput) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ConvertOutput.Unmarshal(m, b)
+}
+func (m *ConvertOutput) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ConvertOutput.Marshal(b, m, deterministic)
+}
+func (m *ConvertOutput) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConvertOutput.Merge(m, src)
+}
+func (m *ConvertOutput) XXX_Size() int {
+	return xxx_messageInfo_ConvertOutput.Size(m)
+}
+func (m *ConvertOutput) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConvertOutput.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConvertOutput proto.InternalMessageInfo
+
+func (m *ConvertOutput) GetConvertedData() string {
+	if m != nil {
+		return m.ConvertedData
+	}
+	return ""
+}
+
 type FibonacciRequest struct {
 	// The 1-indexed point in the Fibonacci sequence
 	N                    uint64   `protobuf:"varint,1,opt,name=n,proto3" json:"n,omitempty"`
@@ -36,7 +278,7 @@ func (m *FibonacciRequest) Reset()         { *m = FibonacciRequest{} }
 func (m *FibonacciRequest) String() string { return proto.CompactTextString(m) }
 func (*FibonacciRequest) ProtoMessage()    {}
 func (*FibonacciRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{0}
+	return fileDescriptor_a0b84a42fa06f626, []int{6}
 }
 
 func (m *FibonacciRequest) XXX_Unmarshal(b []byte) error {
@@ -76,7 +318,7 @@ func (m *FibonacciResponse) Reset()         { *m = FibonacciResponse{} }
 func (m *FibonacciResponse) String() string { return proto.CompactTextString(m) }
 func (*FibonacciResponse) ProtoMessage()    {}
 func (*FibonacciResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{1}
+	return fileDescriptor_a0b84a42fa06f626, []int{7}
 }
 
 func (m *FibonacciResponse) XXX_Unmarshal(b []byte) error {
@@ -118,7 +360,7 @@ func (m *RandomRequest) Reset()         { *m = RandomRequest{} }
 func (m *RandomRequest) String() string { return proto.CompactTextString(m) }
 func (*RandomRequest) ProtoMessage()    {}
 func (*RandomRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{2}
+	return fileDescriptor_a0b84a42fa06f626, []int{8}
 }
 
 func (m *RandomRequest) XXX_Unmarshal(b []byte) error {
@@ -165,7 +407,7 @@ func (m *RandomResponse) Reset()         { *m = RandomResponse{} }
 func (m *RandomResponse) String() string { return proto.CompactTextString(m) }
 func (*RandomResponse) ProtoMessage()    {}
 func (*RandomResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{3}
+	return fileDescriptor_a0b84a42fa06f626, []int{9}
 }
 
 func (m *RandomResponse) XXX_Unmarshal(b []byte) error {
@@ -205,7 +447,7 @@ func (m *UploadPhotoRequest) Reset()         { *m = UploadPhotoRequest{} }
 func (m *UploadPhotoRequest) String() string { return proto.CompactTextString(m) }
 func (*UploadPhotoRequest) ProtoMessage()    {}
 func (*UploadPhotoRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{4}
+	return fileDescriptor_a0b84a42fa06f626, []int{10}
 }
 
 func (m *UploadPhotoRequest) XXX_Unmarshal(b []byte) error {
@@ -245,7 +487,7 @@ func (m *UploadPhotoResponse) Reset()         { *m = UploadPhotoResponse{} }
 func (m *UploadPhotoResponse) String() string { return proto.CompactTextString(m) }
 func (*UploadPhotoResponse) ProtoMessage()    {}
 func (*UploadPhotoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a0b84a42fa06f626, []int{5}
+	return fileDescriptor_a0b84a42fa06f626, []int{11}
 }
 
 func (m *UploadPhotoResponse) XXX_Unmarshal(b []byte) error {
@@ -274,6 +516,12 @@ func (m *UploadPhotoResponse) GetUuid() string {
 }
 
 func init() {
+	proto.RegisterType((*FeedData)(nil), "service.FeedData")
+	proto.RegisterType((*FeedResponse)(nil), "service.FeedResponse")
+	proto.RegisterType((*BroadcastRequest)(nil), "service.BroadcastRequest")
+	proto.RegisterType((*BroadcastData)(nil), "service.BroadcastData")
+	proto.RegisterType((*ConvertInput)(nil), "service.ConvertInput")
+	proto.RegisterType((*ConvertOutput)(nil), "service.ConvertOutput")
 	proto.RegisterType((*FibonacciRequest)(nil), "service.FibonacciRequest")
 	proto.RegisterType((*FibonacciResponse)(nil), "service.FibonacciResponse")
 	proto.RegisterType((*RandomRequest)(nil), "service.RandomRequest")
@@ -285,27 +533,40 @@ func init() {
 func init() { proto.RegisterFile("service.proto", fileDescriptor_a0b84a42fa06f626) }
 
 var fileDescriptor_a0b84a42fa06f626 = []byte{
-	// 312 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xcd, 0x4a, 0x3b, 0x31,
-	0x14, 0xc5, 0xff, 0xf9, 0xb7, 0x54, 0xe6, 0xb6, 0xf5, 0x23, 0x42, 0xd5, 0x51, 0xb0, 0x64, 0x35,
-	0x22, 0x74, 0x51, 0x97, 0x82, 0xa0, 0xf8, 0x01, 0x2e, 0xa4, 0x06, 0x5c, 0xcb, 0x7c, 0x04, 0x1c,
-	0x68, 0x73, 0xe3, 0x24, 0x51, 0x1f, 0xc6, 0xc7, 0xf2, 0x81, 0x64, 0x32, 0x33, 0xa1, 0xb5, 0xb3,
-	0x12, 0x77, 0xc9, 0xc9, 0x6f, 0xce, 0x3d, 0xf7, 0x30, 0x30, 0xd4, 0xa2, 0x78, 0xcb, 0x53, 0x31,
-	0x51, 0x05, 0x1a, 0xa4, 0x1b, 0xf5, 0x95, 0x8d, 0x61, 0xfb, 0x36, 0x4f, 0x50, 0xc6, 0x69, 0x9a,
-	0x73, 0xf1, 0x6a, 0x85, 0x36, 0x74, 0x00, 0x44, 0xee, 0x93, 0x31, 0x89, 0xba, 0x9c, 0x48, 0x76,
-	0x0a, 0x3b, 0x4b, 0x84, 0x56, 0x28, 0xb5, 0xa0, 0x23, 0xe8, 0x49, 0xbb, 0x48, 0x44, 0x51, 0x73,
-	0xf5, 0x8d, 0x3d, 0xc2, 0x90, 0xc7, 0x32, 0xc3, 0x45, 0xe3, 0x75, 0x0c, 0xfd, 0x39, 0xbe, 0x8b,
-	0xe2, 0x39, 0x41, 0x2b, 0x33, 0x47, 0x77, 0x38, 0x38, 0xe9, 0xaa, 0x54, 0x4a, 0xc0, 0x2a, 0xe5,
-	0x81, 0xff, 0x15, 0xe0, 0x24, 0x07, 0xb0, 0x08, 0x36, 0x1b, 0xcb, 0xd6, 0xe1, 0x1d, 0x3f, 0x3c,
-	0x02, 0xfa, 0xa4, 0xe6, 0x18, 0x67, 0xb3, 0x17, 0x34, 0xd8, 0x24, 0xa0, 0xd0, 0xcd, 0x62, 0x13,
-	0x3b, 0x76, 0xc0, 0xdd, 0x99, 0x9d, 0xc0, 0xee, 0x0a, 0x59, 0x1b, 0x53, 0xe8, 0x5a, 0x9b, 0x57,
-	0x29, 0x03, 0xee, 0xce, 0xd3, 0x2f, 0x02, 0x9d, 0x4b, 0xa5, 0xe8, 0x35, 0x04, 0xbe, 0x06, 0x7a,
-	0x30, 0x69, 0xea, 0xfc, 0x59, 0x5e, 0x18, 0xb6, 0x3d, 0x55, 0xfe, 0xec, 0x1f, 0x3d, 0x87, 0x5e,
-	0xb5, 0x0c, 0x1d, 0x79, 0x6e, 0xa5, 0xb0, 0x70, 0x6f, 0x4d, 0xf7, 0x1f, 0xdf, 0x43, 0x7f, 0x29,
-	0x35, 0x3d, 0xf4, 0xe4, 0xfa, 0xd6, 0xe1, 0x51, 0xfb, 0x63, 0xe3, 0x35, 0xfd, 0x24, 0x00, 0x37,
-	0x1f, 0x0a, 0xb5, 0xc8, 0xca, 0xed, 0x2e, 0x20, 0xb8, 0x13, 0xe6, 0xf7, 0xd1, 0x1e, 0x60, 0x6b,
-	0x86, 0xda, 0xfc, 0x55, 0xbc, 0xa4, 0xe7, 0x7e, 0xd3, 0xb3, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x68, 0xf6, 0xa7, 0xf4, 0xb7, 0x02, 0x00, 0x00,
+	// 522 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xd1, 0x6e, 0xd3, 0x30,
+	0x14, 0x9d, 0xdb, 0xaa, 0x6b, 0xee, 0x92, 0x6e, 0xf3, 0x44, 0xe9, 0x32, 0x24, 0xaa, 0x48, 0x48,
+	0x19, 0x48, 0xd3, 0x34, 0x10, 0x42, 0x42, 0x42, 0xa2, 0x6c, 0x9d, 0xd8, 0x03, 0x0c, 0x33, 0x9e,
+	0x2b, 0x37, 0xb1, 0x20, 0xd2, 0x66, 0x9b, 0xc4, 0x59, 0xd9, 0x8f, 0xf0, 0x8f, 0xfc, 0x05, 0xb2,
+	0x93, 0xb8, 0x49, 0x5b, 0xf1, 0x30, 0xf6, 0x66, 0x1f, 0x9f, 0x7b, 0xee, 0xf5, 0xf1, 0x49, 0xc0,
+	0xcb, 0x58, 0x7a, 0x9b, 0x44, 0xec, 0x48, 0xa6, 0x42, 0x09, 0xbc, 0x59, 0x6e, 0x03, 0x02, 0xbd,
+	0x09, 0x63, 0xf1, 0x29, 0x55, 0x14, 0xf7, 0xa1, 0x95, 0xc4, 0x43, 0x34, 0x42, 0xa1, 0x43, 0x5a,
+	0x49, 0x8c, 0x0f, 0xc0, 0x89, 0xa9, 0xa2, 0x53, 0x75, 0x27, 0xd9, 0xb0, 0x35, 0x42, 0x61, 0x87,
+	0xf4, 0x34, 0x70, 0x75, 0x27, 0x19, 0xde, 0x87, 0x5e, 0x4a, 0xe7, 0x53, 0xbd, 0x1f, 0xb6, 0x47,
+	0x28, 0x74, 0xc9, 0x66, 0x4a, 0xe7, 0x5a, 0x27, 0xe8, 0x83, 0xab, 0x35, 0x09, 0xcb, 0xa4, 0xe0,
+	0x19, 0x0b, 0x02, 0xd8, 0x19, 0xa7, 0x82, 0xc6, 0x11, 0xcd, 0x14, 0x61, 0x3f, 0x73, 0x96, 0xa9,
+	0xe5, 0x5e, 0xc1, 0x73, 0xf0, 0x2c, 0xc7, 0x0c, 0x53, 0xd7, 0x47, 0x4d, 0xfd, 0x43, 0x70, 0x3f,
+	0x08, 0x7e, 0xcb, 0x52, 0xf5, 0x91, 0xcb, 0x5c, 0xfd, 0x8b, 0xfa, 0x1a, 0xbc, 0x92, 0xfa, 0x39,
+	0x57, 0x9a, 0xfb, 0x0c, 0xfa, 0x51, 0x01, 0xb0, 0x78, 0x51, 0xe1, 0x10, 0xcf, 0xa2, 0xa6, 0x6e,
+	0x04, 0x3b, 0x93, 0x64, 0x26, 0x38, 0x8d, 0xa2, 0xa4, 0x1a, 0xd9, 0x05, 0xc4, 0x0d, 0xbb, 0x43,
+	0x10, 0x0f, 0x5e, 0xc0, 0x6e, 0x8d, 0x51, 0xdc, 0x14, 0x0f, 0xa0, 0xcb, 0xf3, 0x9b, 0x19, 0x4b,
+	0x4b, 0x5e, 0xb9, 0x0b, 0xbe, 0x80, 0x47, 0x28, 0x8f, 0xc5, 0x4d, 0xa5, 0xf5, 0x14, 0xb6, 0xae,
+	0xc5, 0x9c, 0xa5, 0xd3, 0x99, 0xc8, 0x79, 0xe1, 0x43, 0x9b, 0x80, 0x81, 0xc6, 0x1a, 0xd1, 0x84,
+	0x5c, 0x4a, 0x4b, 0x68, 0x15, 0x04, 0x03, 0x19, 0x42, 0x10, 0x42, 0xbf, 0x92, 0x5c, 0xdb, 0xbc,
+	0x6d, 0x9b, 0x87, 0x80, 0xbf, 0xc9, 0x6b, 0x41, 0xe3, 0xcb, 0x1f, 0x42, 0x89, 0x6a, 0x02, 0x0c,
+	0x9d, 0x9a, 0x61, 0x66, 0x1d, 0x1c, 0xc2, 0x5e, 0x83, 0x59, 0x0a, 0x63, 0xe8, 0xe4, 0xb9, 0x7d,
+	0x2d, 0xb3, 0x3e, 0xf9, 0xdd, 0x86, 0xf6, 0x7b, 0x29, 0xf1, 0x29, 0x38, 0xd6, 0x06, 0xbc, 0x7f,
+	0x54, 0xa5, 0x6c, 0xd9, 0x3c, 0xdf, 0x5f, 0x77, 0x54, 0xe6, 0x63, 0x03, 0xbf, 0x85, 0x6e, 0x71,
+	0x19, 0x3c, 0xb0, 0xbc, 0x86, 0x61, 0xfe, 0xe3, 0x15, 0xdc, 0x16, 0x5f, 0xc0, 0x56, 0x6d, 0x6a,
+	0x7c, 0x60, 0x99, 0xab, 0xb7, 0xf6, 0x9f, 0xac, 0x3f, 0xb4, 0x5a, 0xaf, 0xa0, 0xa3, 0xa3, 0x8b,
+	0x77, 0x17, 0xe3, 0x96, 0x5f, 0x87, 0xff, 0xa8, 0x01, 0x2d, 0x6a, 0x42, 0x84, 0xc7, 0xe0, 0xd8,
+	0xf0, 0xd6, 0x4c, 0x58, 0x0e, 0xbd, 0x3f, 0x58, 0x3d, 0x32, 0x69, 0xdb, 0x38, 0x46, 0x78, 0x02,
+	0xdb, 0x65, 0x52, 0xaf, 0xc4, 0x57, 0x95, 0x26, 0xfc, 0x3b, 0x5e, 0x74, 0xac, 0xc7, 0xbd, 0xa6,
+	0xd2, 0x88, 0xb6, 0x9e, 0xe4, 0x18, 0x9d, 0xfc, 0x69, 0x01, 0x9c, 0xfd, 0x92, 0x22, 0x63, 0xb1,
+	0x7e, 0x9f, 0x77, 0xe0, 0x9c, 0x33, 0x75, 0x7f, 0x73, 0x3f, 0xc1, 0xf6, 0xa5, 0xc8, 0xd4, 0x83,
+	0x19, 0xfc, 0x06, 0x7a, 0x5a, 0xef, 0x1e, 0x26, 0x9f, 0x81, 0x7b, 0xce, 0xd4, 0x7f, 0xfb, 0x7c,
+	0x01, 0x7b, 0x7a, 0x80, 0x87, 0xf0, 0x7a, 0xd6, 0x35, 0x3f, 0xd3, 0x97, 0x7f, 0x03, 0x00, 0x00,
+	0xff, 0xff, 0x4f, 0x16, 0xbc, 0x12, 0x5d, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -326,6 +587,12 @@ type AppClient interface {
 	Random(ctx context.Context, in *RandomRequest, opts ...grpc.CallOption) (*RandomResponse, error)
 	// UploadPhoto allows the upload of a photo to some persistence store. It may be accessed via  Post request to the proxy at, for example, /api/Service/UploadPhoto
 	UploadPhoto(ctx context.Context, in *UploadPhotoRequest, opts ...grpc.CallOption) (*UploadPhotoResponse, error)
+	// Feed sends streamed inputs
+	Feed(ctx context.Context, opts ...grpc.CallOption) (App_FeedClient, error)
+	// Broadcast asks the App to broadcast data in a stream
+	Broadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (App_BroadcastClient, error)
+	// ConvertToString streams conversions of the input stream to strings
+	ConvertToString(ctx context.Context, opts ...grpc.CallOption) (App_ConvertToStringClient, error)
 }
 
 type appClient struct {
@@ -363,6 +630,103 @@ func (c *appClient) UploadPhoto(ctx context.Context, in *UploadPhotoRequest, opt
 	return out, nil
 }
 
+func (c *appClient) Feed(ctx context.Context, opts ...grpc.CallOption) (App_FeedClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_App_serviceDesc.Streams[0], "/service.App/Feed", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &appFeedClient{stream}
+	return x, nil
+}
+
+type App_FeedClient interface {
+	Send(*FeedData) error
+	CloseAndRecv() (*FeedResponse, error)
+	grpc.ClientStream
+}
+
+type appFeedClient struct {
+	grpc.ClientStream
+}
+
+func (x *appFeedClient) Send(m *FeedData) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *appFeedClient) CloseAndRecv() (*FeedResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(FeedResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *appClient) Broadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (App_BroadcastClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_App_serviceDesc.Streams[1], "/service.App/Broadcast", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &appBroadcastClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type App_BroadcastClient interface {
+	Recv() (*BroadcastData, error)
+	grpc.ClientStream
+}
+
+type appBroadcastClient struct {
+	grpc.ClientStream
+}
+
+func (x *appBroadcastClient) Recv() (*BroadcastData, error) {
+	m := new(BroadcastData)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *appClient) ConvertToString(ctx context.Context, opts ...grpc.CallOption) (App_ConvertToStringClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_App_serviceDesc.Streams[2], "/service.App/ConvertToString", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &appConvertToStringClient{stream}
+	return x, nil
+}
+
+type App_ConvertToStringClient interface {
+	Send(*ConvertInput) error
+	Recv() (*ConvertOutput, error)
+	grpc.ClientStream
+}
+
+type appConvertToStringClient struct {
+	grpc.ClientStream
+}
+
+func (x *appConvertToStringClient) Send(m *ConvertInput) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *appConvertToStringClient) Recv() (*ConvertOutput, error) {
+	m := new(ConvertOutput)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // AppServer is the server API for App service.
 type AppServer interface {
 	// Fibonacci returns the nth number in the Fibonacci sequence. It does not start with an HTTP method and is therefore not exposed
@@ -371,6 +735,12 @@ type AppServer interface {
 	Random(context.Context, *RandomRequest) (*RandomResponse, error)
 	// UploadPhoto allows the upload of a photo to some persistence store. It may be accessed via  Post request to the proxy at, for example, /api/Service/UploadPhoto
 	UploadPhoto(context.Context, *UploadPhotoRequest) (*UploadPhotoResponse, error)
+	// Feed sends streamed inputs
+	Feed(App_FeedServer) error
+	// Broadcast asks the App to broadcast data in a stream
+	Broadcast(*BroadcastRequest, App_BroadcastServer) error
+	// ConvertToString streams conversions of the input stream to strings
+	ConvertToString(App_ConvertToStringServer) error
 }
 
 // UnimplementedAppServer can be embedded to have forward compatible implementations.
@@ -385,6 +755,15 @@ func (*UnimplementedAppServer) Random(ctx context.Context, req *RandomRequest) (
 }
 func (*UnimplementedAppServer) UploadPhoto(ctx context.Context, req *UploadPhotoRequest) (*UploadPhotoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadPhoto not implemented")
+}
+func (*UnimplementedAppServer) Feed(srv App_FeedServer) error {
+	return status.Errorf(codes.Unimplemented, "method Feed not implemented")
+}
+func (*UnimplementedAppServer) Broadcast(req *BroadcastRequest, srv App_BroadcastServer) error {
+	return status.Errorf(codes.Unimplemented, "method Broadcast not implemented")
+}
+func (*UnimplementedAppServer) ConvertToString(srv App_ConvertToStringServer) error {
+	return status.Errorf(codes.Unimplemented, "method ConvertToString not implemented")
 }
 
 func RegisterAppServer(s *grpc.Server, srv AppServer) {
@@ -445,6 +824,79 @@ func _App_UploadPhoto_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _App_Feed_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AppServer).Feed(&appFeedServer{stream})
+}
+
+type App_FeedServer interface {
+	SendAndClose(*FeedResponse) error
+	Recv() (*FeedData, error)
+	grpc.ServerStream
+}
+
+type appFeedServer struct {
+	grpc.ServerStream
+}
+
+func (x *appFeedServer) SendAndClose(m *FeedResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *appFeedServer) Recv() (*FeedData, error) {
+	m := new(FeedData)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _App_Broadcast_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(BroadcastRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AppServer).Broadcast(m, &appBroadcastServer{stream})
+}
+
+type App_BroadcastServer interface {
+	Send(*BroadcastData) error
+	grpc.ServerStream
+}
+
+type appBroadcastServer struct {
+	grpc.ServerStream
+}
+
+func (x *appBroadcastServer) Send(m *BroadcastData) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _App_ConvertToString_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AppServer).ConvertToString(&appConvertToStringServer{stream})
+}
+
+type App_ConvertToStringServer interface {
+	Send(*ConvertOutput) error
+	Recv() (*ConvertInput, error)
+	grpc.ServerStream
+}
+
+type appConvertToStringServer struct {
+	grpc.ServerStream
+}
+
+func (x *appConvertToStringServer) Send(m *ConvertOutput) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *appConvertToStringServer) Recv() (*ConvertInput, error) {
+	m := new(ConvertInput)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _App_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "service.App",
 	HandlerType: (*AppServer)(nil),
@@ -462,7 +914,24 @@ var _App_serviceDesc = grpc.ServiceDesc{
 			Handler:    _App_UploadPhoto_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Feed",
+			Handler:       _App_Feed_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "Broadcast",
+			Handler:       _App_Broadcast_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ConvertToString",
+			Handler:       _App_ConvertToString_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "service.proto",
 }
 
@@ -472,6 +941,9 @@ var _App_serviceDesc = grpc.ServiceDesc{
 type ExposedAppClient interface {
 	GetRandom(ctx context.Context, in *RandomRequest, opts ...grpc.CallOption) (*RandomResponse, error)
 	PostUploadPhoto(ctx context.Context, in *UploadPhotoRequest, opts ...grpc.CallOption) (*UploadPhotoResponse, error)
+	PostFeed(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostFeedClient, error)
+	GetBroadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (ExposedApp_GetBroadcastClient, error)
+	PostConvertToString(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostConvertToStringClient, error)
 }
 
 type exposedAppClient struct {
@@ -500,10 +972,110 @@ func (c *exposedAppClient) PostUploadPhoto(ctx context.Context, in *UploadPhotoR
 	return out, nil
 }
 
+func (c *exposedAppClient) PostFeed(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostFeedClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[0], "/service.ExposedApp/PostFeed", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &exposedAppPostFeedClient{stream}
+	return x, nil
+}
+
+type ExposedApp_PostFeedClient interface {
+	Send(*FeedData) error
+	CloseAndRecv() (*FeedResponse, error)
+	grpc.ClientStream
+}
+
+type exposedAppPostFeedClient struct {
+	grpc.ClientStream
+}
+
+func (x *exposedAppPostFeedClient) Send(m *FeedData) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *exposedAppPostFeedClient) CloseAndRecv() (*FeedResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(FeedResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *exposedAppClient) GetBroadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (ExposedApp_GetBroadcastClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[1], "/service.ExposedApp/GetBroadcast", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &exposedAppGetBroadcastClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ExposedApp_GetBroadcastClient interface {
+	Recv() (*BroadcastData, error)
+	grpc.ClientStream
+}
+
+type exposedAppGetBroadcastClient struct {
+	grpc.ClientStream
+}
+
+func (x *exposedAppGetBroadcastClient) Recv() (*BroadcastData, error) {
+	m := new(BroadcastData)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *exposedAppClient) PostConvertToString(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostConvertToStringClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[2], "/service.ExposedApp/PostConvertToString", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &exposedAppPostConvertToStringClient{stream}
+	return x, nil
+}
+
+type ExposedApp_PostConvertToStringClient interface {
+	Send(*ConvertInput) error
+	Recv() (*ConvertOutput, error)
+	grpc.ClientStream
+}
+
+type exposedAppPostConvertToStringClient struct {
+	grpc.ClientStream
+}
+
+func (x *exposedAppPostConvertToStringClient) Send(m *ConvertInput) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *exposedAppPostConvertToStringClient) Recv() (*ConvertOutput, error) {
+	m := new(ConvertOutput)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ExposedAppServer is the server API for ExposedApp service.
 type ExposedAppServer interface {
 	GetRandom(context.Context, *RandomRequest) (*RandomResponse, error)
 	PostUploadPhoto(context.Context, *UploadPhotoRequest) (*UploadPhotoResponse, error)
+	PostFeed(ExposedApp_PostFeedServer) error
+	GetBroadcast(*BroadcastRequest, ExposedApp_GetBroadcastServer) error
+	PostConvertToString(ExposedApp_PostConvertToStringServer) error
 }
 
 // UnimplementedExposedAppServer can be embedded to have forward compatible implementations.
@@ -515,6 +1087,15 @@ func (*UnimplementedExposedAppServer) GetRandom(ctx context.Context, req *Random
 }
 func (*UnimplementedExposedAppServer) PostUploadPhoto(ctx context.Context, req *UploadPhotoRequest) (*UploadPhotoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostUploadPhoto not implemented")
+}
+func (*UnimplementedExposedAppServer) PostFeed(srv ExposedApp_PostFeedServer) error {
+	return status.Errorf(codes.Unimplemented, "method PostFeed not implemented")
+}
+func (*UnimplementedExposedAppServer) GetBroadcast(req *BroadcastRequest, srv ExposedApp_GetBroadcastServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetBroadcast not implemented")
+}
+func (*UnimplementedExposedAppServer) PostConvertToString(srv ExposedApp_PostConvertToStringServer) error {
+	return status.Errorf(codes.Unimplemented, "method PostConvertToString not implemented")
 }
 
 func RegisterExposedAppServer(s *grpc.Server, srv ExposedAppServer) {
@@ -557,6 +1138,79 @@ func _ExposedApp_PostUploadPhoto_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ExposedApp_PostFeed_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ExposedAppServer).PostFeed(&exposedAppPostFeedServer{stream})
+}
+
+type ExposedApp_PostFeedServer interface {
+	SendAndClose(*FeedResponse) error
+	Recv() (*FeedData, error)
+	grpc.ServerStream
+}
+
+type exposedAppPostFeedServer struct {
+	grpc.ServerStream
+}
+
+func (x *exposedAppPostFeedServer) SendAndClose(m *FeedResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *exposedAppPostFeedServer) Recv() (*FeedData, error) {
+	m := new(FeedData)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _ExposedApp_GetBroadcast_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(BroadcastRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ExposedAppServer).GetBroadcast(m, &exposedAppGetBroadcastServer{stream})
+}
+
+type ExposedApp_GetBroadcastServer interface {
+	Send(*BroadcastData) error
+	grpc.ServerStream
+}
+
+type exposedAppGetBroadcastServer struct {
+	grpc.ServerStream
+}
+
+func (x *exposedAppGetBroadcastServer) Send(m *BroadcastData) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _ExposedApp_PostConvertToString_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ExposedAppServer).PostConvertToString(&exposedAppPostConvertToStringServer{stream})
+}
+
+type ExposedApp_PostConvertToStringServer interface {
+	Send(*ConvertOutput) error
+	Recv() (*ConvertInput, error)
+	grpc.ServerStream
+}
+
+type exposedAppPostConvertToStringServer struct {
+	grpc.ServerStream
+}
+
+func (x *exposedAppPostConvertToStringServer) Send(m *ConvertOutput) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *exposedAppPostConvertToStringServer) Recv() (*ConvertInput, error) {
+	m := new(ConvertInput)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _ExposedApp_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "service.ExposedApp",
 	HandlerType: (*ExposedAppServer)(nil),
@@ -570,6 +1224,23 @@ var _ExposedApp_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ExposedApp_PostUploadPhoto_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "PostFeed",
+			Handler:       _ExposedApp_PostFeed_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "GetBroadcast",
+			Handler:       _ExposedApp_GetBroadcast_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "PostConvertToString",
+			Handler:       _ExposedApp_PostConvertToString_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "service.proto",
 }
