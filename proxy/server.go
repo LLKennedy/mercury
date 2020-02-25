@@ -4,7 +4,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/LLKennedy/httpgrpc/proto"
+	"github.com/LLKennedy/httpgrpc/httpapi"
 	"google.golang.org/grpc"
 )
 
@@ -22,7 +22,7 @@ const (
 var defaultServer = &Server{}
 
 // ExceptionHandler is an exception handler function
-type ExceptionHandler func(ctx context.Context, req *proto.Request) (handled bool, res *proto.Response, err error)
+type ExceptionHandler func(ctx context.Context, req *httpapi.Request) (handled bool, res *httpapi.Response, err error)
 
 // Server is an HTTP to GRPC proxy server
 type Server struct {
@@ -82,7 +82,7 @@ func (s *Server) setInnerServer(in interface{}) {
 	s.innerServer = in
 }
 
-func (s *Server) handleExceptions(ctx context.Context, req *proto.Request) (handled bool, res *proto.Response, err error) {
+func (s *Server) handleExceptions(ctx context.Context, req *httpapi.Request) (handled bool, res *httpapi.Response, err error) {
 	if s == nil || s.exceptionHandler == nil {
 		handled = false
 		return

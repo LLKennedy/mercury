@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/LLKennedy/httpgrpc/proto"
+	"github.com/LLKennedy/httpgrpc/httpapi"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
@@ -98,11 +98,11 @@ func TestSetExceptionHandler(t *testing.T) {
 	})
 	t.Run("simple exception handler catching all methods", func(t *testing.T) {
 		s := &Server{}
-		fixedResponse := &proto.Response{
+		fixedResponse := &httpapi.Response{
 			StatusCode: 111,
 			Payload:    []byte("testdata"),
 		}
-		s.SetExceptionHandler(func(ctx context.Context, req *proto.Request) (handled bool, res *proto.Response, err error) {
+		s.SetExceptionHandler(func(ctx context.Context, req *httpapi.Request) (handled bool, res *httpapi.Response, err error) {
 			return true, fixedResponse, fmt.Errorf("some error")
 		})
 		res, err := s.Proxy(nil, nil)
