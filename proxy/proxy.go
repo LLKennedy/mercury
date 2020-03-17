@@ -1,18 +1,17 @@
 package proxy
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
 
 	"github.com/LLKennedy/httpgrpc/httpapi"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/peterbourgon/mergemap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // Proxy proxies connections through the server
@@ -106,10 +105,10 @@ func callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Ty
 	builtRequestPtr := builtRequest.Interface()
 	builtRequestMessage, ok := builtRequestPtr.(proto.Message)
 	if !ok {
-		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "httpgrpc: cannot convert json data to non-proto message using jsonpb")
+		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "httpgrpc: cannot convert json data to non-proto message using protojson")
 	}
 	if inputJSON != nil {
-		err = jsonpb.Unmarshal(bytes.NewReader(inputJSON), builtRequestMessage)
+		err = protojson.Unmarshal(inputJSON, builtRequestMessage)
 		if err != nil {
 			return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
 		}
@@ -120,10 +119,8 @@ func callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Ty
 	if returnValues[0].CanInterface() {
 		outMessage, ok := (returnValues[0].Interface()).(proto.Message)
 		if ok {
-			buf := bytes.NewBuffer(nil)
-			(&jsonpb.Marshaler{}).Marshal(buf, outMessage)
-			outJSON = buf.Bytes()
-			if outJSON != nil && (len(outJSON) == 0 || string(outJSON) == "null") {
+			outJSON, err = protojson.Marshal(outMessage)
+			if err != nil || outJSON != nil && (len(outJSON) == 0 || string(outJSON) == "null" || string(outJSON) == "{}") {
 				outJSON = nil
 			}
 		}

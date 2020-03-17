@@ -53,6 +53,17 @@ func (s *exampleGRPCServer) DoThing(ctx context.Context, req *request) (*respons
 	}, nil
 }
 
+type exampleService struct{}
+
+func (e *exampleService) Example(ctx context.Context, req *ExampleRequest) (res *ExampleResponse, err error) {
+	res = &ExampleResponse{
+		FullResponseData: fmt.Sprintf("%d", req.GetOtherThing()),
+		Done:             !req.GetToggle(),
+		Output:           req.GetMainData(),
+	}
+	return res, nil
+}
+
 func TestServer_Proxy(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -87,23 +98,23 @@ func TestServer_Proxy(t *testing.T) {
 			s: &Server{
 				api: map[string]map[string]apiMethod{
 					"POST": {
-						"DoThing": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.TypeOf(&exampleGRPCServer{}).Method(0)},
+						"Example": apiMethod{pattern: apiMethodPatternStructStruct, reflection: reflect.TypeOf(&exampleService{}).Method(0)},
 					},
 				},
-				innerServer: &exampleGRPCServer{},
+				innerServer: &exampleService{},
 			},
 			ctx: new(mockContext),
 			req: &httpapi.Request{
 				Method:    httpapi.Method_POST,
-				Procedure: "DoThing",
-				Payload:   []byte(`{"arg1": "hello","arg2": 3}`),
+				Procedure: "Example",
+				Payload:   []byte(`{"toggle": false, "otherThing": 17}`),
 				Params: map[string]*httpapi.MultiVal{
-					"arg3": {Values: []string{"goodbye"}},
+					"mainData": {Values: []string{"aGVsbG8="}},
 				},
 			},
 			want: &httpapi.Response{
 				StatusCode: 200,
-				Payload:    []byte(`{"arg3":true}`),
+				Payload:    []byte(`{"fullResponseData":"17","done":true,"output":"aGVsbG8="}`),
 			},
 		},
 		{
