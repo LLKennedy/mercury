@@ -1,6 +1,8 @@
 syntax = "proto3";
 package service;
 
+option go_package = "github.com/LLKennedy/httpgrpc/internal/testservice/service";
+
 // App is a microservice GRPC API
 service App {
     // Fibonacci returns the nth number in the Fibonacci sequence. It does not start with an HTTP method and is therefore not exposed

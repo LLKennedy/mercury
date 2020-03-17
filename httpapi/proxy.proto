@@ -1,6 +1,8 @@
 syntax = "proto3";
 package httpapi;
 
+option go_package = "github.com/LLKennedy/httpgrpc/httpapi";
+
 // ExposedService is a microservice exposed to the outside world via an HTTPS reverse-proxy
 service ExposedService {
     // Proxies a message to the internal GRPC API
