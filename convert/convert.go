@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/LLKennedy/httpgrpc/httpapi"
 	"github.com/LLKennedy/httpgrpc/logs"
-	"github.com/LLKennedy/httpgrpc/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,7 +20,7 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	req.Payload = bodyBytes
 	// Forward the actual GRPC request
-	res, err := proto.NewExposedServiceClient(conn).Proxy(ctx, req)
+	res, err := httpapi.NewExposedServiceClient(conn).Proxy(ctx, req)
 	if err != nil {
 		// GRPC call failed, let's log it, process an error status
 		for _, logger := range loggers {
@@ -47,19 +47,19 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 	return
 }
 
-// RequestFromRequest creates a *proto.Request from *http.Request filling all values except body, which could error
-func RequestFromRequest(r *http.Request) *proto.Request {
-	req := &proto.Request{}
-	req.Headers = map[string]*proto.MultiVal{}
+// RequestFromRequest creates a *httpapi.Request from *http.Request filling all values except body, which could error
+func RequestFromRequest(r *http.Request) *httpapi.Request {
+	req := &httpapi.Request{}
+	req.Headers = map[string]*httpapi.MultiVal{}
 	for name, values := range r.Header {
-		newHeader := &proto.MultiVal{}
+		newHeader := &httpapi.MultiVal{}
 		newHeader.Values = values
 		req.Headers[name] = newHeader
 	}
 	req.Method = MethodFromString(r.Method)
-	req.Params = map[string]*proto.MultiVal{}
+	req.Params = map[string]*httpapi.MultiVal{}
 	for name, values := range r.URL.Query() {
-		newParam := &proto.MultiVal{}
+		newParam := &httpapi.MultiVal{}
 		newParam.Values = values
 		req.Params[name] = newParam
 	}
@@ -110,29 +110,29 @@ func GRPCStatusToHTTPStatusCode(grpcStatus codes.Code) (c int) {
 	return
 }
 
-// MethodFromString converts a method string to a proto.Method
-func MethodFromString(methodString string) proto.Method {
+// MethodFromString converts a method string to a httpapi.Method
+func MethodFromString(methodString string) httpapi.Method {
 	switch strings.ToUpper(methodString) {
 	case "GET":
-		return proto.Method_GET
+		return httpapi.Method_GET
 	case "HEAD":
-		return proto.Method_HEAD
+		return httpapi.Method_HEAD
 	case "POST":
-		return proto.Method_POST
+		return httpapi.Method_POST
 	case "PUT":
-		return proto.Method_PUT
+		return httpapi.Method_PUT
 	case "DELETE":
-		return proto.Method_DELETE
+		return httpapi.Method_DELETE
 	case "CONNECT":
-		return proto.Method_CONNECT
+		return httpapi.Method_CONNECT
 	case "OPTIONS":
-		return proto.Method_OPTIONS
+		return httpapi.Method_OPTIONS
 	case "TRACE":
-		return proto.Method_TRACE
+		return httpapi.Method_TRACE
 	case "PATCH":
-		return proto.Method_PATCH
+		return httpapi.Method_PATCH
 	default:
-		return proto.Method_UNKNOWN
+		return httpapi.Method_UNKNOWN
 
 	}
 }

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package proto;
+package httpapi;
 
 // ExposedService is a microservice exposed to the outside world via an HTTPS reverse-proxy
 service ExposedService {
