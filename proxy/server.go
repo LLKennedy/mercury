@@ -30,6 +30,7 @@ type Server struct {
 	api              map[string]map[string]apiMethod // the api of innerServer
 	innerServer      interface{}                     // the actual protobuf endpoints we want to use
 	exceptionHandler ExceptionHandler
+	httpapi.UnimplementedExposedServiceServer
 }
 
 type apiMethod struct {
