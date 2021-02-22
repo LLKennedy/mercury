@@ -114,9 +114,11 @@ func TestSetExceptionHandler(t *testing.T) {
 func TestNewServer(t *testing.T) {
 	gS := grpc.NewServer()
 	type args struct {
-		api      interface{}
-		server   interface{}
-		listener *grpc.Server
+		api               interface{}
+		server            interface{}
+		listener          *grpc.Server
+		clientConn        grpc.ClientConnInterface
+		invokeServiceName string
 	}
 	tests := []struct {
 		name    string
@@ -152,7 +154,7 @@ func TestNewServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewServer(tt.args.api, tt.args.server, tt.args.listener)
+			got, err := NewServer(tt.args.api, tt.args.server, tt.args.listener, tt.args.clientConn, tt.args.invokeServiceName)
 			if tt.want == nil {
 				assert.Nil(t, got)
 			} else {

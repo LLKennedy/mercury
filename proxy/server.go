@@ -26,10 +26,12 @@ type ExceptionHandler func(ctx context.Context, req *httpapi.Request) (handled b
 
 // Server is an HTTP to GRPC proxy server
 type Server struct {
-	grpcServer       *grpc.Server
-	api              map[string]map[string]apiMethod // the api of innerServer
-	innerServer      interface{}                     // the actual protobuf endpoints we want to use
-	exceptionHandler ExceptionHandler
+	grpcServer        *grpc.Server
+	api               map[string]map[string]apiMethod // the api of innerServer
+	innerServer       interface{}                     // the actual protobuf endpoints we want to use
+	clientConn        grpc.ClientConnInterface
+	invokeServiceName string
+	exceptionHandler  ExceptionHandler
 	httpapi.UnimplementedExposedServiceServer
 }
 
@@ -81,6 +83,34 @@ func (s *Server) setInnerServer(in interface{}) {
 		return
 	}
 	s.innerServer = in
+}
+
+func (s *Server) getClientConn() grpc.ClientConnInterface {
+	if s == nil {
+		return defaultServer.clientConn
+	}
+	return s.clientConn
+}
+
+func (s *Server) setClientConn(in grpc.ClientConnInterface) {
+	if s == nil {
+		defaultServer.clientConn = in
+	}
+	s.clientConn = in
+}
+
+func (s *Server) getInvokeServiceName() string {
+	if s == nil {
+		return defaultServer.invokeServiceName
+	}
+	return s.invokeServiceName
+}
+
+func (s *Server) setInvokeServiceName(in string) {
+	if s == nil {
+		defaultServer.invokeServiceName = in
+	}
+	s.invokeServiceName = in
 }
 
 func (s *Server) handleExceptions(ctx context.Context, req *httpapi.Request) (handled bool, res *httpapi.Response, err error) {

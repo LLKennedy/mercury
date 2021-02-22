@@ -12,21 +12,20 @@ import (
 // NewServer creates a proxy from HTTP(S) traffic to server using the methods defined by api
 // api should be the Unimplemented<ServiceName> struct compiled by the protobuf. All methods defined on api MUST start with an HTTP method name
 // server MUST implement the same methods as api without the prepended method names, though it may have others without exposing them to HTTP(S) traffic
-func NewServer(api, server interface{}, listener *grpc.Server) (s *Server, err error) {
+func NewServer(api, server interface{}, listener *grpc.Server, clientConn grpc.ClientConnInterface, invokeServiceName string) (s *Server, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("httpgrpc: caught panic creating new server: %v", r)
 		}
 	}()
-	wrapErr := func(in error) error {
-		if in == nil {
-			return nil
-		}
-		return fmt.Errorf("httpgrpc: %v", in)
-	}
 	s = new(Server)
 	s.register(listener)
-	err = wrapErr(s.setAPIConfig(api, server))
+	s.setClientConn(clientConn)
+	s.setInvokeServiceName(invokeServiceName)
+	err = s.setAPIConfig(api, server)
+	if err != nil {
+		err = fmt.Errorf("httpgrpc: %v", err)
+	}
 	return s, err
 }
 
