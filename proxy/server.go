@@ -33,11 +33,14 @@ type Server struct {
 	invokeServiceName string
 	exceptionHandler  ExceptionHandler
 	httpapi.UnimplementedExposedServiceServer
+	bypassInterceptors bool
+	callOpts           []grpc.CallOption
 }
 
 type apiMethod struct {
 	pattern    apiMethodPattern
 	reflection reflect.Method
+	value      reflect.Value
 }
 
 func (s *Server) getGrpcServer() *grpc.Server {
@@ -111,6 +114,34 @@ func (s *Server) setInvokeServiceName(in string) {
 		defaultServer.invokeServiceName = in
 	}
 	s.invokeServiceName = in
+}
+
+func (s *Server) getBypassInterceptors() bool {
+	if s == nil {
+		return defaultServer.bypassInterceptors
+	}
+	return s.bypassInterceptors
+}
+
+func (s *Server) setBypassInterceptors(in bool) {
+	if s == nil {
+		defaultServer.bypassInterceptors = in
+	}
+	s.bypassInterceptors = in
+}
+
+func (s *Server) getCallOpts() []grpc.CallOption {
+	if s == nil {
+		return defaultServer.callOpts
+	}
+	return s.callOpts
+}
+
+func (s *Server) setCallOpts(in []grpc.CallOption) {
+	if s == nil {
+		defaultServer.callOpts = in
+	}
+	s.callOpts = in
 }
 
 func (s *Server) handleExceptions(ctx context.Context, req *httpapi.Request) (handled bool, res *httpapi.Response, err error) {

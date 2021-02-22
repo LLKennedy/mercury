@@ -9,6 +9,7 @@ import (
 	"github.com/LLKennedy/httpgrpc/v2/httpapi"
 	"github.com/peterbourgon/mergemap"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -61,7 +62,7 @@ func (s *Server) callProc(ctx context.Context, req *httpapi.Request, procType re
 	}
 	switch pattern {
 	case apiMethodPatternStructStruct:
-		res, err = callStructStruct(ctx, inputJSON, procType, caller)
+		res, err = s.callStructStruct(ctx, inputJSON, req.GetProcedure(), procType, caller)
 	case apiMethodPatternStructStream:
 		res, err = callStructStream(ctx, inputJSON, procType, caller)
 	case apiMethodPatternStreamStruct:
@@ -94,18 +95,24 @@ func (s *Server) findProc(httpMethod httpapi.Method, procName string) (procType 
 	}
 	procType = apiProc.reflection.Type
 	pattern = apiProc.pattern
-	caller = reflect.ValueOf(s.getInnerServer()).MethodByName(procName)
+	caller = apiProc.value
 	return
 }
 
 // One struct in, one struct out
-func callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *httpapi.Response, err error) {
+func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procName string, procType reflect.Type, caller reflect.Value) (res *httpapi.Response, err error) {
 	// Create new instance of struct argument to pass into real implementation
 	builtRequest := reflect.New(procType.In(2).Elem())
+	builtResponse := reflect.New(procType.Out(0).Elem())
+	builtResponsePtr := builtResponse.Interface()
 	builtRequestPtr := builtRequest.Interface()
 	builtRequestMessage, ok := builtRequestPtr.(proto.Message)
 	if !ok {
 		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "httpgrpc: cannot convert json data to non-proto message using protojson")
+	}
+	builtResponseMessage, ok := builtResponsePtr.(proto.Message)
+	if !ok {
+		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "httpgrpc: cannot convert non-proto message to json data using protojson")
 	}
 	if inputJSON != nil {
 		unmarshaller := protojson.UnmarshalOptions{
@@ -116,6 +123,19 @@ func callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Ty
 		if err != nil {
 			return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
 		}
+	}
+	if !s.getBypassInterceptors() {
+		// Call the external procedure
+		invokeServiceName := s.getInvokeServiceName()
+		invokePath := fmt.Sprintf("/%s/%s", invokeServiceName, procName)
+		// Forward all incoming metadata if present
+		incoming, ok := metadata.FromIncomingContext(ctx)
+		if ok {
+			ctx = metadata.NewOutgoingContext(ctx, incoming)
+		}
+		client := s.getClientConn()
+		err = client.Invoke(ctx, invokePath, builtRequestMessage, builtResponseMessage)
+		return
 	}
 	// Actually call the inner procedure
 	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
@@ -128,6 +148,7 @@ func callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Ty
 				EmitUnpopulated: true,
 			}
 			outJSON, err = marshaller.Marshal(outMessage)
+			// TODO: this error gets swallowed if the actual endpoint also returned an error, we should fix this somehow
 			if err != nil || outJSON != nil && (len(outJSON) == 0 || string(outJSON) == "null" || string(outJSON) == "{}") {
 				outJSON = nil
 			}

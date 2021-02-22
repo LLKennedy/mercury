@@ -12,7 +12,7 @@ import (
 // NewServer creates a proxy from HTTP(S) traffic to server using the methods defined by api
 // api should be the Unimplemented<ServiceName> struct compiled by the protobuf. All methods defined on api MUST start with an HTTP method name
 // server MUST implement the same methods as api without the prepended method names, though it may have others without exposing them to HTTP(S) traffic
-func NewServer(api, server interface{}, listener *grpc.Server, clientConn grpc.ClientConnInterface, invokeServiceName string) (s *Server, err error) {
+func NewServer(api, server interface{}, listener *grpc.Server, clientConn grpc.ClientConnInterface, invokeServiceName string, bypassInterceptors bool, callOpts ...grpc.CallOption) (s *Server, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("httpgrpc: caught panic creating new server: %v", r)
@@ -22,6 +22,8 @@ func NewServer(api, server interface{}, listener *grpc.Server, clientConn grpc.C
 	s.register(listener)
 	s.setClientConn(clientConn)
 	s.setInvokeServiceName(invokeServiceName)
+	s.setBypassInterceptors(bypassInterceptors)
+	s.setCallOpts(callOpts)
 	err = s.setAPIConfig(api, server)
 	if err != nil {
 		err = fmt.Errorf("httpgrpc: %v", err)
@@ -61,10 +63,15 @@ func (s *Server) setAPIConfig(api, server interface{}) (err error) {
 			// one of the functions didn't match
 			return err
 		}
+		value := reflect.ValueOf(server).MethodByName(procedureName)
 		if _, exists := apiMethods[methodString]; !exists {
 			apiMethods[methodString] = map[string]apiMethod{}
 		}
-		apiMethods[methodString][procedureName] = apiMethod{pattern: pattern, reflection: apiMethodReflection}
+		apiMethods[methodString][procedureName] = apiMethod{
+			pattern:    pattern,
+			reflection: apiMethodReflection,
+			value:      value,
+		}
 	}
 	// We know all api functions map to server functions, now hold onto the method list and server pointer for later
 	s.setAPI(apiMethods)
