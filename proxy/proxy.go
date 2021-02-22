@@ -108,7 +108,11 @@ func callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Ty
 		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "httpgrpc: cannot convert json data to non-proto message using protojson")
 	}
 	if inputJSON != nil {
-		err = protojson.Unmarshal(inputJSON, builtRequestMessage)
+		unmarshaller := protojson.UnmarshalOptions{
+			AllowPartial:   true,
+			DiscardUnknown: true,
+		}
+		err = unmarshaller.Unmarshal(inputJSON, builtRequestMessage)
 		if err != nil {
 			return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
 		}
@@ -119,7 +123,11 @@ func callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Ty
 	if returnValues[0].CanInterface() {
 		outMessage, ok := (returnValues[0].Interface()).(proto.Message)
 		if ok {
-			outJSON, err = protojson.Marshal(outMessage)
+			marshaller := protojson.MarshalOptions{
+				AllowPartial:    true,
+				EmitUnpopulated: true,
+			}
+			outJSON, err = marshaller.Marshal(outMessage)
 			if err != nil || outJSON != nil && (len(outJSON) == 0 || string(outJSON) == "null" || string(outJSON) == "{}") {
 				outJSON = nil
 			}
