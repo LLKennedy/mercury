@@ -25,11 +25,6 @@ type Handle struct {
 func New() (*Handle, error) {
 	s := new(Handle)
 	s.server = grpc.NewServer()
-	var err error
-	s.proxy, err = httpgrpc.NewServer(&UnimplementedExposedAppServer{}, s, s.server)
-	if err != nil {
-		return nil, err
-	}
 	RegisterAppServer(s.server, s)
 	return s, nil
 }
@@ -37,6 +32,14 @@ func New() (*Handle, error) {
 // Start starts the server
 func (h *Handle) Start() error {
 	listener, err := net.Listen("tcp", ":8953")
+	if err != nil {
+		return err
+	}
+	conn, err := h.MakeClientConn()
+	if err != nil {
+		return err
+	}
+	h.proxy, err = httpgrpc.NewServer(&UnimplementedExposedAppServer{}, h, h.server, conn, "service.App", false)
 	if err != nil {
 		return err
 	}

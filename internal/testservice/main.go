@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/LLKennedy/httpgrpc/v2/internal/testservice/proxy"
 	"github.com/LLKennedy/httpgrpc/v2/internal/testservice/service"
@@ -19,7 +20,7 @@ func main() {
 	startErr1 := make(chan error)
 	startErr2 := make(chan error)
 	go startServer(s, startErr1)
-
+	time.Sleep(time.Second)
 	client, err := s.MakeClientConn()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -53,6 +54,8 @@ func main() {
 	select {
 	case err = <-startErr1:
 	case err = <-startErr2:
+	default:
+		fmt.Println("Closing without server-start error")
 	}
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)

@@ -114,15 +114,20 @@ func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procNam
 	if !ok {
 		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "httpgrpc: cannot convert non-proto message to json data using protojson")
 	}
-	if inputJSON != nil {
-		unmarshaller := protojson.UnmarshalOptions{
-			AllowPartial:   true,
-			DiscardUnknown: true,
-		}
-		err = unmarshaller.Unmarshal(inputJSON, builtRequestMessage)
-		if err != nil {
-			return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
-		}
+	if inputJSON == nil {
+		inputJSON = []byte("{}")
+	}
+	unmarshaller := protojson.UnmarshalOptions{
+		AllowPartial:   true,
+		DiscardUnknown: true,
+	}
+	err = unmarshaller.Unmarshal([]byte("{}"), builtResponseMessage)
+	if err != nil {
+		return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
+	}
+	err = unmarshaller.Unmarshal(inputJSON, builtRequestMessage)
+	if err != nil {
+		return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
 	}
 	if !s.getBypassInterceptors() {
 		// Call the external procedure
