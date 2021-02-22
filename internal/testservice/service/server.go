@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"net"
 
-	"github.com/LLKennedy/httpgrpc"
+	"github.com/LLKennedy/httpgrpc/v2"
 	"google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

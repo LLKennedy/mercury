@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/httpgrpc/v2/httpapi"
 	"github.com/peterbourgon/mergemap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

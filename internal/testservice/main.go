@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/LLKennedy/httpgrpc/internal/testservice/proxy"
-	"github.com/LLKennedy/httpgrpc/internal/testservice/service"
+	"github.com/LLKennedy/httpgrpc/v2/internal/testservice/proxy"
+	"github.com/LLKennedy/httpgrpc/v2/internal/testservice/service"
 )
 
 func main() {

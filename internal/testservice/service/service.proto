@@ -1,7 +1,7 @@
 syntax = "proto3";
 package service;
 
-option go_package = "github.com/LLKennedy/httpgrpc/internal/testservice/service";
+option go_package = "github.com/LLKennedy/httpgrpc/v2/internal/testservice/service";
 
 // App is a microservice GRPC API
 service App {

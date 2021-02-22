@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/LLKennedy/httpgrpc"
+	"github.com/LLKennedy/httpgrpc/v2"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 )
