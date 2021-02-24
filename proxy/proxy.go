@@ -55,6 +55,21 @@ func (s *Server) ProxyUnary(ctx context.Context, req *httpapi.Request) (res *htt
 	return
 }
 
+// ProxyClientStream streams requests from the client and terminates in a single server response
+func (s *Server) ProxyClientStream(srv httpapi.ExposedService_ProxyClientStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method ProxyClientStream not implemented")
+}
+
+// ProxyServerStream takes a single client request then streams responses from the server
+func (s *Server) ProxyServerStream(req *httpapi.Request, srv httpapi.ExposedService_ProxyServerStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method ProxyServerStream not implemented")
+}
+
+// ProxyDualStream streams requests and responses in both directions in any order
+func (s *Server) ProxyDualStream(srv httpapi.ExposedService_ProxyDualStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method ProxyDualStream not implemented")
+}
+
 func (s *Server) findProc(httpMethod httpapi.Method, procName string) (procType reflect.Type, caller reflect.Value, pattern apiMethodPattern, err error) {
 	var methodString string
 	methodString, err = methodToString(httpMethod)
