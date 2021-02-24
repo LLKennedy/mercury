@@ -48,7 +48,8 @@ func validateArgs(expected, found reflect.Type) error {
 }
 
 func typesMatch(expected, found []reflect.Type) error {
-	if len(expected) != len(found) {
+	// Account for both patterns
+	if len(expected) != len(found)-1 && len(expected) != len(found) {
 		return fmt.Errorf("argument lengths did not match: expected %d but found %d", len(expected), len(found))
 	}
 	for i := range expected {
