@@ -43,39 +43,15 @@ func (s *Server) ProxyUnary(ctx context.Context, req *httpapi.Request) (res *htt
 	if pattern == apiMethodPatternUnknown {
 		return &httpapi.Response{}, wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
 	}
-	res, err = s.callProc(ctx, req, procType, caller, pattern)
-	return
-}
-
-func (s *Server) callProc(ctx context.Context, req *httpapi.Request, procType reflect.Type, caller reflect.Value, pattern apiMethodPattern) (res *httpapi.Response, err error) {
-	wrapErr := func(code codes.Code, err error) error {
-		if err == nil {
-			return nil
-		}
-		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
+	if pattern != apiMethodPatternStructStruct {
+		return &httpapi.Response{}, wrapErr(codes.InvalidArgument, fmt.Errorf("ProxyUnary called for non-unary RPC"))
 	}
-	// We're going to rely on JSON unmarshalling logic to get data from the request to the new struct
-	// Maybe one day there will be custom marshalling/unmarshalling capability here with tag parsing and method analysis for custom functions, but probably not
-	// JSON tags are pretty much fit for purpose
-	// We just have to make sure we have json to work with first
 	var inputJSON []byte
 	inputJSON, err = parseRequest(req)
 	if err != nil {
 		return &httpapi.Response{}, wrapErr(codes.Internal, err)
 	}
-	switch pattern {
-	case apiMethodPatternStructStruct:
-		res, err = s.callStructStruct(ctx, inputJSON, req.GetProcedure(), procType, caller)
-	case apiMethodPatternStructStream:
-		res, err = callStructStream(ctx, inputJSON, procType, caller)
-	case apiMethodPatternStreamStruct:
-		res, err = callStreamStruct(ctx, inputJSON, procType, caller)
-	case apiMethodPatternStreamStream:
-		res, err = callStreamStream(ctx, inputJSON, procType, caller)
-	default:
-		// This should be truly impossible during normal operation, we've checked for this like 20 times before this point
-		res, err = &httpapi.Response{}, wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
-	}
+	res, err = s.callStructStruct(ctx, inputJSON, req.GetProcedure(), procType, caller)
 	return
 }
 
