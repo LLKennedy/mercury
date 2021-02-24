@@ -17,8 +17,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// Proxy proxies connections through the server
-func (s *Server) Proxy(ctx context.Context, req *httpapi.Request) (res *httpapi.Response, err error) {
+// ProxyUnary proxies connections through the server
+func (s *Server) ProxyUnary(ctx context.Context, req *httpapi.Request) (res *httpapi.Response, err error) {
 	wrapErr := func(code codes.Code, err error) error {
 		if err == nil {
 			return nil

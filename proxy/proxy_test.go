@@ -173,7 +173,7 @@ func TestServer_Proxy(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.s.Proxy(tt.ctx, tt.req)
+			got, err := tt.s.ProxyUnary(tt.ctx, tt.req)
 			assert.Equal(t, tt.want, got)
 			if tt.expectedErr == "" {
 				assert.NoError(t, err)

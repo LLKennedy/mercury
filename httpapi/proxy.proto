@@ -5,8 +5,37 @@ option go_package = "github.com/LLKennedy/httpgrpc/v2/httpapi";
 
 // ExposedService is a microservice exposed to the outside world via an HTTPS reverse-proxy
 service ExposedService {
-    // Proxies a message to the internal GRPC API
-    rpc Proxy(Request) returns (Response) {}
+    // ProxyUnary sends a message to the GRPC API expecting an immediate single response
+    rpc ProxyUnary(Request) returns (Response) {}
+    // ProxyClientStream sends a series of messages to the GRPC API expecting a single response when the client messages end
+    rpc ProxyClientStream(stream StreamedRequest) returns (Response) {}
+    // ProxyServerStream sends a message to the GRPC API expecting a series of responses back
+    rpc ProxyServerStream(Request) returns (stream StreamedResponse) {}
+    // ProxyDualStream sends a series of messages to the GRPC API expecting a series of responses back in any order of sending and receiving
+    rpc ProxyDualStream(stream StreamedRequest) returns (stream StreamedResponse) {}
+}
+
+message StreamedRequest {
+    oneof message_type {
+        // Init will only be sent once on initialisation of the websocket that this stream is linked to, it contains the routing information normally transmitted by the Request message
+        RoutingInformation init = 1;
+        // Request will be sent for every message but the very first, and is the JSON extracted from the websocket message
+        bytes request = 2;
+    }
+}
+
+message RoutingInformation {
+    // HTTP method from requestor
+    Method method = 1;
+    // Desired procedure name
+    string procedure = 2;
+    // Headers won't be automatically translated into the GRPC requests, but they should be delivered in case manual conversion is needed
+    map<string, MultiVal> headers = 3;
+}
+
+// TODO: work out what we can do here
+message StreamedResponse {
+    bytes response = 1;
 }
 
 // The request data from the HTTP request

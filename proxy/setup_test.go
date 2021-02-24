@@ -105,7 +105,7 @@ func TestSetExceptionHandler(t *testing.T) {
 		s.SetExceptionHandler(func(ctx context.Context, req *httpapi.Request) (handled bool, res *httpapi.Response, err error) {
 			return true, fixedResponse, fmt.Errorf("some error")
 		})
-		res, err := s.Proxy(nil, nil)
+		res, err := s.ProxyUnary(nil, nil)
 		assert.Equal(t, fixedResponse, res)
 		assert.EqualError(t, err, "some error")
 	})

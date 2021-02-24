@@ -21,7 +21,7 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 	req.Payload = bodyBytes
 	// Forward the actual GRPC request
 	var errStatus *status.Status
-	res, err := httpapi.NewExposedServiceClient(conn).Proxy(ctx, req)
+	res, err := httpapi.NewExposedServiceClient(conn).ProxyUnary(ctx, req)
 	if err != nil {
 		// GRPC call failed, let's log it, process an error status
 		for _, logger := range loggers {
