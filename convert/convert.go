@@ -20,13 +20,15 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	req.Payload = bodyBytes
 	// Forward the actual GRPC request
+	var errStatus *status.Status
 	res, err := httpapi.NewExposedServiceClient(conn).Proxy(ctx, req)
 	if err != nil {
 		// GRPC call failed, let's log it, process an error status
 		for _, logger := range loggers {
 			logger.LogErrorf(txid, "httpgrpc: received error from target service: %v", err)
 		}
-		errStatus, ok := status.FromError(err)
+		var ok bool
+		errStatus, ok = status.FromError(err)
 		if !ok {
 			// Can't get proper status code, return bad gateway
 			w.WriteHeader(http.StatusBadGateway)
@@ -38,11 +40,15 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 		w.WriteHeader(int(res.GetStatusCode()))
 	}
 	// Write response body
-	w.Write(res.GetPayload())
 	for name, values := range res.GetWriteHeaders() {
 		for _, value := range values.GetValues() {
 			w.Header().Add(name, value)
 		}
+	}
+	if errStatus == nil {
+		w.Write(res.GetPayload())
+	} else {
+		w.Write([]byte(errStatus.Message()))
 	}
 	return
 }

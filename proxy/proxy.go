@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 
+	"github.com/LLKennedy/httpgrpc/v2/convert"
 	"github.com/LLKennedy/httpgrpc/v2/httpapi"
 	"github.com/peterbourgon/mergemap"
 	"google.golang.org/grpc/codes"
@@ -41,7 +43,8 @@ func (s *Server) Proxy(ctx context.Context, req *httpapi.Request) (res *httpapi.
 	if pattern == apiMethodPatternUnknown {
 		return &httpapi.Response{}, wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
 	}
-	return s.callProc(ctx, req, procType, caller, pattern)
+	res, err = s.callProc(ctx, req, procType, caller, pattern)
+	return
 }
 
 func (s *Server) callProc(ctx context.Context, req *httpapi.Request, procType reflect.Type, caller reflect.Value, pattern apiMethodPattern) (res *httpapi.Response, err error) {
@@ -121,14 +124,16 @@ func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procNam
 		AllowPartial:   true,
 		DiscardUnknown: true,
 	}
-	err = unmarshaller.Unmarshal([]byte("{}"), builtResponseMessage)
-	if err != nil {
-		return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
+	marshaller := protojson.MarshalOptions{
+		AllowPartial:    true,
+		EmitUnpopulated: true,
 	}
 	err = unmarshaller.Unmarshal(inputJSON, builtRequestMessage)
 	if err != nil {
 		return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
 	}
+	var outJSON []byte
+	var jsonErr error
 	if !s.getBypassInterceptors() {
 		// Call the external procedure
 		invokeServiceName := s.getInvokeServiceName()
@@ -140,37 +145,46 @@ func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procNam
 		}
 		client := s.getClientConn()
 		err = client.Invoke(ctx, invokePath, builtRequestMessage, builtResponseMessage)
-		return
-	}
-	// Actually call the inner procedure
-	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
-	var outJSON []byte
-	if returnValues[0].CanInterface() {
-		outMessage, ok := (returnValues[0].Interface()).(proto.Message)
-		if ok {
-			marshaller := protojson.MarshalOptions{
-				AllowPartial:    true,
-				EmitUnpopulated: true,
-			}
-			outJSON, err = marshaller.Marshal(outMessage)
-			// TODO: this error gets swallowed if the actual endpoint also returned an error, we should fix this somehow
-			if err != nil || outJSON != nil && (len(outJSON) == 0 || string(outJSON) == "null" || string(outJSON) == "{}") {
-				outJSON = nil
+		outJSON, jsonErr = marshaller.Marshal(builtResponseMessage)
+	} else {
+		returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
+		if returnValues[0].CanInterface() {
+			outMessage, ok := (returnValues[0].Interface()).(proto.Message)
+			if ok {
+				outJSON, jsonErr = marshaller.Marshal(outMessage)
+			} else {
+				jsonErr = status.Errorf(codes.Internal, "response message could not be converted to protMessage interface")
 			}
 		}
+		if returnValues[1].CanInterface() {
+			err, _ = returnValues[1].Interface().(error)
+		} else {
+			err = status.Errorf(codes.Internal, "httpgrpc: response error was not an error message?")
+		}
 	}
-	if returnValues[1].CanInterface() {
-		err, _ = returnValues[1].Interface().(error)
+	// TODO: this error gets swallowed if the actual endpoint also returned an error, we should fix this somehow
+	if jsonErr != nil && err == nil {
+		outJSON = nil
+		err = status.Errorf(codes.Internal, "could not marshal response message to JSON: %v", jsonErr)
+	} else if jsonErr != nil || outJSON != nil && (len(outJSON) == 0 || string(outJSON) == "null" || string(outJSON) == "{}") {
+		outJSON = nil
 	}
 	res = &httpapi.Response{
 		Payload: outJSON,
 	}
 	if err == nil {
-		res.StatusCode = 200 // TODO: parse status code specifically from outJSON
+		res.StatusCode = http.StatusOK
 	} else {
-		res.StatusCode = 500
+		sErr, ok := status.FromError(err)
+		if !ok {
+			res.StatusCode = http.StatusInternalServerError
+			res.Payload = []byte(fmt.Sprintf("httpgrpc: received non-gRPC error from endpoint: %v", err))
+		} else {
+			res.StatusCode = uint32(convert.GRPCStatusToHTTPStatusCode(sErr.Code()))
+			res.Payload = []byte(sErr.Message())
+		}
 	}
-	return res, err
+	return
 }
 
 // One struct in, stream of structs out
