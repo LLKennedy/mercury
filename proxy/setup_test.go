@@ -117,10 +117,7 @@ func TestNewServer(t *testing.T) {
 		api                interface{}
 		server             interface{}
 		listener           *grpc.Server
-		clientConn         grpc.ClientConnInterface
-		invokeServiceName  string
 		bypassInterceptors bool
-		callOpts           []grpc.CallOption
 	}
 	tests := []struct {
 		name    string
@@ -156,7 +153,7 @@ func TestNewServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewServer(tt.args.api, tt.args.server, tt.args.listener, tt.args.clientConn, tt.args.invokeServiceName, tt.args.bypassInterceptors, tt.args.callOpts...)
+			got, err := NewServer(tt.args.api, tt.args.server, tt.args.listener, tt.args.bypassInterceptors)
 			if tt.want == nil {
 				assert.Nil(t, got)
 			} else {

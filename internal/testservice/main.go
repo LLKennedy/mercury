@@ -42,19 +42,23 @@ func main() {
 			Scheme: "http",
 		},
 	}
-	res, err := webClient.Do(req)
-	if err != nil {
-		fmt.Printf("error sending web request: %v\n", err)
-	} else {
-		fmt.Printf("http response: %+v\n", res)
-		body, _ := ioutil.ReadAll(res.Body)
-		fmt.Printf("http response body: %s\n", body)
-	}
+	done := make(chan struct{}, 1)
+	go func() {
+		res, err := webClient.Do(req)
+		if err != nil {
+			fmt.Printf("error sending web request: %v\n", err)
+		} else {
+			fmt.Printf("http response: %+v\n", res)
+			body, _ := ioutil.ReadAll(res.Body)
+			fmt.Printf("http response body: %s\n", body)
+		}
+		done <- struct{}{}
+	}()
 
 	select {
 	case err = <-startErr1:
 	case err = <-startErr2:
-	default:
+	case <-done:
 		fmt.Println("Closing without server-start error")
 	}
 	if err != nil {

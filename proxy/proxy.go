@@ -106,16 +106,10 @@ func (s *Server) findProc(httpMethod httpapi.Method, procName string) (procType 
 func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procName string, procType reflect.Type, caller reflect.Value) (res *httpapi.Response, err error) {
 	// Create new instance of struct argument to pass into real implementation
 	builtRequest := reflect.New(procType.In(2).Elem())
-	builtResponse := reflect.New(procType.Out(0).Elem())
-	builtResponsePtr := builtResponse.Interface()
 	builtRequestPtr := builtRequest.Interface()
 	builtRequestMessage, ok := builtRequestPtr.(proto.Message)
 	if !ok {
 		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "httpgrpc: cannot convert json data to non-proto message using protojson")
-	}
-	builtResponseMessage, ok := builtResponsePtr.(proto.Message)
-	if !ok {
-		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "httpgrpc: cannot convert non-proto message to json data using protojson")
 	}
 	if inputJSON == nil {
 		inputJSON = []byte("{}")
@@ -132,35 +126,27 @@ func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procNam
 	if err != nil {
 		return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
 	}
-	var outJSON []byte
-	var jsonErr error
-	if !s.getBypassInterceptors() {
-		// Call the external procedure
-		invokeServiceName := s.getInvokeServiceName()
-		invokePath := fmt.Sprintf("/%s/%s", invokeServiceName, procName)
-		// Forward all incoming metadata if present
+	if !s.getSkipForwardingMetadata() {
 		incoming, ok := metadata.FromIncomingContext(ctx)
 		if ok {
 			ctx = metadata.NewOutgoingContext(ctx, incoming)
 		}
-		client := s.getClientConn()
-		err = client.Invoke(ctx, invokePath, builtRequestMessage, builtResponseMessage)
-		outJSON, jsonErr = marshaller.Marshal(builtResponseMessage)
-	} else {
-		returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
-		if returnValues[0].CanInterface() {
-			outMessage, ok := (returnValues[0].Interface()).(proto.Message)
-			if ok {
-				outJSON, jsonErr = marshaller.Marshal(outMessage)
-			} else {
-				jsonErr = status.Errorf(codes.Internal, "response message could not be converted to protMessage interface")
-			}
-		}
-		if returnValues[1].CanInterface() {
-			err, _ = returnValues[1].Interface().(error)
+	}
+	var outJSON []byte
+	var jsonErr error
+	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx), builtRequest})
+	if returnValues[0].CanInterface() {
+		outMessage, ok := (returnValues[0].Interface()).(proto.Message)
+		if ok {
+			outJSON, jsonErr = marshaller.Marshal(outMessage)
 		} else {
-			err = status.Errorf(codes.Internal, "httpgrpc: response error was not an error message?")
+			jsonErr = status.Errorf(codes.Internal, "response message could not be converted to protMessage interface")
 		}
+	}
+	if returnValues[1].CanInterface() {
+		err, _ = returnValues[1].Interface().(error)
+	} else {
+		err = status.Errorf(codes.Internal, "httpgrpc: response error was not an error message?")
 	}
 	// TODO: this error gets swallowed if the actual endpoint also returned an error, we should fix this somehow
 	if jsonErr != nil && err == nil {

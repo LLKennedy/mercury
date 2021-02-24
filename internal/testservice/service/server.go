@@ -19,6 +19,7 @@ type Handle struct {
 	server *grpc.Server
 	proxy  interface{ Serve(net.Listener) error }
 	photos map[string][]byte
+	UnimplementedAppServer
 }
 
 // New creates a new server
@@ -39,7 +40,8 @@ func (h *Handle) Start() error {
 	if err != nil {
 		return err
 	}
-	h.proxy, err = httpgrpc.NewServer(&UnimplementedExposedAppServer{}, h, h.server, conn, "service.App", false)
+	client := NewAppClient(conn)
+	h.proxy, err = httpgrpc.NewServer(&UnimplementedExposedAppServer{}, client, h.server, false)
 	if err != nil {
 		return err
 	}

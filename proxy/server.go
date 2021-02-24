@@ -26,15 +26,12 @@ type ExceptionHandler func(ctx context.Context, req *httpapi.Request) (handled b
 
 // Server is an HTTP to GRPC proxy server
 type Server struct {
-	grpcServer        *grpc.Server
-	api               map[string]map[string]apiMethod // the api of innerServer
-	innerServer       interface{}                     // the actual protobuf endpoints we want to use
-	clientConn        grpc.ClientConnInterface
-	invokeServiceName string
-	exceptionHandler  ExceptionHandler
+	grpcServer       *grpc.Server
+	api              map[string]map[string]apiMethod // the api of innerServer
+	innerServer      interface{}                     // the actual protobuf endpoints we want to use
+	exceptionHandler ExceptionHandler
 	httpapi.UnimplementedExposedServiceServer
-	bypassInterceptors bool
-	callOpts           []grpc.CallOption
+	skipForwardingMetadata bool
 }
 
 type apiMethod struct {
@@ -87,61 +84,18 @@ func (s *Server) setInnerServer(in interface{}) {
 	}
 	s.innerServer = in
 }
-
-func (s *Server) getClientConn() grpc.ClientConnInterface {
+func (s *Server) getSkipForwardingMetadata() bool {
 	if s == nil {
-		return defaultServer.clientConn
+		return defaultServer.skipForwardingMetadata
 	}
-	return s.clientConn
+	return s.skipForwardingMetadata
 }
 
-func (s *Server) setClientConn(in grpc.ClientConnInterface) {
+func (s *Server) setSkipForwardingMetadata(in bool) {
 	if s == nil {
-		defaultServer.clientConn = in
+		defaultServer.skipForwardingMetadata = in
 	}
-	s.clientConn = in
-}
-
-func (s *Server) getInvokeServiceName() string {
-	if s == nil {
-		return defaultServer.invokeServiceName
-	}
-	return s.invokeServiceName
-}
-
-func (s *Server) setInvokeServiceName(in string) {
-	if s == nil {
-		defaultServer.invokeServiceName = in
-	}
-	s.invokeServiceName = in
-}
-
-func (s *Server) getBypassInterceptors() bool {
-	if s == nil {
-		return defaultServer.bypassInterceptors
-	}
-	return s.bypassInterceptors
-}
-
-func (s *Server) setBypassInterceptors(in bool) {
-	if s == nil {
-		defaultServer.bypassInterceptors = in
-	}
-	s.bypassInterceptors = in
-}
-
-func (s *Server) getCallOpts() []grpc.CallOption {
-	if s == nil {
-		return defaultServer.callOpts
-	}
-	return s.callOpts
-}
-
-func (s *Server) setCallOpts(in []grpc.CallOption) {
-	if s == nil {
-		defaultServer.callOpts = in
-	}
-	s.callOpts = in
+	s.skipForwardingMetadata = in
 }
 
 func (s *Server) handleExceptions(ctx context.Context, req *httpapi.Request) (handled bool, res *httpapi.Response, err error) {

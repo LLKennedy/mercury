@@ -23,9 +23,9 @@ service App {
 service ExposedApp {
     rpc GetRandom(RandomRequest) returns (RandomResponse) {}
     rpc PostUploadPhoto(UploadPhotoRequest) returns (UploadPhotoResponse) {}
-    rpc PostFeed(stream FeedData) returns (FeedResponse) {}
-    rpc GetBroadcast(BroadcastRequest) returns (stream BroadcastData) {}
-    rpc PostConvertToString(stream ConvertInput) returns (stream ConvertOutput) {}
+    // rpc PostFeed(stream FeedData) returns (FeedResponse) {}
+    // rpc GetBroadcast(BroadcastRequest) returns (stream BroadcastData) {}
+    // rpc PostConvertToString(stream ConvertInput) returns (stream ConvertOutput) {}
 }
 
 message FeedData {
