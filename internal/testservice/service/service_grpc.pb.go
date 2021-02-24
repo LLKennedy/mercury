@@ -388,6 +388,9 @@ var _App_serviceDesc = grpc.ServiceDesc{
 type ExposedAppClient interface {
 	GetRandom(ctx context.Context, in *RandomRequest, opts ...grpc.CallOption) (*RandomResponse, error)
 	PostUploadPhoto(ctx context.Context, in *UploadPhotoRequest, opts ...grpc.CallOption) (*UploadPhotoResponse, error)
+	PostFeed(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostFeedClient, error)
+	// rpc GetBroadcast(BroadcastRequest) returns (stream BroadcastData) {}
+	PostConvertToString(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostConvertToStringClient, error)
 }
 
 type exposedAppClient struct {
@@ -416,12 +419,80 @@ func (c *exposedAppClient) PostUploadPhoto(ctx context.Context, in *UploadPhotoR
 	return out, nil
 }
 
+func (c *exposedAppClient) PostFeed(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostFeedClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[0], "/service.ExposedApp/PostFeed", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &exposedAppPostFeedClient{stream}
+	return x, nil
+}
+
+type ExposedApp_PostFeedClient interface {
+	Send(*FeedData) error
+	CloseAndRecv() (*FeedResponse, error)
+	grpc.ClientStream
+}
+
+type exposedAppPostFeedClient struct {
+	grpc.ClientStream
+}
+
+func (x *exposedAppPostFeedClient) Send(m *FeedData) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *exposedAppPostFeedClient) CloseAndRecv() (*FeedResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(FeedResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *exposedAppClient) PostConvertToString(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostConvertToStringClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[1], "/service.ExposedApp/PostConvertToString", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &exposedAppPostConvertToStringClient{stream}
+	return x, nil
+}
+
+type ExposedApp_PostConvertToStringClient interface {
+	Send(*ConvertInput) error
+	Recv() (*ConvertOutput, error)
+	grpc.ClientStream
+}
+
+type exposedAppPostConvertToStringClient struct {
+	grpc.ClientStream
+}
+
+func (x *exposedAppPostConvertToStringClient) Send(m *ConvertInput) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *exposedAppPostConvertToStringClient) Recv() (*ConvertOutput, error) {
+	m := new(ConvertOutput)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ExposedAppServer is the server API for ExposedApp service.
 // All implementations must embed UnimplementedExposedAppServer
 // for forward compatibility
 type ExposedAppServer interface {
 	GetRandom(context.Context, *RandomRequest) (*RandomResponse, error)
 	PostUploadPhoto(context.Context, *UploadPhotoRequest) (*UploadPhotoResponse, error)
+	PostFeed(ExposedApp_PostFeedServer) error
+	// rpc GetBroadcast(BroadcastRequest) returns (stream BroadcastData) {}
+	PostConvertToString(ExposedApp_PostConvertToStringServer) error
 	mustEmbedUnimplementedExposedAppServer()
 }
 
@@ -434,6 +505,12 @@ func (UnimplementedExposedAppServer) GetRandom(context.Context, *RandomRequest) 
 }
 func (UnimplementedExposedAppServer) PostUploadPhoto(context.Context, *UploadPhotoRequest) (*UploadPhotoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostUploadPhoto not implemented")
+}
+func (UnimplementedExposedAppServer) PostFeed(ExposedApp_PostFeedServer) error {
+	return status.Errorf(codes.Unimplemented, "method PostFeed not implemented")
+}
+func (UnimplementedExposedAppServer) PostConvertToString(ExposedApp_PostConvertToStringServer) error {
+	return status.Errorf(codes.Unimplemented, "method PostConvertToString not implemented")
 }
 func (UnimplementedExposedAppServer) mustEmbedUnimplementedExposedAppServer() {}
 
@@ -484,6 +561,58 @@ func _ExposedApp_PostUploadPhoto_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ExposedApp_PostFeed_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ExposedAppServer).PostFeed(&exposedAppPostFeedServer{stream})
+}
+
+type ExposedApp_PostFeedServer interface {
+	SendAndClose(*FeedResponse) error
+	Recv() (*FeedData, error)
+	grpc.ServerStream
+}
+
+type exposedAppPostFeedServer struct {
+	grpc.ServerStream
+}
+
+func (x *exposedAppPostFeedServer) SendAndClose(m *FeedResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *exposedAppPostFeedServer) Recv() (*FeedData, error) {
+	m := new(FeedData)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _ExposedApp_PostConvertToString_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ExposedAppServer).PostConvertToString(&exposedAppPostConvertToStringServer{stream})
+}
+
+type ExposedApp_PostConvertToStringServer interface {
+	Send(*ConvertOutput) error
+	Recv() (*ConvertInput, error)
+	grpc.ServerStream
+}
+
+type exposedAppPostConvertToStringServer struct {
+	grpc.ServerStream
+}
+
+func (x *exposedAppPostConvertToStringServer) Send(m *ConvertOutput) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *exposedAppPostConvertToStringServer) Recv() (*ConvertInput, error) {
+	m := new(ConvertInput)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _ExposedApp_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "service.ExposedApp",
 	HandlerType: (*ExposedAppServer)(nil),
@@ -497,6 +626,18 @@ var _ExposedApp_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ExposedApp_PostUploadPhoto_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "PostFeed",
+			Handler:       _ExposedApp_PostFeed_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "PostConvertToString",
+			Handler:       _ExposedApp_PostConvertToString_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "service.proto",
 }

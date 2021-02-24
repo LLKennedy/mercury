@@ -41,6 +41,8 @@ func (h *Handle) Start() error {
 		return err
 	}
 	client := NewAppClient(conn)
+	// client.Broadcast()
+	// h.Broadcast()
 	h.proxy, err = httpgrpc.NewServer(&UnimplementedExposedAppServer{}, client, h.server, false)
 	if err != nil {
 		return err
