@@ -51,23 +51,119 @@ func (s *Server) ProxyUnary(ctx context.Context, req *httpapi.Request) (res *htt
 	if err != nil {
 		return &httpapi.Response{}, wrapErr(codes.Internal, err)
 	}
-	res, err = s.callStructStruct(ctx, inputJSON, req.GetProcedure(), procType, caller)
-	return
+	res, err = s.callStructStruct(ctx, inputJSON, procType, caller)
+	return res, err
 }
 
 // ProxyClientStream streams requests from the client and terminates in a single server response
-func (s *Server) ProxyClientStream(srv httpapi.ExposedService_ProxyClientStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method ProxyClientStream not implemented")
+func (s *Server) ProxyClientStream(srv httpapi.ExposedService_ProxyClientStreamServer) (err error) {
+	wrapErr := func(code codes.Code, err error) error {
+		if err == nil {
+			return nil
+		}
+		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = wrapErr(codes.Internal, fmt.Errorf("caught panic %v", r))
+		}
+	}()
+	ctx := srv.Context()
+	initMsg, err := srv.Recv()
+	if err != nil {
+		return wrapErr(codes.InvalidArgument, fmt.Errorf("could not receive initial routing message in ProxyClientStream: %v", err))
+	}
+	switch initMsg.GetMessageType().(type) {
+	case *httpapi.StreamedRequest_Init:
+		break
+	case *httpapi.StreamedRequest_Request:
+		return wrapErr(codes.InvalidArgument, fmt.Errorf("first message in ProxyClientStream must be Init"))
+	}
+	msg := initMsg.GetMessageType().(*httpapi.StreamedRequest_Init).Init
+	procType, caller, pattern, err := s.findProc(msg.GetMethod(), msg.GetProcedure())
+	if err != nil {
+		return wrapErr(codes.Unimplemented, err)
+	}
+	if pattern == apiMethodPatternUnknown {
+		return wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
+	}
+	if pattern != apiMethodPatternStreamStruct {
+		return wrapErr(codes.InvalidArgument, fmt.Errorf("ProxyClientStream called for non-client-stream RPC"))
+	}
+	err = s.callStreamStruct(ctx, procType, caller, srv)
+	return err
 }
 
 // ProxyServerStream takes a single client request then streams responses from the server
-func (s *Server) ProxyServerStream(req *httpapi.Request, srv httpapi.ExposedService_ProxyServerStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method ProxyServerStream not implemented")
+func (s *Server) ProxyServerStream(req *httpapi.Request, srv httpapi.ExposedService_ProxyServerStreamServer) (err error) {
+	wrapErr := func(code codes.Code, err error) error {
+		if err == nil {
+			return nil
+		}
+		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = wrapErr(codes.Internal, fmt.Errorf("caught panic %v", r))
+		}
+	}()
+	ctx := srv.Context()
+	procType, caller, pattern, err := s.findProc(req.GetMethod(), req.GetProcedure())
+	if err != nil {
+		return wrapErr(codes.Unimplemented, err)
+	}
+	if pattern == apiMethodPatternUnknown {
+		return wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
+	}
+	if pattern != apiMethodPatternStructStream {
+		return wrapErr(codes.InvalidArgument, fmt.Errorf("ProxyServerStream called for non-server-stream RPC"))
+	}
+	var inputJSON []byte
+	inputJSON, err = parseRequest(req)
+	if err != nil {
+		return wrapErr(codes.Internal, err)
+	}
+	err = s.callStructStream(ctx, inputJSON, procType, caller, srv)
+	return err
 }
 
 // ProxyDualStream streams requests and responses in both directions in any order
-func (s *Server) ProxyDualStream(srv httpapi.ExposedService_ProxyDualStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method ProxyDualStream not implemented")
+func (s *Server) ProxyDualStream(srv httpapi.ExposedService_ProxyDualStreamServer) (err error) {
+	wrapErr := func(code codes.Code, err error) error {
+		if err == nil {
+			return nil
+		}
+		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = wrapErr(codes.Internal, fmt.Errorf("caught panic %v", r))
+		}
+	}()
+	ctx := srv.Context()
+	initMsg, err := srv.Recv()
+	if err != nil {
+		return wrapErr(codes.InvalidArgument, fmt.Errorf("could not receive initial routing message in ProxyClientStream: %v", err))
+	}
+	switch initMsg.GetMessageType().(type) {
+	case *httpapi.StreamedRequest_Init:
+		break
+	case *httpapi.StreamedRequest_Request:
+		return wrapErr(codes.InvalidArgument, fmt.Errorf("first message in ProxyClientStream must be Init"))
+	}
+	msg := initMsg.GetMessageType().(*httpapi.StreamedRequest_Init).Init
+	procType, caller, pattern, err := s.findProc(msg.GetMethod(), msg.GetProcedure())
+	if err != nil {
+		return wrapErr(codes.Unimplemented, err)
+	}
+	if pattern == apiMethodPatternUnknown {
+		return wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
+	}
+	if pattern != apiMethodPatternStreamStream {
+		return wrapErr(codes.InvalidArgument, fmt.Errorf("ProxyDualStream called for non-dual-stream RPC"))
+	}
+	err = s.callStreamStream(ctx, procType, caller, srv)
+	return err
 }
 
 func (s *Server) findProc(httpMethod httpapi.Method, procName string) (procType reflect.Type, caller reflect.Value, pattern apiMethodPattern, err error) {
@@ -94,7 +190,7 @@ func (s *Server) findProc(httpMethod httpapi.Method, procName string) (procType 
 }
 
 // One struct in, one struct out
-func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procName string, procType reflect.Type, caller reflect.Value) (res *httpapi.Response, err error) {
+func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *httpapi.Response, err error) {
 	// Create new instance of struct argument to pass into real implementation
 	builtRequest := reflect.New(procType.In(2).Elem())
 	builtRequestPtr := builtRequest.Interface()
@@ -165,42 +261,18 @@ func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procNam
 }
 
 // One struct in, stream of structs out
-func callStructStream(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *httpapi.Response, err error) {
-	// Actually call the inner procedure
-	// This is impossible - we need to construct a new type which satisfies the stream interface, but that's not currently possible using go reflection.
-	// https://github.com/golang/go/issues/16522 is where discussion on this topic is ongoing, though it started as early as 2012
-	// This problem will make all stream interfaces impossible to manage through pure reflection, though it may be possible to require
-	// users to pass in their own types that can satisfy all necessary stream interfaces. This will be a really awkward solution, since
-	// protobufs don't expose these interfaces by default. If the compiled protobufs are in the same package this is fine, but for separate
-	// protobuf packages to the application service you'll need to manually expose those types or create new ones that have to be manually maintained.
-	// Everything about this sucks.
-	return nil, status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Struct In, Stream Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
+func (s *Server) callStructStream(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyServerStreamServer) (err error) {
+	return status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Struct In, Stream Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
 }
 
 // Stream of structs in, one struct out
-func callStreamStruct(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *httpapi.Response, err error) {
-	// Actually call the inner procedure
-	// This is impossible - we need to construct a new type which satisfies the stream interface, but that's not currently possible using go reflection.
-	// https://github.com/golang/go/issues/16522 is where discussion on this topic is ongoing, though it started as early as 2012
-	// This problem will make all stream interfaces impossible to manage through pure reflection, though it may be possible to require
-	// users to pass in their own types that can satisfy all necessary stream interfaces. This will be a really awkward solution, since
-	// protobufs don't expose these interfaces by default. If the compiled protobufs are in the same package this is fine, but for separate
-	// protobuf packages to the application service you'll need to manually expose those types or create new ones that have to be manually maintained.
-	// Everything about this sucks.
-	return nil, status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Stream In, Struct Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
+func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyClientStreamServer) (err error) {
+	return status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Stream In, Struct Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
 }
 
 // Stram of structs in, stream of structs out
-func callStreamStream(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value) (res *httpapi.Response, err error) {
-	// Actually call the inner procedure
-	// This is impossible - we need to construct a new type which satisfies the stream interface, but that's not currently possible using go reflection.
-	// https://github.com/golang/go/issues/16522 is where discussion on this topic is ongoing, though it started as early as 2012
-	// This problem will make all stream interfaces impossible to manage through pure reflection, though it may be possible to require
-	// users to pass in their own types that can satisfy all necessary stream interfaces. This will be a really awkward solution, since
-	// protobufs don't expose these interfaces by default. If the compiled protobufs are in the same package this is fine, but for separate
-	// protobuf packages to the application service you'll need to manually expose those types or create new ones that have to be manually maintained.
-	// Everything about this sucks.
-	return nil, status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Stream In, Stream Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
+func (s *Server) callStreamStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyDualStreamServer) (err error) {
+	return status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Stream In, Stream Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
 }
 
 func parseRequest(req *httpapi.Request) (finalJSON []byte, err error) {
