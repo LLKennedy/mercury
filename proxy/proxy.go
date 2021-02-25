@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 
 	"github.com/LLKennedy/httpgrpc/v2/convert"
 	"github.com/LLKennedy/httpgrpc/v2/httpapi"
 	"github.com/peterbourgon/mergemap"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -267,7 +269,48 @@ func (s *Server) callStructStream(ctx context.Context, inputJSON []byte, procTyp
 
 // Stream of structs in, one struct out
 func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyClientStreamServer) (err error) {
-	return status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Stream In, Struct Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
+	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx)})
+	var clientErr error
+	var client grpc.ClientStream
+	if returnValues[0].CanInterface() {
+		var ok bool
+		client, ok = (returnValues[0].Interface()).(grpc.ClientStream)
+		if !ok {
+			clientErr = status.Errorf(codes.Internal, "response message could not be converted to grpc.ClientStream interface")
+		}
+	}
+	if returnValues[1].CanInterface() {
+		err, _ = returnValues[1].Interface().(error)
+	}
+	if err != nil {
+		_, ok := status.FromError(err)
+		if !ok {
+			err = status.Errorf(codes.Internal, "non-gRPC error returned when initiating stream: %v", err)
+		}
+		return
+	}
+	if clientErr != nil {
+		err = clientErr
+		return
+	}
+	var req *httpapi.StreamedRequest
+	for req, err = srv.Recv(); err == nil; req, err = srv.Recv() {
+		// FIXME: marshal payload to real request here
+		err = client.SendMsg(req)
+		if err != nil {
+			break
+		}
+	}
+	if err == io.EOF {
+		err = client.CloseSend()
+		if err != nil {
+			return
+		}
+		recvAndCloseMethod := returnValues[0].MethodByName("CloseAndRecv")
+		recvAndCloseMethod.Call()
+		err = client.RecvMsg()
+	}
+	return
 }
 
 // Stram of structs in, stream of structs out
