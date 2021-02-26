@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/LLKennedy/httpgrpc/v2/convert"
-	"github.com/LLKennedy/httpgrpc/v2/httpapi"
+	"github.com/LLKennedy/httpgrpc/convert"
+	"github.com/LLKennedy/httpgrpc/httpapi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"

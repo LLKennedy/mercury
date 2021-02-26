@@ -32,14 +32,14 @@ In this example, App would provide three GRPC endpoints, but only one would be e
 
 ## Installation
 
-`go get "github.com/LLKennedy/httpgrpc/v2"`
+`go get "github.com/LLKennedy/httpgrpc"`
 
 ## Basic Usage
 
 ### In Your Web Proxy
 
 ```golang
-import "github.com/LLKennedy/httpgrpc/v2"
+import "github.com/LLKennedy/httpgrpc"
 
 ...
 
@@ -59,7 +59,7 @@ func (ws *WebServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 ### In Your Application Service
 
 ```golang
-import "github.com/LLKennedy/httpgrpc/v2"
+import "github.com/LLKennedy/httpgrpc"
 
 ...
 

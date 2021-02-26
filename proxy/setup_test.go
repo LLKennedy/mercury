@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/LLKennedy/httpgrpc/v2/httpapi"
+	"github.com/LLKennedy/httpgrpc/httpapi"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )

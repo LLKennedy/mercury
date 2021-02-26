@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/LLKennedy/httpgrpc/v2/httpapi"
+	"github.com/LLKennedy/httpgrpc/httpapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"

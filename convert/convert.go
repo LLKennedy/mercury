@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/LLKennedy/httpgrpc/v2/httpapi"
-	"github.com/LLKennedy/httpgrpc/v2/logs"
+	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/httpgrpc/logs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

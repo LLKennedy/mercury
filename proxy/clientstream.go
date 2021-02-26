@@ -6,7 +6,7 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/LLKennedy/httpgrpc/v2/httpapi"
+	"github.com/LLKennedy/httpgrpc/httpapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

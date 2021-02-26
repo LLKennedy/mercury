@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/LLKennedy/httpgrpc/v2/convert"
-	"github.com/LLKennedy/httpgrpc/v2/logs"
-	"github.com/LLKennedy/httpgrpc/v2/proxy"
+	"github.com/LLKennedy/httpgrpc/convert"
+	"github.com/LLKennedy/httpgrpc/logs"
+	"github.com/LLKennedy/httpgrpc/proxy"
 	"google.golang.org/grpc"
 )
 

@@ -1,4 +1,4 @@
-module github.com/LLKennedy/httpgrpc/v2
+module github.com/LLKennedy/httpgrpc
 
 go 1.12
 
