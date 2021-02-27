@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -87,14 +86,6 @@ func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procTyp
 	}
 	if inputJSON == nil {
 		inputJSON = []byte("{}")
-	}
-	unmarshaller := protojson.UnmarshalOptions{
-		AllowPartial:   true,
-		DiscardUnknown: true,
-	}
-	marshaller := protojson.MarshalOptions{
-		AllowPartial:    true,
-		EmitUnpopulated: true,
 	}
 	err = unmarshaller.Unmarshal(inputJSON, builtRequestMessage)
 	if err != nil {

@@ -2,6 +2,7 @@ package convert
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/LLKennedy/httpgrpc/httpapi"
@@ -32,7 +33,7 @@ func (h stream) Serve(c *websocket.Conn) {
 	}
 	client, err := h.remote.ProxyStream(h.ctx)
 	if err != nil {
-		errWriter.writeWsErr(err)
+		errWriter.writeWsErr(fmt.Errorf("error initialising: %v", err))
 		return
 	}
 	routingInfo := &httpapi.RoutingInformation{
@@ -58,12 +59,12 @@ func (h stream) Serve(c *websocket.Conn) {
 		select {
 		case err := <-up:
 			if err != nil {
-				errWriter.writeWsErr(err)
+				errWriter.writeWsErr(fmt.Errorf("error on upstream: %v", err))
 				return
 			}
 		case err := <-down:
 			if err != nil {
-				errWriter.writeWsErr(err)
+				errWriter.writeWsErr(fmt.Errorf("error on downstream: %v", err))
 				return
 			}
 		}

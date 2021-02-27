@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 // Stream of structs in, one struct out
@@ -24,9 +25,10 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 	// Parse our return values
 	var clientErr error
 	var client grpc.ClientStream
-	if returnValues[0].CanInterface() {
+	endpoint := returnValues[0]
+	if endpoint.CanInterface() {
 		var ok bool
-		client, ok = (returnValues[0].Interface()).(grpc.ClientStream)
+		client, ok = (endpoint.Interface()).(grpc.ClientStream)
 		if !ok {
 			clientErr = status.Errorf(codes.Internal, "response message could not be converted to grpc.ClientStream interface")
 		}
@@ -46,13 +48,20 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 		return
 	}
 	// All worked as expected and without error, now we start proxying request messages
-	send := returnValues[0].MethodByName("Send")
-	t := send.Type().NumIn
-	_ = t
+	send := endpoint.MethodByName("SendMsg")
+	recv := endpoint.MethodByName("RecvMsg")
+	sendT := send.Type()
+	recvT := recv.Type()
+	reqT := sendT.In(0)
+	resT := recvT.In(0)
 	var req *httpapi.StreamedRequest
 	req, err = srv.Recv()
 	for err == nil {
-		// FIXME: marshal payload to real request here
+		msg := reflect.New(reqT).Interface().(proto.Message)
+		err = unmarshaller.Unmarshal(req.GetRequest(), msg)
+		if err != nil {
+			break
+		}
 		err = client.SendMsg(req)
 		if err != nil {
 			break
@@ -64,10 +73,22 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 		if err != nil {
 			return
 		}
-		recvAndCloseMethod := returnValues[0].MethodByName("CloseAndRecv")
-		_ = recvAndCloseMethod
-		// recvAndCloseMethod.Call()
-		// err = client.RecvMsg()
+		res := reflect.New(resT).Interface().(proto.Message)
+		err = client.RecvMsg(&res)
+		if err != nil {
+			return
+		}
+		var data []byte
+		data, err = marshaller.Marshal(res)
+		if err != nil {
+			return
+		}
+		err = srv.Send(&httpapi.StreamedResponse{
+			Response: data,
+		})
+		if err != nil {
+			return
+		}
 	}
 	return
 }
