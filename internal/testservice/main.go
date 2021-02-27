@@ -9,6 +9,8 @@ import (
 
 	"github.com/LLKennedy/httpgrpc/internal/testservice/proxy"
 	"github.com/LLKennedy/httpgrpc/internal/testservice/service"
+	"golang.org/x/net/websocket"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func main() {
@@ -33,24 +35,45 @@ func main() {
 	// time.Sleep(1 * time.Second)
 	fmt.Println("Sending HTTP request")
 
-	webClient := &http.Client{}
-	req := &http.Request{
-		Method: http.MethodGet,
-		URL: &url.URL{
-			Host:   "localhost:4848",
-			Path:   "/Random",
-			Scheme: "http",
-		},
-	}
 	done := make(chan struct{}, 1)
 	go func() {
+		webClient := &http.Client{}
+		req := &http.Request{
+			Method: http.MethodGet,
+			URL: &url.URL{
+				Host:   "localhost:4848",
+				Path:   "/Random",
+				Scheme: "http",
+			},
+		}
 		res, err := webClient.Do(req)
 		if err != nil {
 			fmt.Printf("error sending web request: %v\n", err)
-		} else {
-			fmt.Printf("http response: %+v\n", res)
-			body, _ := ioutil.ReadAll(res.Body)
-			fmt.Printf("http response body: %s\n", body)
+			return
+		}
+		fmt.Printf("http response: %+v\n", res)
+		body, _ := ioutil.ReadAll(res.Body)
+		fmt.Printf("http response body: %s\n", body)
+
+		ws, err := websocket.Dial("localhost:4848/Feed", "ws", "localhost")
+		if err != nil {
+			fmt.Printf("error establishing websocket: %v\n", err)
+			return
+		}
+		msg := &service.FeedData{
+			Id:       "123",
+			DataType: 12,
+			RawData:  []byte("hello"),
+		}
+		msgBytes, err := protojson.Marshal(msg)
+		if err != nil {
+			fmt.Printf("error marshalling FeedData: %v\n", err)
+			return
+		}
+		_, err = ws.Write(msgBytes)
+		if err != nil {
+			fmt.Printf("error writing FeedData: %v\n", err)
+			return
 		}
 		done <- struct{}{}
 	}()

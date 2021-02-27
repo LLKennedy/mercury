@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"reflect"
 
@@ -12,48 +11,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ProxyClientStream streams requests from the client and terminates in a single server response
-func (s *Server) ProxyClientStream(srv httpapi.ExposedService_ProxyClientStreamServer) (err error) {
-	wrapErr := func(code codes.Code, err error) error {
-		if err == nil {
-			return nil
-		}
-		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = wrapErr(codes.Internal, fmt.Errorf("caught panic %v", r))
-		}
-	}()
-	ctx := srv.Context()
-	initMsg, err := srv.Recv()
-	if err != nil {
-		return wrapErr(codes.InvalidArgument, fmt.Errorf("could not receive initial routing message in ProxyClientStream: %v", err))
-	}
-	switch initMsg.GetMessageType().(type) {
-	case *httpapi.StreamedRequest_Init:
-		break
-	case *httpapi.StreamedRequest_Request:
-		return wrapErr(codes.InvalidArgument, fmt.Errorf("first message in ProxyClientStream must be Init"))
-	}
-	msg := initMsg.GetMessageType().(*httpapi.StreamedRequest_Init).Init
-	procType, caller, pattern, err := s.findProc(msg.GetMethod(), msg.GetProcedure())
-	if err != nil {
-		return wrapErr(codes.Unimplemented, err)
-	}
-	if pattern == apiMethodPatternUnknown {
-		return wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
-	}
-	if pattern != apiMethodPatternStreamStruct {
-		return wrapErr(codes.InvalidArgument, fmt.Errorf("ProxyClientStream called for non-client-stream RPC"))
-	}
-	err = s.callStreamStruct(ctx, procType, caller, srv)
-	return err
-}
-
 // Stream of structs in, one struct out
-func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyClientStreamServer) (err error) {
+func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
+	// Client streaming always starts by passing the context and nothing else to receive a stream + error
 	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx)})
+	// Parse our return values
 	var clientErr error
 	var client grpc.ClientStream
 	if returnValues[0].CanInterface() {
@@ -77,6 +39,10 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 		err = clientErr
 		return
 	}
+	// All worked as expected and without error, now we start proxying request messages
+	send := returnValues[0].MethodByName("Send")
+	t := send.Type().NumIn
+	_ = t
 	var req *httpapi.StreamedRequest
 	for req, err = srv.Recv(); err == nil; req, err = srv.Recv() {
 		// FIXME: marshal payload to real request here
@@ -91,8 +57,9 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 			return
 		}
 		recvAndCloseMethod := returnValues[0].MethodByName("CloseAndRecv")
-		recvAndCloseMethod.Call()
-		err = client.RecvMsg()
+		_ = recvAndCloseMethod
+		// recvAndCloseMethod.Call()
+		// err = client.RecvMsg()
 	}
 	return
 }

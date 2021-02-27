@@ -19,12 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 type ExposedServiceClient interface {
 	// ProxyUnary sends a message to the GRPC API expecting an immediate single response
 	ProxyUnary(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
-	// ProxyClientStream sends a series of messages to the GRPC API expecting a single response when the client messages end
-	ProxyClientStream(ctx context.Context, opts ...grpc.CallOption) (ExposedService_ProxyClientStreamClient, error)
-	// ProxyServerStream sends a message to the GRPC API expecting a series of responses back
-	ProxyServerStream(ctx context.Context, in *Request, opts ...grpc.CallOption) (ExposedService_ProxyServerStreamClient, error)
-	// ProxyDualStream sends a series of messages to the GRPC API expecting a series of responses back in any order of sending and receiving
-	ProxyDualStream(ctx context.Context, opts ...grpc.CallOption) (ExposedService_ProxyDualStreamClient, error)
+	// ProxyStream handles streamed requests and responses from websockets
+	ProxyStream(ctx context.Context, opts ...grpc.CallOption) (ExposedService_ProxyStreamClient, error)
 }
 
 type exposedServiceClient struct {
@@ -44,96 +40,30 @@ func (c *exposedServiceClient) ProxyUnary(ctx context.Context, in *Request, opts
 	return out, nil
 }
 
-func (c *exposedServiceClient) ProxyClientStream(ctx context.Context, opts ...grpc.CallOption) (ExposedService_ProxyClientStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_ExposedService_serviceDesc.Streams[0], "/httpapi.ExposedService/ProxyClientStream", opts...)
+func (c *exposedServiceClient) ProxyStream(ctx context.Context, opts ...grpc.CallOption) (ExposedService_ProxyStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ExposedService_serviceDesc.Streams[0], "/httpapi.ExposedService/ProxyStream", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &exposedServiceProxyClientStreamClient{stream}
+	x := &exposedServiceProxyStreamClient{stream}
 	return x, nil
 }
 
-type ExposedService_ProxyClientStreamClient interface {
-	Send(*StreamedRequest) error
-	CloseAndRecv() (*Response, error)
-	grpc.ClientStream
-}
-
-type exposedServiceProxyClientStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *exposedServiceProxyClientStreamClient) Send(m *StreamedRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *exposedServiceProxyClientStreamClient) CloseAndRecv() (*Response, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	m := new(Response)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *exposedServiceClient) ProxyServerStream(ctx context.Context, in *Request, opts ...grpc.CallOption) (ExposedService_ProxyServerStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_ExposedService_serviceDesc.Streams[1], "/httpapi.ExposedService/ProxyServerStream", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &exposedServiceProxyServerStreamClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type ExposedService_ProxyServerStreamClient interface {
-	Recv() (*StreamedResponse, error)
-	grpc.ClientStream
-}
-
-type exposedServiceProxyServerStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *exposedServiceProxyServerStreamClient) Recv() (*StreamedResponse, error) {
-	m := new(StreamedResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *exposedServiceClient) ProxyDualStream(ctx context.Context, opts ...grpc.CallOption) (ExposedService_ProxyDualStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_ExposedService_serviceDesc.Streams[2], "/httpapi.ExposedService/ProxyDualStream", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &exposedServiceProxyDualStreamClient{stream}
-	return x, nil
-}
-
-type ExposedService_ProxyDualStreamClient interface {
+type ExposedService_ProxyStreamClient interface {
 	Send(*StreamedRequest) error
 	Recv() (*StreamedResponse, error)
 	grpc.ClientStream
 }
 
-type exposedServiceProxyDualStreamClient struct {
+type exposedServiceProxyStreamClient struct {
 	grpc.ClientStream
 }
 
-func (x *exposedServiceProxyDualStreamClient) Send(m *StreamedRequest) error {
+func (x *exposedServiceProxyStreamClient) Send(m *StreamedRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *exposedServiceProxyDualStreamClient) Recv() (*StreamedResponse, error) {
+func (x *exposedServiceProxyStreamClient) Recv() (*StreamedResponse, error) {
 	m := new(StreamedResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -147,12 +77,8 @@ func (x *exposedServiceProxyDualStreamClient) Recv() (*StreamedResponse, error) 
 type ExposedServiceServer interface {
 	// ProxyUnary sends a message to the GRPC API expecting an immediate single response
 	ProxyUnary(context.Context, *Request) (*Response, error)
-	// ProxyClientStream sends a series of messages to the GRPC API expecting a single response when the client messages end
-	ProxyClientStream(ExposedService_ProxyClientStreamServer) error
-	// ProxyServerStream sends a message to the GRPC API expecting a series of responses back
-	ProxyServerStream(*Request, ExposedService_ProxyServerStreamServer) error
-	// ProxyDualStream sends a series of messages to the GRPC API expecting a series of responses back in any order of sending and receiving
-	ProxyDualStream(ExposedService_ProxyDualStreamServer) error
+	// ProxyStream handles streamed requests and responses from websockets
+	ProxyStream(ExposedService_ProxyStreamServer) error
 	mustEmbedUnimplementedExposedServiceServer()
 }
 
@@ -163,14 +89,8 @@ type UnimplementedExposedServiceServer struct {
 func (UnimplementedExposedServiceServer) ProxyUnary(context.Context, *Request) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProxyUnary not implemented")
 }
-func (UnimplementedExposedServiceServer) ProxyClientStream(ExposedService_ProxyClientStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method ProxyClientStream not implemented")
-}
-func (UnimplementedExposedServiceServer) ProxyServerStream(*Request, ExposedService_ProxyServerStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method ProxyServerStream not implemented")
-}
-func (UnimplementedExposedServiceServer) ProxyDualStream(ExposedService_ProxyDualStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method ProxyDualStream not implemented")
+func (UnimplementedExposedServiceServer) ProxyStream(ExposedService_ProxyStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method ProxyStream not implemented")
 }
 func (UnimplementedExposedServiceServer) mustEmbedUnimplementedExposedServiceServer() {}
 
@@ -203,72 +123,25 @@ func _ExposedService_ProxyUnary_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ExposedService_ProxyClientStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ExposedServiceServer).ProxyClientStream(&exposedServiceProxyClientStreamServer{stream})
+func _ExposedService_ProxyStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ExposedServiceServer).ProxyStream(&exposedServiceProxyStreamServer{stream})
 }
 
-type ExposedService_ProxyClientStreamServer interface {
-	SendAndClose(*Response) error
-	Recv() (*StreamedRequest, error)
-	grpc.ServerStream
-}
-
-type exposedServiceProxyClientStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *exposedServiceProxyClientStreamServer) SendAndClose(m *Response) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *exposedServiceProxyClientStreamServer) Recv() (*StreamedRequest, error) {
-	m := new(StreamedRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func _ExposedService_ProxyServerStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Request)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(ExposedServiceServer).ProxyServerStream(m, &exposedServiceProxyServerStreamServer{stream})
-}
-
-type ExposedService_ProxyServerStreamServer interface {
-	Send(*StreamedResponse) error
-	grpc.ServerStream
-}
-
-type exposedServiceProxyServerStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *exposedServiceProxyServerStreamServer) Send(m *StreamedResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _ExposedService_ProxyDualStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ExposedServiceServer).ProxyDualStream(&exposedServiceProxyDualStreamServer{stream})
-}
-
-type ExposedService_ProxyDualStreamServer interface {
+type ExposedService_ProxyStreamServer interface {
 	Send(*StreamedResponse) error
 	Recv() (*StreamedRequest, error)
 	grpc.ServerStream
 }
 
-type exposedServiceProxyDualStreamServer struct {
+type exposedServiceProxyStreamServer struct {
 	grpc.ServerStream
 }
 
-func (x *exposedServiceProxyDualStreamServer) Send(m *StreamedResponse) error {
+func (x *exposedServiceProxyStreamServer) Send(m *StreamedResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *exposedServiceProxyDualStreamServer) Recv() (*StreamedRequest, error) {
+func (x *exposedServiceProxyStreamServer) Recv() (*StreamedRequest, error) {
 	m := new(StreamedRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -287,18 +160,8 @@ var _ExposedService_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "ProxyClientStream",
-			Handler:       _ExposedService_ProxyClientStream_Handler,
-			ClientStreams: true,
-		},
-		{
-			StreamName:    "ProxyServerStream",
-			Handler:       _ExposedService_ProxyServerStream_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "ProxyDualStream",
-			Handler:       _ExposedService_ProxyDualStream_Handler,
+			StreamName:    "ProxyStream",
+			Handler:       _ExposedService_ProxyStream_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

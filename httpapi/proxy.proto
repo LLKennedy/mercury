@@ -7,12 +7,8 @@ option go_package = "github.com/LLKennedy/httpgrpc/httpapi";
 service ExposedService {
     // ProxyUnary sends a message to the GRPC API expecting an immediate single response
     rpc ProxyUnary(Request) returns (Response) {}
-    // ProxyClientStream sends a series of messages to the GRPC API expecting a single response when the client messages end
-    rpc ProxyClientStream(stream StreamedRequest) returns (Response) {}
-    // ProxyServerStream sends a message to the GRPC API expecting a series of responses back
-    rpc ProxyServerStream(Request) returns (stream StreamedResponse) {}
-    // ProxyDualStream sends a series of messages to the GRPC API expecting a series of responses back in any order of sending and receiving
-    rpc ProxyDualStream(stream StreamedRequest) returns (stream StreamedResponse) {}
+    // ProxyStream handles streamed requests and responses from websockets
+    rpc ProxyStream(stream StreamedRequest) returns (stream StreamedResponse) {}
 }
 
 message StreamedRequest {

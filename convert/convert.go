@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ProxyRequest proxies an HTTP request through a GRPC connection compliant with httpgrpc/proto
-func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, procedure string, conn *grpc.ClientConn, txid string, loggers ...logs.Writer) {
+// ProxyRequest proxies an HTTP(S) or WS(S) request through a GRPC connection compliant with httpgrpc/httpapi
+func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, procedure string, conn grpc.ClientConnInterface, txid string, loggers ...logs.Writer) {
 	req := RequestFromRequest(r)
 	req.Procedure = procedure
 	bodyBytes, err := ioutil.ReadAll(r.Body)

@@ -388,9 +388,9 @@ var _App_serviceDesc = grpc.ServiceDesc{
 type ExposedAppClient interface {
 	GetRandom(ctx context.Context, in *RandomRequest, opts ...grpc.CallOption) (*RandomResponse, error)
 	PostUploadPhoto(ctx context.Context, in *UploadPhotoRequest, opts ...grpc.CallOption) (*UploadPhotoResponse, error)
-	PostFeed(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostFeedClient, error)
-	GetBroadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (ExposedApp_GetBroadcastClient, error)
-	PostConvertToString(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostConvertToStringClient, error)
+	WSSFeed(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_WSSFeedClient, error)
+	WSSBroadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (ExposedApp_WSSBroadcastClient, error)
+	WSSConvertToString(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_WSSConvertToStringClient, error)
 }
 
 type exposedAppClient struct {
@@ -419,30 +419,30 @@ func (c *exposedAppClient) PostUploadPhoto(ctx context.Context, in *UploadPhotoR
 	return out, nil
 }
 
-func (c *exposedAppClient) PostFeed(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostFeedClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[0], "/service.ExposedApp/PostFeed", opts...)
+func (c *exposedAppClient) WSSFeed(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_WSSFeedClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[0], "/service.ExposedApp/WSSFeed", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &exposedAppPostFeedClient{stream}
+	x := &exposedAppWSSFeedClient{stream}
 	return x, nil
 }
 
-type ExposedApp_PostFeedClient interface {
+type ExposedApp_WSSFeedClient interface {
 	Send(*FeedData) error
 	CloseAndRecv() (*FeedResponse, error)
 	grpc.ClientStream
 }
 
-type exposedAppPostFeedClient struct {
+type exposedAppWSSFeedClient struct {
 	grpc.ClientStream
 }
 
-func (x *exposedAppPostFeedClient) Send(m *FeedData) error {
+func (x *exposedAppWSSFeedClient) Send(m *FeedData) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *exposedAppPostFeedClient) CloseAndRecv() (*FeedResponse, error) {
+func (x *exposedAppWSSFeedClient) CloseAndRecv() (*FeedResponse, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
@@ -453,12 +453,12 @@ func (x *exposedAppPostFeedClient) CloseAndRecv() (*FeedResponse, error) {
 	return m, nil
 }
 
-func (c *exposedAppClient) GetBroadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (ExposedApp_GetBroadcastClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[1], "/service.ExposedApp/GetBroadcast", opts...)
+func (c *exposedAppClient) WSSBroadcast(ctx context.Context, in *BroadcastRequest, opts ...grpc.CallOption) (ExposedApp_WSSBroadcastClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[1], "/service.ExposedApp/WSSBroadcast", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &exposedAppGetBroadcastClient{stream}
+	x := &exposedAppWSSBroadcastClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -468,16 +468,16 @@ func (c *exposedAppClient) GetBroadcast(ctx context.Context, in *BroadcastReques
 	return x, nil
 }
 
-type ExposedApp_GetBroadcastClient interface {
+type ExposedApp_WSSBroadcastClient interface {
 	Recv() (*BroadcastData, error)
 	grpc.ClientStream
 }
 
-type exposedAppGetBroadcastClient struct {
+type exposedAppWSSBroadcastClient struct {
 	grpc.ClientStream
 }
 
-func (x *exposedAppGetBroadcastClient) Recv() (*BroadcastData, error) {
+func (x *exposedAppWSSBroadcastClient) Recv() (*BroadcastData, error) {
 	m := new(BroadcastData)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -485,30 +485,30 @@ func (x *exposedAppGetBroadcastClient) Recv() (*BroadcastData, error) {
 	return m, nil
 }
 
-func (c *exposedAppClient) PostConvertToString(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_PostConvertToStringClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[2], "/service.ExposedApp/PostConvertToString", opts...)
+func (c *exposedAppClient) WSSConvertToString(ctx context.Context, opts ...grpc.CallOption) (ExposedApp_WSSConvertToStringClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ExposedApp_serviceDesc.Streams[2], "/service.ExposedApp/WSSConvertToString", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &exposedAppPostConvertToStringClient{stream}
+	x := &exposedAppWSSConvertToStringClient{stream}
 	return x, nil
 }
 
-type ExposedApp_PostConvertToStringClient interface {
+type ExposedApp_WSSConvertToStringClient interface {
 	Send(*ConvertInput) error
 	Recv() (*ConvertOutput, error)
 	grpc.ClientStream
 }
 
-type exposedAppPostConvertToStringClient struct {
+type exposedAppWSSConvertToStringClient struct {
 	grpc.ClientStream
 }
 
-func (x *exposedAppPostConvertToStringClient) Send(m *ConvertInput) error {
+func (x *exposedAppWSSConvertToStringClient) Send(m *ConvertInput) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *exposedAppPostConvertToStringClient) Recv() (*ConvertOutput, error) {
+func (x *exposedAppWSSConvertToStringClient) Recv() (*ConvertOutput, error) {
 	m := new(ConvertOutput)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -522,9 +522,9 @@ func (x *exposedAppPostConvertToStringClient) Recv() (*ConvertOutput, error) {
 type ExposedAppServer interface {
 	GetRandom(context.Context, *RandomRequest) (*RandomResponse, error)
 	PostUploadPhoto(context.Context, *UploadPhotoRequest) (*UploadPhotoResponse, error)
-	PostFeed(ExposedApp_PostFeedServer) error
-	GetBroadcast(*BroadcastRequest, ExposedApp_GetBroadcastServer) error
-	PostConvertToString(ExposedApp_PostConvertToStringServer) error
+	WSSFeed(ExposedApp_WSSFeedServer) error
+	WSSBroadcast(*BroadcastRequest, ExposedApp_WSSBroadcastServer) error
+	WSSConvertToString(ExposedApp_WSSConvertToStringServer) error
 	mustEmbedUnimplementedExposedAppServer()
 }
 
@@ -538,14 +538,14 @@ func (UnimplementedExposedAppServer) GetRandom(context.Context, *RandomRequest) 
 func (UnimplementedExposedAppServer) PostUploadPhoto(context.Context, *UploadPhotoRequest) (*UploadPhotoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostUploadPhoto not implemented")
 }
-func (UnimplementedExposedAppServer) PostFeed(ExposedApp_PostFeedServer) error {
-	return status.Errorf(codes.Unimplemented, "method PostFeed not implemented")
+func (UnimplementedExposedAppServer) WSSFeed(ExposedApp_WSSFeedServer) error {
+	return status.Errorf(codes.Unimplemented, "method WSSFeed not implemented")
 }
-func (UnimplementedExposedAppServer) GetBroadcast(*BroadcastRequest, ExposedApp_GetBroadcastServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetBroadcast not implemented")
+func (UnimplementedExposedAppServer) WSSBroadcast(*BroadcastRequest, ExposedApp_WSSBroadcastServer) error {
+	return status.Errorf(codes.Unimplemented, "method WSSBroadcast not implemented")
 }
-func (UnimplementedExposedAppServer) PostConvertToString(ExposedApp_PostConvertToStringServer) error {
-	return status.Errorf(codes.Unimplemented, "method PostConvertToString not implemented")
+func (UnimplementedExposedAppServer) WSSConvertToString(ExposedApp_WSSConvertToStringServer) error {
+	return status.Errorf(codes.Unimplemented, "method WSSConvertToString not implemented")
 }
 func (UnimplementedExposedAppServer) mustEmbedUnimplementedExposedAppServer() {}
 
@@ -596,25 +596,25 @@ func _ExposedApp_PostUploadPhoto_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ExposedApp_PostFeed_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ExposedAppServer).PostFeed(&exposedAppPostFeedServer{stream})
+func _ExposedApp_WSSFeed_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ExposedAppServer).WSSFeed(&exposedAppWSSFeedServer{stream})
 }
 
-type ExposedApp_PostFeedServer interface {
+type ExposedApp_WSSFeedServer interface {
 	SendAndClose(*FeedResponse) error
 	Recv() (*FeedData, error)
 	grpc.ServerStream
 }
 
-type exposedAppPostFeedServer struct {
+type exposedAppWSSFeedServer struct {
 	grpc.ServerStream
 }
 
-func (x *exposedAppPostFeedServer) SendAndClose(m *FeedResponse) error {
+func (x *exposedAppWSSFeedServer) SendAndClose(m *FeedResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *exposedAppPostFeedServer) Recv() (*FeedData, error) {
+func (x *exposedAppWSSFeedServer) Recv() (*FeedData, error) {
 	m := new(FeedData)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -622,46 +622,46 @@ func (x *exposedAppPostFeedServer) Recv() (*FeedData, error) {
 	return m, nil
 }
 
-func _ExposedApp_GetBroadcast_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _ExposedApp_WSSBroadcast_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(BroadcastRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ExposedAppServer).GetBroadcast(m, &exposedAppGetBroadcastServer{stream})
+	return srv.(ExposedAppServer).WSSBroadcast(m, &exposedAppWSSBroadcastServer{stream})
 }
 
-type ExposedApp_GetBroadcastServer interface {
+type ExposedApp_WSSBroadcastServer interface {
 	Send(*BroadcastData) error
 	grpc.ServerStream
 }
 
-type exposedAppGetBroadcastServer struct {
+type exposedAppWSSBroadcastServer struct {
 	grpc.ServerStream
 }
 
-func (x *exposedAppGetBroadcastServer) Send(m *BroadcastData) error {
+func (x *exposedAppWSSBroadcastServer) Send(m *BroadcastData) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _ExposedApp_PostConvertToString_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ExposedAppServer).PostConvertToString(&exposedAppPostConvertToStringServer{stream})
+func _ExposedApp_WSSConvertToString_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ExposedAppServer).WSSConvertToString(&exposedAppWSSConvertToStringServer{stream})
 }
 
-type ExposedApp_PostConvertToStringServer interface {
+type ExposedApp_WSSConvertToStringServer interface {
 	Send(*ConvertOutput) error
 	Recv() (*ConvertInput, error)
 	grpc.ServerStream
 }
 
-type exposedAppPostConvertToStringServer struct {
+type exposedAppWSSConvertToStringServer struct {
 	grpc.ServerStream
 }
 
-func (x *exposedAppPostConvertToStringServer) Send(m *ConvertOutput) error {
+func (x *exposedAppWSSConvertToStringServer) Send(m *ConvertOutput) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *exposedAppPostConvertToStringServer) Recv() (*ConvertInput, error) {
+func (x *exposedAppWSSConvertToStringServer) Recv() (*ConvertInput, error) {
 	m := new(ConvertInput)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -684,18 +684,18 @@ var _ExposedApp_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "PostFeed",
-			Handler:       _ExposedApp_PostFeed_Handler,
+			StreamName:    "WSSFeed",
+			Handler:       _ExposedApp_WSSFeed_Handler,
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "GetBroadcast",
-			Handler:       _ExposedApp_GetBroadcast_Handler,
+			StreamName:    "WSSBroadcast",
+			Handler:       _ExposedApp_WSSBroadcast_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "PostConvertToString",
-			Handler:       _ExposedApp_PostConvertToString_Handler,
+			StreamName:    "WSSConvertToString",
+			Handler:       _ExposedApp_WSSConvertToString_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

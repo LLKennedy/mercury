@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ProxyDualStream streams requests and responses in both directions in any order
-func (s *Server) ProxyDualStream(srv httpapi.ExposedService_ProxyDualStreamServer) (err error) {
+// ProxyStream streams requests and responses in both directions in any order
+func (s *Server) ProxyStream(srv httpapi.ExposedService_ProxyStreamServer) (err error) {
 	wrapErr := func(code codes.Code, err error) error {
 		if err == nil {
 			return nil
@@ -50,6 +50,6 @@ func (s *Server) ProxyDualStream(srv httpapi.ExposedService_ProxyDualStreamServe
 }
 
 // Stram of structs in, stream of structs out
-func (s *Server) callStreamStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyDualStreamServer) (err error) {
+func (s *Server) callStreamStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
 	return status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Stream In, Stream Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
 }
