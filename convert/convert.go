@@ -8,6 +8,7 @@ import (
 
 	"github.com/LLKennedy/httpgrpc/httpapi"
 	"github.com/LLKennedy/httpgrpc/logs"
+	"golang.org/x/net/websocket"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,13 +16,36 @@ import (
 
 // ProxyRequest proxies an HTTP(S) or WS(S) request through a GRPC connection compliant with httpgrpc/httpapi
 func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, procedure string, conn grpc.ClientConnInterface, txid string, loggers ...logs.Writer) {
+	remote := httpapi.NewExposedServiceClient(conn)
+	isWebsocket := false
+	upgradeHader, ok := r.Header["Upgrade"]
+	if ok {
+		isWebsocket = len(upgradeHader) >= 1 && upgradeHader[0] == "websocket"
+	}
+	if isWebsocket {
+		// Stream request
+		handler := stream{
+			ctx:       ctx,
+			remote:    remote,
+			loggers:   loggers,
+			procedure: procedure,
+			headers:   r.Header,
+			txid:      txid,
+		}
+		wssrv := &websocket.Server{
+			Handler: handler.Serve,
+		}
+		wssrv.ServeHTTP(w, r)
+		return
+	}
+	// Unary request
 	req := RequestFromRequest(r)
 	req.Procedure = procedure
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	req.Payload = bodyBytes
 	// Forward the actual GRPC request
 	var errStatus *status.Status
-	res, err := httpapi.NewExposedServiceClient(conn).ProxyUnary(ctx, req)
+	res, err := remote.ProxyUnary(ctx, req)
 	if err != nil {
 		// GRPC call failed, let's log it, process an error status
 		for _, logger := range loggers {
@@ -51,6 +75,7 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 		w.Write([]byte(errStatus.Message()))
 	}
 	return
+
 }
 
 // RequestFromRequest creates a *httpapi.Request from *http.Request filling all values except body, which could error

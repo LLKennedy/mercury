@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/LLKennedy/httpgrpc"
+	"github.com/LLKennedy/httpgrpc/logs"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 )
@@ -31,5 +32,5 @@ func (h *Handle) Start() error {
 func (h *Handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	txid := uuid.New().String()
 	procedure := strings.TrimLeft(r.URL.Path, "/")
-	httpgrpc.ProxyRequest(context.Background(), w, r, procedure, h.conn, txid)
+	httpgrpc.ProxyRequest(context.Background(), w, r, procedure, h.conn, txid, logs.StdOutLogger{})
 }

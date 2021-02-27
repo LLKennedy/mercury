@@ -11,6 +11,6 @@ import (
 )
 
 // One struct in, stream of structs out
-func (s *Server) callStructStream(ctx context.Context, inputJSON []byte, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
+func (s *Server) callStructStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
 	return status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Struct In, Stream Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
 }

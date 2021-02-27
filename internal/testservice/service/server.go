@@ -113,7 +113,7 @@ func (h *Handle) Feed(stream App_FeedServer) error {
 	data, err := stream.Recv()
 	for err == nil && data != nil {
 		fmt.Println("Received FeedData...")
-		fmt.Printf("%+v\n", data)
+		fmt.Printf("%+v\n", data.GetId())
 		data, err = stream.Recv()
 	}
 	if err != nil && err.Error() == "EOF" {

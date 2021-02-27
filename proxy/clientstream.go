@@ -13,6 +13,12 @@ import (
 
 // Stream of structs in, one struct out
 func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+
+		}
+	}()
 	// Client streaming always starts by passing the context and nothing else to receive a stream + error
 	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx)})
 	// Parse our return values
@@ -44,12 +50,14 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 	t := send.Type().NumIn
 	_ = t
 	var req *httpapi.StreamedRequest
-	for req, err = srv.Recv(); err == nil; req, err = srv.Recv() {
+	req, err = srv.Recv()
+	for err == nil {
 		// FIXME: marshal payload to real request here
 		err = client.SendMsg(req)
 		if err != nil {
 			break
 		}
+		req, err = srv.Recv()
 	}
 	if err == io.EOF {
 		err = client.CloseSend()
