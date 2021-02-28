@@ -1,9 +1,7 @@
 package proxy
 
 import (
-	"context"
 	"fmt"
-	"reflect"
 	"runtime/debug"
 
 	"github.com/LLKennedy/httpgrpc/httpapi"
@@ -56,9 +54,4 @@ func (s *Server) ProxyStream(srv httpapi.ExposedService_ProxyStreamServer) (err 
 		err = wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
 	}
 	return err
-}
-
-// Stram of structs in, stream of structs out
-func (s *Server) callStreamStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
-	return status.Error(codes.Unimplemented, fmt.Sprintf("httpgrpc: Stream In, Stream Out is not yet supported, please manually implement exceptions for endpoint %s", procType))
 }

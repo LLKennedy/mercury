@@ -24,7 +24,7 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 		}
 	}()
 	// Client streaming always starts by passing the context and nothing else to receive a stream + error
-	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(context.Background())})
+	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx)})
 	// Parse our return values
 	var clientErr error
 	var client grpc.ClientStream
@@ -74,11 +74,9 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 		if err != nil {
 			return
 		}
-		resVals := recv.Call(nil)
-		res := resVals[0].Interface().(proto.Message)
-		errVal := resVals[1].Interface()
-		if errVal != nil {
-			err = errVal.(error)
+		var res proto.Message
+		res, err = wrapRecv(recv)
+		if err != nil {
 			return
 		}
 		var data []byte
