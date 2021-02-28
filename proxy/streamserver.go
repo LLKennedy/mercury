@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"io"
 	"reflect"
 	"runtime/debug"
 
@@ -67,15 +68,18 @@ func (s *Server) handleServerStream(ctx context.Context, procType reflect.Type, 
 		var data []byte
 		data, err = marshaller.Marshal(res)
 		if err != nil {
-			return
+			break
 		}
 		err = srv.Send(&httpapi.StreamedResponse{
 			Response: data,
 		})
 		if err != nil {
-			return
+			break
 		}
 		res, err = wrapRecv(recv)
+	}
+	if err == io.EOF {
+		err = nil
 	}
 	return
 }

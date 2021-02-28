@@ -67,9 +67,15 @@ func (s *Server) handleDualStream(ctx context.Context, procType reflect.Type, ca
 		err = <-down
 	case err = <-down:
 		if err != nil {
+			if err == io.EOF {
+				err = nil
+			}
 			return
 		}
 		err = <-up
+	}
+	if err == io.EOF {
+		err = nil
 	}
 	return
 }
