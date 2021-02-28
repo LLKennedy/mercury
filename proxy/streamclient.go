@@ -15,11 +15,11 @@ import (
 )
 
 // Stream of structs in, one struct out
-func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
+func (s *Server) handleClientStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
-			err = status.Errorf(codes.Internal, "caught panic: %v", r)
+			err = status.Errorf(codes.Internal, "caught panic for client stream: %v", r)
 			fmt.Printf("%s\n", debug.Stack())
 		}
 	}()
@@ -54,11 +54,11 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 	send := endpoint.MethodByName("Send")
 	recv := endpoint.MethodByName("CloseAndRecv")
 	sendT := send.Type()
-	reqT := sendT.In(0)
+	reqT := sendT.In(0).Elem()
 	var req *httpapi.StreamedRequest
 	req, err = srv.Recv()
 	for err == nil {
-		msg := reflect.New(reqT.Elem()).Interface().(proto.Message)
+		msg := reflect.New(reqT).Interface().(proto.Message)
 		err = unmarshaller.Unmarshal(req.GetRequest(), msg)
 		if err != nil {
 			break

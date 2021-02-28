@@ -2,11 +2,13 @@ package proxy
 
 import (
 	"fmt"
+	"reflect"
 	"runtime/debug"
 
 	"github.com/LLKennedy/httpgrpc/httpapi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 // ProxyStream streams requests and responses in both directions in any order
@@ -41,11 +43,11 @@ func (s *Server) ProxyStream(srv httpapi.ExposedService_ProxyStreamServer) (err 
 	}
 	switch pattern {
 	case apiMethodPatternStreamStream:
-		err = s.callStreamStream(ctx, procType, caller, srv)
+		err = s.handleDualStream(ctx, procType, caller, srv)
 	case apiMethodPatternStreamStruct:
-		err = s.callStreamStruct(ctx, procType, caller, srv)
+		err = s.handleClientStream(ctx, procType, caller, srv)
 	case apiMethodPatternStructStream:
-		err = s.callStructStream(ctx, procType, caller, srv)
+		err = s.handleServerStream(ctx, procType, caller, srv)
 	case apiMethodPatternStructStruct:
 		err = wrapErr(codes.Unimplemented, fmt.Errorf("ProxyStream called for non-stream RPC"))
 	case apiMethodPatternUnknown:
@@ -54,4 +56,13 @@ func (s *Server) ProxyStream(srv httpapi.ExposedService_ProxyStreamServer) (err 
 		err = wrapErr(codes.Unimplemented, fmt.Errorf("nonstandard grpc signature not implemented"))
 	}
 	return err
+}
+
+func wrapRecv(recv reflect.Value) (proto.Message, error) {
+	resVals := recv.Call(nil)
+	errVal := resVals[1].Interface()
+	if errVal != nil {
+		return nil, errVal.(error)
+	}
+	return resVals[0].Interface().(proto.Message), nil
 }

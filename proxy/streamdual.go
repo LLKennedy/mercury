@@ -15,11 +15,11 @@ import (
 )
 
 // Stram of structs in, stream of structs out
-func (s *Server) callStreamStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
+func (s *Server) handleDualStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
-			err = status.Errorf(codes.Internal, "caught panic: %v", r)
+			err = status.Errorf(codes.Internal, "caught panic for dual stream: %v", r)
 			fmt.Printf("%s\n", debug.Stack())
 		}
 	}()
@@ -50,48 +50,65 @@ func (s *Server) callStreamStream(ctx context.Context, procType reflect.Type, ca
 		err = clientErr
 		return
 	}
-	// All worked as expected and without error, now we start proxying request messages
+	// All worked as expected and without error, now we start proxying messages in both directions
 	send := endpoint.MethodByName("Send")
-	recv := endpoint.MethodByName("CloseAndRecv")
+	recv := endpoint.MethodByName("Recv")
 	sendT := send.Type()
-	reqT := sendT.In(0)
-	var req *httpapi.StreamedRequest
-	req, err = srv.Recv()
+	reqT := sendT.In(0).Elem()
+	up := make(chan error, 1)
+	down := make(chan error, 1)
+	go s.up(client, reqT, srv, up)
+	go s.down(recv, srv, down)
+	select {
+	case err = <-up:
+		if err != nil {
+			return
+		}
+		err = <-down
+	case err = <-down:
+		if err != nil {
+			return
+		}
+		err = <-up
+	}
+	return
+}
+
+func (s *Server) up(client grpc.ClientStream, reqT reflect.Type, srv httpapi.ExposedService_ProxyStreamServer, done chan<- error) {
+	defer close(done)
+	req, err := srv.Recv()
 	for err == nil {
-		msg := reflect.New(reqT.Elem()).Interface().(proto.Message)
+		msg := reflect.New(reqT).Interface().(proto.Message)
 		err = unmarshaller.Unmarshal(req.GetRequest(), msg)
 		if err != nil {
 			break
 		}
 		err = client.SendMsg(msg)
-		if err != nil {
-			break
-		}
-		req, err = srv.Recv()
 	}
 	if err == io.EOF {
-		err = client.CloseSend()
-		if err != nil {
-			return
-		}
-		resVals := recv.Call(nil)
-		res := resVals[0].Interface().(proto.Message)
-		errVal := resVals[1].Interface()
-		if errVal != nil {
-			err = errVal.(error)
-			return
-		}
-		var data []byte
+		client.CloseSend()
+		err = nil
+	}
+	done <- err
+}
+
+func (s *Server) down(recv reflect.Value, srv httpapi.ExposedService_ProxyStreamServer, done chan<- error) {
+	defer close(done)
+	res, err := wrapRecv(recv)
+	var data []byte
+	for err == nil {
 		data, err = marshaller.Marshal(res)
 		if err != nil {
-			return
+			break
 		}
 		err = srv.Send(&httpapi.StreamedResponse{
 			Response: data,
 		})
 		if err != nil {
-			return
+			break
 		}
+		res, err = wrapRecv(recv)
 	}
-	return
+	// EOF here means the other end hung up, so we pass it along
+	done <- err
 }

@@ -3,7 +3,6 @@ package proxy
 import (
 	"context"
 	"fmt"
-	"io"
 	"reflect"
 	"runtime/debug"
 
@@ -15,11 +14,11 @@ import (
 )
 
 // One struct in, stream of structs out
-func (s *Server) callStructStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
+func (s *Server) handleServerStream(ctx context.Context, procType reflect.Type, caller reflect.Value, srv httpapi.ExposedService_ProxyStreamServer) (err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
-			err = status.Errorf(codes.Internal, "caught panic: %v", r)
+			err = status.Errorf(codes.Internal, "caught panic for server stream: %v", r)
 			fmt.Printf("%s\n", debug.Stack())
 		}
 	}()
@@ -41,7 +40,7 @@ func (s *Server) callStructStream(ctx context.Context, procType reflect.Type, ca
 	endpoint := returnValues[0]
 	if endpoint.CanInterface() {
 		var ok bool
-		_, ok = (endpoint.Interface()).(grpc.ServerStream)
+		_, ok = (endpoint.Interface()).(grpc.ClientStream)
 		if !ok {
 			clientErr = status.Errorf(codes.Internal, "response message could not be converted to grpc.ServerStream interface")
 		}
@@ -60,7 +59,7 @@ func (s *Server) callStructStream(ctx context.Context, procType reflect.Type, ca
 		err = clientErr
 		return
 	}
-	// All worked as expected and without error, now we start proxying request messages
+	// All worked as expected and without error, now we start proxying response messages
 	recv := endpoint.MethodByName("Recv")
 	var res proto.Message
 	res, err = wrapRecv(recv)
@@ -78,17 +77,5 @@ func (s *Server) callStructStream(ctx context.Context, procType reflect.Type, ca
 		}
 		res, err = wrapRecv(recv)
 	}
-	if err == io.EOF {
-		err = nil
-	}
 	return
-}
-
-func wrapRecv(recv reflect.Value) (proto.Message, error) {
-	resVals := recv.Call(nil)
-	errVal := resVals[1].Interface()
-	if errVal != nil {
-		return nil, errVal.(error)
-	}
-	return resVals[0].Interface().(proto.Message), nil
 }
