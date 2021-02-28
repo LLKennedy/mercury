@@ -115,8 +115,10 @@ func (h *Handle) Feed(stream App_FeedServer) error {
 			fmt.Printf("caught panic: %v\n", r)
 		}
 	}()
+	total := 0
 	data, err := stream.Recv()
 	for err == nil && data != nil {
+		total++
 		fmt.Println("Received FeedData...")
 		fmt.Printf("%#v\n", data)
 		data, err = stream.Recv()
@@ -125,7 +127,9 @@ func (h *Handle) Feed(stream App_FeedServer) error {
 		err = nil
 	}
 	if err == nil {
-		err = stream.SendAndClose(&FeedResponse{})
+		err = stream.SendAndClose(&FeedResponse{
+			Received: int32(total),
+		})
 	}
 	if err != nil {
 		return status.Error(codes.Aborted, fmt.Sprintf("failed to receive all data and send response: %v", err))

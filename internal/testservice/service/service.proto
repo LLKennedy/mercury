@@ -34,7 +34,9 @@ message FeedData {
     bytes raw_data = 3;
 }
 
-message FeedResponse {}
+message FeedResponse {
+    int32 received = 1;
+}
 
 message BroadcastRequest {
     string id = 1;

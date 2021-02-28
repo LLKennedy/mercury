@@ -76,8 +76,9 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 		}
 		resVals := recv.Call(nil)
 		res := resVals[0].Interface().(proto.Message)
-		err = resVals[1].Interface().(error)
-		if err != nil {
+		errVal := resVals[1].Interface()
+		if errVal != nil {
+			err = errVal.(error)
 			return
 		}
 		var data []byte

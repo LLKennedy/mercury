@@ -3,6 +3,7 @@ package convert
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/LLKennedy/httpgrpc/httpapi"
@@ -13,6 +14,8 @@ import (
 
 const (
 	defaultBufferSize = 65536
+	// EOFMessage is the EOF message websockets must send to imitate gRPC CloseSend()
+	EOFMessage = "EOF"
 )
 
 type stream struct {
@@ -51,70 +54,93 @@ func (h stream) Serve(c *websocket.Conn) {
 			Init: routingInfo,
 		},
 	})
-	for {
-		up := make(chan error, 1)
-		down := make(chan error, 1)
-		go h.up(c, client, up)
-		go h.down(c, client, down)
-		select {
-		case err := <-up:
-			if err != nil {
-				errWriter.writeWsErr(fmt.Errorf("error on upstream: %v", err))
-				return
-			}
-		case err := <-down:
-			if err != nil {
-				errWriter.writeWsErr(fmt.Errorf("error on downstream: %v", err))
-				return
-			}
+	up := make(chan error, 1)
+	down := make(chan error, 1)
+	go h.up(c, client, up)
+	go h.down(c, client, down)
+	select {
+	case err := <-up:
+		if err != nil && err != io.EOF {
+			errWriter.writeWsErr(fmt.Errorf("error on upstream: %v", err))
+			return
 		}
+		// Upstream is closed, just wait on downstream
+		err = <-down
+		if err != nil && err != io.EOF {
+			errWriter.writeWsErr(fmt.Errorf("error on downstream: %v", err))
+			return
+		}
+		c.WriteClose(http.StatusOK)
+		return
+	case err := <-down:
+		if err != nil && err != io.EOF {
+			errWriter.writeWsErr(fmt.Errorf("error on downstream: %v", err))
+			return
+		}
+		// Downstream is closed, just wait on upstream
+		err = <-up
+		if err != nil && err != io.EOF {
+			errWriter.writeWsErr(fmt.Errorf("error on upstream: %v", err))
+			return
+		}
+		c.WriteClose(http.StatusOK)
+		return
 	}
 }
 
 // Messages from client to server
 func (h *stream) up(c *websocket.Conn, client httpapi.ExposedService_ProxyStreamClient, out chan<- error) {
 	defer close(out)
-	bufferSize := h.readBufferSize
-	if bufferSize <= 0 {
-		bufferSize = defaultBufferSize
-	}
-	buffer := make([]byte, bufferSize)
-	n, err := c.Read(buffer)
-	if err != nil {
-		out <- fmt.Errorf("reading from websocket: %v", err)
-		return
-	}
-	msg := buffer[:n]
-	// _, err = c.Write(msg)
-	// if err != nil {
-	// 	out <- fmt.Errorf("writing back to websocket: %v", err)
-	// 	return
-	// }
-	err = client.Send(&httpapi.StreamedRequest{
-		MessageType: &httpapi.StreamedRequest_Request{
-			Request: msg,
-		},
-	})
-	if err != nil {
-		out <- fmt.Errorf("writing to service: %v", err)
-		return
+	for {
+		bufferSize := h.readBufferSize
+		if bufferSize <= 0 {
+			bufferSize = defaultBufferSize
+		}
+		buffer := make([]byte, bufferSize)
+		n, err := c.Read(buffer)
+		if err != nil {
+			out <- fmt.Errorf("reading from websocket: %v", err)
+			return
+		}
+		msg := buffer[:n]
+		if string(msg) == EOFMessage {
+			client.CloseSend()
+			out <- io.EOF
+			return
+		}
+		err = client.Send(&httpapi.StreamedRequest{
+			MessageType: &httpapi.StreamedRequest_Request{
+				Request: msg,
+			},
+		})
+		if err != nil {
+			out <- fmt.Errorf("writing to service: %v", err)
+			return
+		}
 	}
 }
 
 // Messages from server to client
 func (h *stream) down(c *websocket.Conn, client httpapi.ExposedService_ProxyStreamClient, out chan<- error) {
 	defer close(out)
-	// Get a message from the server
-	msg, err := client.Recv()
-	if err != nil {
-		// FIXME: handle io.EOF here
-		out <- fmt.Errorf("reading from service: %v", err)
-		return
-	}
-	// Send the message to the client
-	_, err = c.Write(msg.GetResponse())
-	if err != nil {
-		out <- fmt.Errorf("writing to websocket: %v", err)
+	for {
+		// Get a message from the server
+		msg, err := client.Recv()
+		if err != nil {
+			if err == io.EOF {
+				out <- err
+				return
+			}
+			c.Write([]byte(EOFMessage))
+			out <- fmt.Errorf("reading from service: %v", err)
+			return
+		}
+		// Send the message to the client
+		_, err = c.Write(msg.GetResponse())
+		if err != nil {
+			out <- fmt.Errorf("writing to websocket: %v", err)
+			return
+		}
 	}
 }
 
@@ -131,9 +157,12 @@ func (w errorWriter) writeWsErr(err error) {
 	}
 	errStatus, ok := status.FromError(err)
 	if !ok {
+		// TODO: how to write these in such a way that parsers can catch them?
 		// Can't get proper status code, return bad gateway
+		w.c.Write([]byte(fmt.Sprintf("%v", err)))
 		w.c.WriteClose(http.StatusBadGateway)
 	} else {
+		w.c.Write([]byte(errStatus.Message()))
 		w.c.WriteClose(GRPCStatusToHTTPStatusCode(errStatus.Code()))
 	}
 }
