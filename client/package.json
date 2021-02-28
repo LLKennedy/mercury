@@ -1,6 +1,6 @@
 {
   "name": "@llkennedy/httpgrpc-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Client wrappers for httpgrpc, specifically for websocket logic.",
   "main": "lib/index.js",
   "dependencies": {
@@ -48,6 +48,10 @@
     "grpc",
     "web",
     "proto"
+  ],
+  "files": [
+    "./src/**",
+    "./lib/**"
   ],
   "author": "Luke Kennedy",
   "license": "MIT"
