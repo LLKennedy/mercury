@@ -63,7 +63,7 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 		if err != nil {
 			break
 		}
-		err = client.SendMsg(req)
+		err = client.SendMsg(msg)
 		if err != nil {
 			break
 		}
