@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 
 	"github.com/LLKennedy/httpgrpc/httpapi"
 	"google.golang.org/grpc/codes"
@@ -21,6 +22,7 @@ func (s *Server) ProxyStream(srv httpapi.ExposedService_ProxyStreamServer) (err 
 	defer func() {
 		if r := recover(); r != nil {
 			err = wrapErr(codes.Internal, fmt.Errorf("caught panic %v", r))
+			fmt.Printf("%s\n", debug.Stack())
 		}
 	}()
 	ctx := srv.Context()

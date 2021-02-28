@@ -81,17 +81,22 @@ func (h *stream) up(c *websocket.Conn, client httpapi.ExposedService_ProxyStream
 	buffer := make([]byte, bufferSize)
 	n, err := c.Read(buffer)
 	if err != nil {
-		out <- err
+		out <- fmt.Errorf("reading from websocket: %v", err)
 		return
 	}
 	msg := buffer[:n]
+	// _, err = c.Write(msg)
+	// if err != nil {
+	// 	out <- fmt.Errorf("writing back to websocket: %v", err)
+	// 	return
+	// }
 	err = client.Send(&httpapi.StreamedRequest{
 		MessageType: &httpapi.StreamedRequest_Request{
 			Request: msg,
 		},
 	})
 	if err != nil {
-		out <- err
+		out <- fmt.Errorf("writing to service: %v", err)
 		return
 	}
 }
@@ -103,13 +108,13 @@ func (h *stream) down(c *websocket.Conn, client httpapi.ExposedService_ProxyStre
 	msg, err := client.Recv()
 	if err != nil {
 		// FIXME: handle io.EOF here
-		out <- err
+		out <- fmt.Errorf("reading from service: %v", err)
 		return
 	}
 	// Send the message to the client
 	_, err = c.Write(msg.GetResponse())
 	if err != nil {
-		out <- err
+		out <- fmt.Errorf("writing to websocket: %v", err)
 	}
 }
 

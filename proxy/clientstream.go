@@ -2,8 +2,10 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"reflect"
+	"runtime/debug"
 
 	"github.com/LLKennedy/httpgrpc/httpapi"
 	"google.golang.org/grpc"
@@ -17,11 +19,12 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 	defer func() {
 		r := recover()
 		if r != nil {
-
+			err = status.Errorf(codes.Internal, "caught panic: %v", r)
+			fmt.Printf("%s\n", debug.Stack())
 		}
 	}()
 	// Client streaming always starts by passing the context and nothing else to receive a stream + error
-	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(ctx)})
+	returnValues := caller.Call([]reflect.Value{reflect.ValueOf(context.Background())})
 	// Parse our return values
 	var clientErr error
 	var client grpc.ClientStream
@@ -48,16 +51,14 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 		return
 	}
 	// All worked as expected and without error, now we start proxying request messages
-	send := endpoint.MethodByName("SendMsg")
-	recv := endpoint.MethodByName("RecvMsg")
+	send := endpoint.MethodByName("Send")
+	recv := endpoint.MethodByName("CloseAndRecv")
 	sendT := send.Type()
-	recvT := recv.Type()
 	reqT := sendT.In(0)
-	resT := recvT.In(0)
 	var req *httpapi.StreamedRequest
 	req, err = srv.Recv()
 	for err == nil {
-		msg := reflect.New(reqT).Interface().(proto.Message)
+		msg := reflect.New(reqT.Elem()).Interface().(proto.Message)
 		err = unmarshaller.Unmarshal(req.GetRequest(), msg)
 		if err != nil {
 			break
@@ -73,8 +74,9 @@ func (s *Server) callStreamStruct(ctx context.Context, procType reflect.Type, ca
 		if err != nil {
 			return
 		}
-		res := reflect.New(resT).Interface().(proto.Message)
-		err = client.RecvMsg(&res)
+		resVals := recv.Call(nil)
+		res := resVals[0].Interface().(proto.Message)
+		err = resVals[1].Interface().(error)
 		if err != nil {
 			return
 		}

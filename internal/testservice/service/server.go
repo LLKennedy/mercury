@@ -110,6 +110,11 @@ func (h *Handle) UploadPhoto(ctx context.Context, in *UploadPhotoRequest) (*Uplo
 
 // Feed handles streamed inputs
 func (h *Handle) Feed(stream App_FeedServer) error {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("caught panic: %v\n", r)
+		}
+	}()
 	data, err := stream.Recv()
 	for err == nil && data != nil {
 		fmt.Println("Received FeedData...")
