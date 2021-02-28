@@ -90,6 +90,7 @@ func (s *Server) up(client grpc.ClientStream, reqT reflect.Type, srv httpapi.Exp
 			break
 		}
 		err = client.SendMsg(msg)
+		req, err = srv.Recv()
 	}
 	if err == io.EOF {
 		client.CloseSend()
