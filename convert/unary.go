@@ -8,25 +8,51 @@ import (
 
 	"github.com/LLKennedy/httpgrpc/httpapi"
 	"github.com/LLKennedy/httpgrpc/logs"
+	"golang.org/x/net/websocket"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-// ProxyRequest proxies an HTTP request through a GRPC connection compliant with httpgrpc/proto
-func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, procedure string, conn *grpc.ClientConn, txid string, loggers ...logs.Writer) {
+// ProxyRequest proxies an HTTP(S) or WS(S) request through a GRPC connection compliant with httpgrpc/httpapi
+func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, procedure string, conn grpc.ClientConnInterface, txid string, loggers ...logs.Writer) {
+	remote := httpapi.NewExposedServiceClient(conn)
+	isWebsocket := false
+	upgradeHader, ok := r.Header["Upgrade"]
+	if ok {
+		isWebsocket = len(upgradeHader) >= 1 && upgradeHader[0] == "websocket"
+	}
+	if isWebsocket {
+		// Stream request
+		handler := stream{
+			ctx:       ctx,
+			remote:    remote,
+			loggers:   loggers,
+			procedure: procedure,
+			headers:   r.Header,
+			txid:      txid,
+		}
+		wssrv := &websocket.Server{
+			Handler: handler.Serve,
+		}
+		wssrv.ServeHTTP(w, r)
+		return
+	}
+	// Unary request
 	req := RequestFromRequest(r)
 	req.Procedure = procedure
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	req.Payload = bodyBytes
 	// Forward the actual GRPC request
-	res, err := httpapi.NewExposedServiceClient(conn).Proxy(ctx, req)
+	var errStatus *status.Status
+	res, err := remote.ProxyUnary(ctx, req)
 	if err != nil {
 		// GRPC call failed, let's log it, process an error status
 		for _, logger := range loggers {
 			logger.LogErrorf(txid, "httpgrpc: received error from target service: %v", err)
 		}
-		errStatus, ok := status.FromError(err)
+		var ok bool
+		errStatus, ok = status.FromError(err)
 		if !ok {
 			// Can't get proper status code, return bad gateway
 			w.WriteHeader(http.StatusBadGateway)
@@ -38,13 +64,18 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 		w.WriteHeader(int(res.GetStatusCode()))
 	}
 	// Write response body
-	w.Write(res.GetPayload())
 	for name, values := range res.GetWriteHeaders() {
 		for _, value := range values.GetValues() {
 			w.Header().Add(name, value)
 		}
 	}
+	if errStatus == nil {
+		w.Write(res.GetPayload())
+	} else {
+		w.Write([]byte(errStatus.Message()))
+	}
 	return
+
 }
 
 // RequestFromRequest creates a *httpapi.Request from *http.Request filling all values except body, which could error

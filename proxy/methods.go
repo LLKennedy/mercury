@@ -25,7 +25,7 @@ func validateMethod(apiMethod reflect.Method, serverType reflect.Type) (methodTy
 		err = fmt.Errorf("method %s did not match standard GRPC patterns (stream or struct pointer in and out, plus error out where applicable)", name)
 		return
 	}
-	err = validateArgs(expectedType, foundType)
+	err = validateArgs(expectedType, foundType, pattern)
 	if err != nil {
 		err = fmt.Errorf("validation of %s to %s mapping: %v", name, trueName, err)
 		return

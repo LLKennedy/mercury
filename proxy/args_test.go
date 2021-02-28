@@ -66,6 +66,7 @@ func TestArgsMatch(t *testing.T) {
 	type test struct {
 		name, expectedErr string
 		a, b              interface{}
+		pattern           apiMethodPattern
 	}
 	tests := []test{
 		{
@@ -135,7 +136,7 @@ func TestArgsMatch(t *testing.T) {
 			} else {
 				bType = reflect.TypeOf(tt.b)
 			}
-			err := validateArgs(aType, bType)
+			err := validateArgs(aType, bType, tt.pattern)
 			if tt.expectedErr == "" {
 				assert.NoError(t, err)
 			} else {

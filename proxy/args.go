@@ -10,7 +10,7 @@ import (
 
 // Beware, this is where stuff gets super vague thanks to the magic of reflection
 
-func validateArgs(expected, found reflect.Type) error {
+func validateArgs(expected, found reflect.Type, pattern apiMethodPattern) error {
 	// All this to get a proper array out of these reflection types
 	expectedInLen := expected.NumIn()
 	expectedOutLen := expected.NumOut()
@@ -32,6 +32,16 @@ func validateArgs(expected, found reflect.Type) error {
 	for i := 0; i < foundOutLen; i++ {
 		foundOut = append(foundOut, found.Out(i))
 	}
+	switch pattern {
+	case apiMethodPatternStructStream:
+		// API: req, stream_server -> error
+		// Client: ctx, req, opts -> stream_client, error
+		if expectedInLen != 3 || expectedOutLen != 1 || foundInLen != 4 || foundOutLen != 2 {
+			return fmt.Errorf("pattern was server-side streaming but real function did not meet that. expected api_in=3,api_out=1,real_in=4,real_out2, got api_in=%d,api_out=%d,real_in=%d,real_out=%d", expectedInLen, expectedOutLen, foundInLen, foundOutLen)
+		}
+		// TODO: better more-specific type-checking all round, maybe? Though this should all be used through code-gen
+		return nil
+	}
 	if expectedInLen < 2 || foundInLen < 2 {
 		return fmt.Errorf("cannot exclude receiver from argument checks if receiver is the only argument: expected >= 2 input argments, found %d and %d", expectedInLen, foundInLen)
 	}
@@ -48,7 +58,8 @@ func validateArgs(expected, found reflect.Type) error {
 }
 
 func typesMatch(expected, found []reflect.Type) error {
-	if len(expected) != len(found) {
+	// Account for both patterns
+	if len(expected) != len(found)-1 && len(expected) != len(found) {
 		return fmt.Errorf("argument lengths did not match: expected %d but found %d", len(expected), len(found))
 	}
 	for i := range expected {

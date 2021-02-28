@@ -105,7 +105,7 @@ func TestSetExceptionHandler(t *testing.T) {
 		s.SetExceptionHandler(func(ctx context.Context, req *httpapi.Request) (handled bool, res *httpapi.Response, err error) {
 			return true, fixedResponse, fmt.Errorf("some error")
 		})
-		res, err := s.Proxy(nil, nil)
+		res, err := s.ProxyUnary(nil, nil)
 		assert.Equal(t, fixedResponse, res)
 		assert.EqualError(t, err, "some error")
 	})
@@ -114,9 +114,10 @@ func TestSetExceptionHandler(t *testing.T) {
 func TestNewServer(t *testing.T) {
 	gS := grpc.NewServer()
 	type args struct {
-		api      interface{}
-		server   interface{}
-		listener *grpc.Server
+		api                interface{}
+		server             interface{}
+		listener           *grpc.Server
+		bypassInterceptors bool
 	}
 	tests := []struct {
 		name    string
@@ -152,7 +153,7 @@ func TestNewServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewServer(tt.args.api, tt.args.server, tt.args.listener)
+			got, err := NewServer(tt.args.api, tt.args.server, tt.args.listener, tt.args.bypassInterceptors)
 			if tt.want == nil {
 				assert.Nil(t, got)
 			} else {

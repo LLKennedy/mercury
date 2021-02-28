@@ -30,11 +30,14 @@ type Server struct {
 	api              map[string]map[string]apiMethod // the api of innerServer
 	innerServer      interface{}                     // the actual protobuf endpoints we want to use
 	exceptionHandler ExceptionHandler
+	httpapi.UnimplementedExposedServiceServer
+	skipForwardingMetadata bool
 }
 
 type apiMethod struct {
 	pattern    apiMethodPattern
 	reflection reflect.Method
+	value      reflect.Value
 }
 
 func (s *Server) getGrpcServer() *grpc.Server {
@@ -80,6 +83,19 @@ func (s *Server) setInnerServer(in interface{}) {
 		return
 	}
 	s.innerServer = in
+}
+func (s *Server) getSkipForwardingMetadata() bool {
+	if s == nil {
+		return defaultServer.skipForwardingMetadata
+	}
+	return s.skipForwardingMetadata
+}
+
+func (s *Server) setSkipForwardingMetadata(in bool) {
+	if s == nil {
+		defaultServer.skipForwardingMetadata = in
+	}
+	s.skipForwardingMetadata = in
 }
 
 func (s *Server) handleExceptions(ctx context.Context, req *httpapi.Request) (handled bool, res *httpapi.Response, err error) {

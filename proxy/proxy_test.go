@@ -173,7 +173,7 @@ func TestServer_Proxy(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.s.Proxy(tt.ctx, tt.req)
+			got, err := tt.s.ProxyUnary(tt.ctx, tt.req)
 			assert.Equal(t, tt.want, got)
 			if tt.expectedErr == "" {
 				assert.NoError(t, err)
@@ -334,22 +334,4 @@ func Test_methodToString(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestImpossiblePatterns(t *testing.T) {
-	t.Run("struct-stream", func(t *testing.T) {
-		res, err := callStructStream(context.Background(), nil, nil, reflect.Value{})
-		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Unimplemented desc = httpgrpc: Struct In, Stream Out is not yet supported, please manually implement exceptions for endpoint %!s(<nil>)")
-	})
-	t.Run("stream-struct", func(t *testing.T) {
-		res, err := callStreamStruct(context.Background(), nil, nil, reflect.Value{})
-		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Unimplemented desc = httpgrpc: Stream In, Struct Out is not yet supported, please manually implement exceptions for endpoint %!s(<nil>)")
-	})
-	t.Run("stream-stream", func(t *testing.T) {
-		res, err := callStreamStream(context.Background(), nil, nil, reflect.Value{})
-		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Unimplemented desc = httpgrpc: Stream In, Stream Out is not yet supported, please manually implement exceptions for endpoint %!s(<nil>)")
-	})
 }

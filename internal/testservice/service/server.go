@@ -19,17 +19,13 @@ type Handle struct {
 	server *grpc.Server
 	proxy  interface{ Serve(net.Listener) error }
 	photos map[string][]byte
+	UnimplementedAppServer
 }
 
 // New creates a new server
 func New() (*Handle, error) {
 	s := new(Handle)
 	s.server = grpc.NewServer()
-	var err error
-	s.proxy, err = httpgrpc.NewServer(&UnimplementedExposedAppServer{}, s, s.server)
-	if err != nil {
-		return nil, err
-	}
 	RegisterAppServer(s.server, s)
 	return s, nil
 }
@@ -37,6 +33,17 @@ func New() (*Handle, error) {
 // Start starts the server
 func (h *Handle) Start() error {
 	listener, err := net.Listen("tcp", ":8953")
+	if err != nil {
+		return err
+	}
+	conn, err := h.MakeClientConn()
+	if err != nil {
+		return err
+	}
+	client := NewAppClient(conn)
+	// client.Broadcast()
+	// h.Broadcast()
+	h.proxy, err = httpgrpc.NewServer(&UnimplementedExposedAppServer{}, client, h.server, false)
 	if err != nil {
 		return err
 	}
@@ -103,17 +110,26 @@ func (h *Handle) UploadPhoto(ctx context.Context, in *UploadPhotoRequest) (*Uplo
 
 // Feed handles streamed inputs
 func (h *Handle) Feed(stream App_FeedServer) error {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("caught panic: %v\n", r)
+		}
+	}()
+	total := 0
 	data, err := stream.Recv()
 	for err == nil && data != nil {
+		total++
 		fmt.Println("Received FeedData...")
-		fmt.Printf("%+v\n", data)
+		fmt.Printf("%#v\n", data)
 		data, err = stream.Recv()
 	}
 	if err != nil && err.Error() == "EOF" {
 		err = nil
 	}
 	if err == nil {
-		err = stream.SendAndClose(&FeedResponse{})
+		err = stream.SendAndClose(&FeedResponse{
+			Received: int32(total),
+		})
 	}
 	if err != nil {
 		return status.Error(codes.Aborted, fmt.Sprintf("failed to receive all data and send response: %v", err))
