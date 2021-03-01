@@ -6,10 +6,10 @@ export type Parser<T> = ((res: Object) => T) | ((res: Object) => Promise<T>);
 export class Client {
 	private axiosClient: AxiosInstance;
 	private basePath: string;
-	private secure: boolean;
-	constructor(basePath: string = "localhost/api", secure: boolean = true, client: AxiosInstance = axios) {
+	private useTLS: boolean;
+	constructor(basePath: string = "localhost/api", useTLS: boolean = true, client: AxiosInstance = axios) {
 		this.basePath = basePath;
-		this.secure = secure;
+		this.useTLS = useTLS;
 		this.axiosClient = client;
 	}
 	/**
@@ -18,12 +18,12 @@ export class Client {
 	 */
 	public async SendUnary<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, request: ReqT, parseResponse: Parser<ResT>): Promise<ResT> {
 		let message = request.ToProtoJSON();
-		let url = this.BuildURL(endpoint);
+		let url = this.BuildURL(endpoint, false);
 		let res = await this.axiosClient.post<Object>(url, message);
 		return parseResponse(res.data);
 	}
 	public async StartClientStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, parseResponse: Parser<ResT>): Promise<EstablishedWebsocket<ReqT, ResT>> {
-		let url = this.BuildURL(endpoint);
+		let url = this.BuildURL(endpoint, true);
 		let ws = new HTTPgRPCWebSocket(url, parseResponse);
 		// Establish the connection, set up event listeners, etc.
 		return ws.init();
@@ -33,7 +33,7 @@ export class Client {
 		let scheme: string;
 		switch (websocket) {
 			case true:
-				switch (this.secure) {
+				switch (this.useTLS) {
 					case true:
 						scheme = "wss";
 						break;
@@ -43,7 +43,7 @@ export class Client {
 				}
 				break;
 			case false:
-				switch (this.secure) {
+				switch (this.useTLS) {
 					case true:
 						scheme = "https";
 						break;
