@@ -14,7 +14,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	}
 	/** Attempts to establish a websocket connection, then set up event listeners to handle bi-directional comms.
 	 * 
-	 * Can only be called once, will throw an error if it is called a second time.
+	 * Can only be called once.
 	 * 
 	 * This will normally be called by the Client method which establishes the connection, you only need to use this method
 	 * if you are creating instances of this class directly for some reason.
@@ -25,15 +25,18 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		if (this.initialised) {
 			throw new Error("cannot initialise HTTPgRPCWebSocket twice");
 		}
+		this.initialised = true;
 		this.conn = new WebSocket(this.url);
 		// FIXME: event listeners
 		return this;
 	}
+	/** Wait until a message is successfully sent to the server. */
 	public async Send(request: ReqT): Promise<void> {
 		let message = request.ToProtoJSON();
 		let messageString = JSON.stringify(message);
 		this.conn?.send(messageString);
 	}
+	/** Wait until a message is received from the server. */
 	public async Recv(): Promise<ResT> {
 		let next = this.responseBuffer.shift();
 		if (next === undefined) {
@@ -42,9 +45,11 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		}
 		return this.parser(next);
 	}
+	/** Close the sending direction of communications, any Send calls after this will throw an Error without writing to the websocket. */
 	public async CloseSend(): Promise<void> {
 		this.conn?.send(EOFMessage);
 	}
+	/** Close terminates the websocket connection early, resulting in errors at the server's end. Any other calls after this point will throw an Error. */
 	public async Close(code?: number, reason?: string): Promise<void> {
 		this.conn?.close(code, reason);
 	}
