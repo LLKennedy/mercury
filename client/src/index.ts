@@ -1,2 +1,5 @@
-export * from "./client/client";
-export * from "./websocket";
+import { Client } from "client";
+export * from "client";
+export * from "websocket";
+export * from "common";
+export default Client;
