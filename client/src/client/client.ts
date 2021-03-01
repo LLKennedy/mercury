@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
-import { ClientStream, DualStream, HTTPgRPCWebSocket, IClientStream, IDualStream, IServerStream, ServerStream } from "websocket";
-import { ProtoJSONCompatible, Parser } from "common";
+import { ClientStream, DualStream, HTTPgRPCWebSocket, IClientStream, IDualStream, IServerStream, ServerStream } from "../websocket";
+import { ProtoJSONCompatible, Parser } from "../common";
 
 export class Client {
 	private axiosClient: AxiosInstance;

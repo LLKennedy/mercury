@@ -1,4 +1,4 @@
-import { ProtoJSONCompatible, Parser } from "common";
+import { ProtoJSONCompatible, Parser } from "../common";
 
 const EOFMessage = "EOF";
 

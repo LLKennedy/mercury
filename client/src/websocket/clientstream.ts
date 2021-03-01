@@ -1,5 +1,5 @@
-import { ProtoJSONCompatible } from "common";
-import { EstablishedWebsocket } from "websocket";
+import { ProtoJSONCompatible } from "../common";
+import { EstablishedWebsocket } from "./websocket";
 
 /** ClientStream is a client-side streaming RPC */
 export class ClientStream<ReqT extends ProtoJSONCompatible, ResT = any> {

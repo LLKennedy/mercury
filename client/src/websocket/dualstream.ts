@@ -1,5 +1,5 @@
-import { ProtoJSONCompatible } from "common";
-import { EstablishedWebsocket } from "websocket";
+import { ProtoJSONCompatible } from "../common";
+import { EstablishedWebsocket } from "./websocket";
 
 /** DualStream is a dual streaming RPC */
 export class DualStream<ReqT extends ProtoJSONCompatible, ResT = any> {
