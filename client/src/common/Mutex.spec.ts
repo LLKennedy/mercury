@@ -28,11 +28,15 @@ describe("Mutex", () => {
 				return;
 			})
 			let job2 = m.Run(() => {
+				sleep(10);
 				throw new Error("something's wrong");
 			})
 			let job3 = m.RunAsync(async () => {
 				sleep(50);
 				return;
+			})
+			let job4 = m.RunAsync(async () => {
+				throw new Error("failure");
 			})
 			try {
 				await job1;
@@ -43,11 +47,20 @@ describe("Mutex", () => {
 				await job2;
 				assert.fail("Not supposed to succeed")
 			} catch (err) {
+				assert.instanceOf(err, Error)
+				assert.equal((err as Error).message, "something's wrong")
 			}
 			try {
 				await job3;
 			} catch (err) {
 				assert.fail(err)
+			}
+			try {
+				await job4;
+				assert.fail("Not supposed to succeed")
+			} catch (err) {
+				assert.instanceOf(err, Error)
+				assert.equal((err as Error).message, "failure")
 			}
 		})
 	});
