@@ -79,7 +79,12 @@ describe("Websocket", () => {
 		it("Send and Recv succeed", async () => {
 			let mockedWs = await makeMockedWebsocket(sandbox);
 			let ws = mockedWs.ws;
-			mockedWs.message(Object.assign(new MessageEvent(""), { data: "{}" }));
+			let fake = mockedWs.fake;
+			sandbox.stub(fake, "send").callsFake(data => {
+				assert.equal(data, "{}")
+			})
+			mockedWs.open({} as any);
+			mockedWs.message({ data: "{}" } as any);
 			await ws.Send(new FakeMessage());
 			let res = await ws.Recv();
 			assert.equal(res, new FakeResponse());
@@ -104,6 +109,7 @@ class FakeWebsocket implements IWebSocket {
 
 interface mockedWebsocket {
 	ws: HTTPgRPCWebSocket<FakeMessage, FakeResponse>;
+	fake: IWebSocket;
 	close(ev: CloseEvent): void;
 	open(ev: Event): void;
 	message(ev: MessageEvent): void;
@@ -145,6 +151,7 @@ async function makeMockedWebsocket(sandbox: sinon.SinonSandbox): Promise<mockedW
 	let [close, open, message, error] = await Promise.all(wait);
 	return {
 		ws,
+		fake,
 		close,
 		open,
 		message,

@@ -233,8 +233,8 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		newConn.addEventListener("message", async ev => {
 			let event = ev;
 			try {
-				await this.mutex.Run(() => {
-					this.messageHandler(event);
+				await this.mutex.RunAsync(async () => {
+					await this.messageHandler(event);
 					this.messageArrived();
 				})
 			} catch (err) {
@@ -249,7 +249,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		return this;
 	}
 	private newMessageAlert() {
-		this.messageAlert = new Promise(async (resolve, reject) => {
+		this.messageAlert = new Promise((resolve, reject) => {
 			this.messageArrived = resolve;
 			this.messageFailed = reject;
 		});
