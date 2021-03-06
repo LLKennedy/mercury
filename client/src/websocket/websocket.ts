@@ -57,11 +57,21 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	private recvOpen: Promise<void> = Promise.reject("socket is not yet open");
 	/** The raw connection object, or a placeholder if the connection is not yet open */
 	private conn: IWebsocket = new NoWebsocket();
-
+	/** Parsed responses waiting to be read by Recv calls */
 	private responseBuffer: ResT[] = [];
+	/** Core mutex for init calls */
 	private mutex: IMutex = new Mutex();
+	/** Mutex for send operations, independent from recvMutex */
 	private sendMutex: IMutex = new Mutex();
+	/** Mutex for receive operations, independent from sendMutex */
 	private recvMutex: IMutex = new Mutex();
+	/** Resolves when a message arrives */
+	private messageAlert: Promise<void> = Promise.reject("socket is not yet open");
+	/** For use *only* by the message handler */
+	private messageArrived: () => void = () => { };
+	private messageFailed: (err: any) => void = () => { };
+
+	/** Constructor */
 	constructor(url: string, parser: Parser<ResT>, name?: string, logger?: Logger) {
 		this.parser = parser;
 		this.url = url;
@@ -89,6 +99,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 
 	/** Wait until a message is received from the server. */
 	public async Recv(): Promise<ResT> {
+		let finishing = false;
 		try {
 			await this.recvOpen;
 		} catch (err) {
@@ -96,17 +107,36 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 			if (!(err instanceof EOFError)) {
 				// Any other error, just re-throw, you don't get to parse your data
 				throw err;
+			} else {
+				finishing = true;
 			}
 		}
-		return await this.recvMutex.RunAsync(this.recv);
+		return await this.recv(finishing);
 	}
-	private async recv(): Promise<ResT> {
-		let next = this.responseBuffer.shift();
-		if (next === undefined) {
-			// FIXME this isn't how buffers work, redo this whole section
-			throw new Error("unimplemented")
+	private async recv(finishing: boolean): Promise<ResT> {
+		let next: ResT | undefined;
+		do { next = await this.recvGetOne() } while (next === undefined && !finishing) {
+			try {
+				await this.messageAlert;
+			} catch (err) {
+				if (err instanceof EOFError) {
+					// closed but might still have a final message for us
+					finishing = true;
+				} else {
+					throw err;
+				}
+			}
 		}
-		return this.parser(next);
+		if (next === undefined) {
+			// Only way to be here is if we got EOF and there are no more messages in the buffer
+			throw new EOFError();
+		}
+		return next;
+	}
+	private async recvGetOne(): Promise<ResT | undefined> {
+		return await this.recvMutex.Run(() => {
+			return this.responseBuffer.shift();
+		})
 	}
 
 	/** Close the sending direction of communications, any Send calls after this will throw an Error without writing to the websocket. */
@@ -189,17 +219,30 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 				this.logError(err, "caught error on error handler: ");
 			}
 		})
+		this.newMessageAlert();
 		newConn.addEventListener("message", async ev => {
 			let event = ev;
 			try {
 				await this.mutex.Run(() => {
 					this.messageHandler(event);
+					this.messageArrived();
 				})
 			} catch (err) {
 				this.logError(err, "caught error on message handler: ");
+				await this.mutex.Run(() => {
+					this.messageFailed(err);
+				})
+			} finally {
+				await this.mutex.Run(this.newMessageAlert)
 			}
 		})
 		return this;
+	}
+	private newMessageAlert() {
+		this.messageAlert = new Promise(async (resolve, reject) => {
+			this.messageArrived = resolve;
+			this.messageFailed = reject;
+		});
 	}
 
 	//#region event handlers
@@ -215,6 +258,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		this.conn = new NoWebsocket();
 		this.sendOpen = Promise.reject("socket has closed");
 		this.recvOpen = ev.wasClean ? Promise.reject(new EOFError()) : this.sendOpen;
+		this.messageFailed(new EOFError());
 	}
 	private async openHandler(ev: Event): Promise<void> {
 		let eventID = uuid.v4();
@@ -226,6 +270,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		this.conn = new NoWebsocket();
 		this.sendOpen = Promise.reject("socket has closed due to error");
 		this.recvOpen = this.sendOpen;
+		this.messageFailed(ev);
 	}
 	private async messageHandler(ev: MessageEvent<any>): Promise<void> {
 		let parsed = await this.parser(ev.data);
