@@ -9,15 +9,14 @@ export interface IMutex {
 export class Mutex implements IMutex {
 	private current: Promise<void> = Promise.resolve();
 	public async Run(codeToRun: SafeAction): Promise<void> {
-		await this.current;
-		// FIXME: mark new current
-		codeToRun();
-		// FIXME: resolve new current
+		const next = async () => {
+			codeToRun();
+			return;
+		}
+		await this.RunAsync(next);
 	}
 	public async RunAsync(codeToRun: SafeActionAsync): Promise<void> {
+		this.current = this.current.finally(codeToRun)
 		await this.current;
-		// FIXME: mark new current
-		await codeToRun();
-		// FIXME: resolve new current
 	}
 }
