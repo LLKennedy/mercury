@@ -27,7 +27,7 @@ describe("Mutex", () => {
 				sleep(100);
 				return;
 			})
-			let job2 = m.RunAsync(async () => {
+			let job2 = m.Run(() => {
 				throw new Error("something's wrong");
 			})
 			let job3 = m.RunAsync(async () => {
