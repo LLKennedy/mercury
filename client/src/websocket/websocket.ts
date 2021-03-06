@@ -27,7 +27,6 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		}
 		this.initialised = true;
 		this.conn = new WebSocket(this.url);
-		// FIXME: event listeners
 		return this;
 	}
 	/** Wait until a message is successfully sent to the server. */
