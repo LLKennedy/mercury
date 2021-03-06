@@ -57,7 +57,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	/** Rejects if receiving is not yet ready or has been closed after opening */
 	private recvOpen: Promise<void> = Promise.reject("socket is not yet open");
 	/** The raw connection object, or a placeholder if the connection is not yet open */
-	private conn: IWebsocket = new NoWebsocket();
+	private conn: IWebSocket = new NoWebsocket();
 	/** Parsed responses waiting to be read by Recv calls */
 	private responseBuffer: ResT[] = [];
 	/** Core mutex for init calls */
@@ -71,10 +71,12 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	/** For use *only* by the message handler */
 	private messageArrived: () => void = () => { };
 	private messageFailed: (err: any) => void = () => { };
+	/** Used to create the websockets, only really for use in testing */
+	private websocketFactory: WebSocketFactory = (url: string, protocols?: string | string[]) => new WebSocket(url, protocols);
 	//#endregion properties
 
 	/** Constructor */
-	constructor(url: string, parser: Parser<ResT>, name?: string, logger?: Logger) {
+	constructor(url: string, parser: Parser<ResT>, name?: string, logger?: Logger, websocketFactory?: WebSocketFactory) {
 		this.parser = parser;
 		this.url = url;
 		// Check undefined and wrong typing at the same time
@@ -83,6 +85,9 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		}
 		if (logger !== undefined) {
 			this.logger = logger;
+		}
+		if (websocketFactory !== undefined) {
+			this.websocketFactory = websocketFactory;
 		}
 	}
 
@@ -179,14 +184,14 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	 * Calling this a second time will always throw an error without doing anything else.
 	 */
 	public async init(): Promise<EstablishedWebsocket<ReqT, ResT>> {
-		return await this.mutex.RunAsync(this.initConnection);
+		return await this.mutex.RunAsync(this.initConnection.bind(this));
 	}
 	private async initConnection(): Promise<EstablishedWebsocket<ReqT, ResT>> {
 		if (this.initialised) {
 			throw new Error("cannot initialise HTTPgRPCWebSocket twice");
 		}
 		this.initialised = true;
-		let newConn = new WebSocket(this.url);
+		let newConn = this.websocketFactory(this.url);
 		this.conn = newConn;
 		// Websocket opened without error, let's set up event listeners
 		this.sendOpen = new Promise(async (resolve, reject) => {
@@ -238,7 +243,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 					this.messageFailed(err);
 				})
 			} finally {
-				await this.mutex.Run(this.newMessageAlert)
+				await this.mutex.Run(this.newMessageAlert.bind(this))
 			}
 		})
 		return this;
@@ -300,17 +305,27 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	//#endregion utility functions
 }
 
-interface IWebsocket {
+export interface IWebSocket {
 	send(data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView): void;
 	close(code?: number | undefined, reason?: string | undefined): void;
+	addEventListener<K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+	addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
 }
 
-class NoWebsocket implements IWebsocket {
+export type WebSocketFactory = (url: string, protocols?: string | string[] | undefined) => IWebSocket
+
+class NoWebsocket implements IWebSocket {
 	send(data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView): void {
 		throw new Error("no websocket")
 	}
 	close(code?: number | undefined, reason?: string | undefined): void {
 		throw new Error("no websocket")
+	}
+	addEventListener<K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void
+	addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+		{
+			throw new Error("no websocket")
+		}
 	}
 }
 
