@@ -1,26 +1,25 @@
-export type SafeAction = () => void;
-export type SafeActionAsync = () => Promise<void>;
+export type SafeAction<T> = () => T;
+export type SafeActionAsync<T> = () => Promise<T>;
 
 export interface IMutex {
-	Run(codeToRun: SafeAction): Promise<void>;
-	RunAsync(codeToRun: SafeActionAsync): Promise<void>;
+	Run<T>(codeToRun: SafeAction<T>): Promise<T>;
+	RunAsync<T>(codeToRun: SafeActionAsync<T>): Promise<T>;
 }
 
 export class Mutex implements IMutex {
 	private current: Promise<void> = Promise.resolve();
-	public async Run(codeToRun: SafeAction): Promise<void> {
+	public async Run<T>(codeToRun: SafeAction<T>): Promise<T> {
 		const next = async () => {
-			codeToRun();
-			return;
+			return codeToRun();
 		}
-		await this.RunAsync(next);
+		return await this.RunAsync(next);
 	}
-	public async RunAsync(codeToRun: SafeActionAsync): Promise<void> {
-		await new Promise<void>((resolve, reject) => {
+	public async RunAsync<T>(codeToRun: SafeActionAsync<T>): Promise<T> {
+		return await new Promise<T>((resolve, reject) => {
 			this.current = this.current.finally(async () => {
 				try {
-					await codeToRun();
-					resolve();
+					let t = await codeToRun();
+					resolve(t);
 				} catch (err) {
 					reject(err);
 				}

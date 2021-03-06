@@ -1,2 +1,2 @@
 /** Converts an object  */
-export type Parser<T> = (res: Object) => Promise<T>;
+export type Parser<T> = (res: any) => Promise<T>;

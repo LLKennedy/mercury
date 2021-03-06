@@ -67,10 +67,10 @@ describe("Mutex", () => {
 })
 
 class FakeMutex implements IMutex {
-	async Run(codeToRun: SafeAction): Promise<void> {
+	async Run<T>(codeToRun: SafeAction<T>): Promise<T> {
 		return codeToRun();
 	}
-	async RunAsync(codeToRun: SafeActionAsync): Promise<void> {
+	async RunAsync<T>(codeToRun: SafeActionAsync<T>): Promise<T> {
 		return codeToRun();
 	}
 }
