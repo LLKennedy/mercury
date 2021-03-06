@@ -39,6 +39,7 @@ export class EOFError extends Error {
  * API and not have to worry about when to call CloseSend, etc.
  */
 export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
+	//#region properties
 	/** The logger used for all logs from this class */
 	public readonly logger: Logger = console;
 	/** The name of this websocket */
@@ -70,6 +71,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	/** For use *only* by the message handler */
 	private messageArrived: () => void = () => { };
 	private messageFailed: (err: any) => void = () => { };
+	//#endregion properties
 
 	/** Constructor */
 	constructor(url: string, parser: Parser<ResT>, name?: string, logger?: Logger) {
@@ -84,6 +86,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		}
 	}
 
+	//#region public methods
 	/** Wait until a message is successfully sent to the server. */
 	public async Send(request: ReqT): Promise<void> {
 		await this.sendOpen;
@@ -163,7 +166,9 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		this.sendOpen = Promise.reject("socket manually closed early");
 		this.recvOpen = this.sendOpen;
 	}
+	//#endregion public methods
 
+	//#region init
 	/** Attempts to establish a websocket connection, then set up event listeners to handle bi-directional comms.
 	 * 
 	 * Can only be called once.
@@ -244,6 +249,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 			this.messageFailed = reject;
 		});
 	}
+	//#endregion init
 
 	//#region event handlers
 	private async closeHandler(ev: CloseEvent): Promise<void> {
