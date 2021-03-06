@@ -27,7 +27,7 @@
     "typescript": "^4.1.3"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.publish.json",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "prepublishOnly": "npm run build"
   },

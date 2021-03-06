@@ -32,10 +32,16 @@ function fakeWsConstructor(): IWebSocket {
 	throw new Error("Unimplemented")
 }
 
+function msgEventConstructor(type: string): MessageEvent {
+	return {} as any;
+}
+
 let fileSandbox = sinon.createSandbox();
 before(async () => {
 	global.WebSocket = fakeWsConstructor as any;
-	fileSandbox.stub(global, "WebSocket").callsFake(fakeWsConstructor)
+	global.MessageEvent = msgEventConstructor as any;
+	fileSandbox.stub(global, "WebSocket").callsFake(fakeWsConstructor);
+	fileSandbox.stub(global, "MessageEvent").callsFake(msgEventConstructor);
 })
 after(async () => {
 	fileSandbox.restore();
@@ -70,19 +76,10 @@ describe("Websocket", () => {
 			await ws.init();
 			assert.deepEqual(evsCalled, [true, true, true, true]);
 		});
-		it.skip("Send and Recv succeed", async () => {
-			let fake = new FakeWebsocket();
-			let evStub = sandbox.stub(fake, "addEventListener");
-			evStub.withArgs("close", sinon.match(() => true)).callsFake(() => {
-			})
-			evStub.withArgs("open", sinon.match(() => true)).callsFake(() => {
-			})
-			evStub.withArgs("message", sinon.match(() => true)).callsFake(() => {
-			})
-			evStub.withArgs("error", sinon.match(() => true)).callsFake(() => {
-			})
-			let ws = new HTTPgRPCWebSocket<FakeMessage, FakeResponse>("not a real URL", ParseFakeData, "TestWebsocket", console, () => fake);
-			await ws.init();
+		it("Send and Recv succeed", async () => {
+			let mockedWs = await makeMockedWebsocket(sandbox);
+			let ws = mockedWs.ws;
+			mockedWs.message(Object.assign(new MessageEvent(""), { data: "{}" }));
 			await ws.Send(new FakeMessage());
 			let res = await ws.Recv();
 			assert.equal(res, new FakeResponse());
@@ -102,5 +99,55 @@ class FakeWebsocket implements IWebSocket {
 	addEventListener<K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void
 	addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
 		throw new Error("no websocket")
+	}
+}
+
+interface mockedWebsocket {
+	ws: HTTPgRPCWebSocket<FakeMessage, FakeResponse>;
+	close(ev: CloseEvent): void;
+	open(ev: Event): void;
+	message(ev: MessageEvent): void;
+	error(ev: Event): void;
+}
+
+async function makeMockedWebsocket(sandbox: sinon.SinonSandbox): Promise<mockedWebsocket> {
+	let fake = new FakeWebsocket();
+	let evStub = sandbox.stub(fake, "addEventListener");
+	let done: ((a: any) => any)[] = [];
+	let wait: [Promise<(ev: CloseEvent) => void>, Promise<(ev: Event) => void>, Promise<(ev: MessageEvent) => void>, Promise<(ev: Event) => void>] = [
+		new Promise(resolve => {
+			done.push(resolve);
+		}),
+		new Promise(resolve => {
+			done.push(resolve);
+		}),
+		new Promise(resolve => {
+			done.push(resolve);
+		}),
+		new Promise(resolve => {
+			done.push(resolve);
+		}),
+	];
+	evStub.withArgs("close", sinon.match(() => true)).callsFake((type, listener) => {
+		done[0](listener);
+	})
+	evStub.withArgs("open", sinon.match(() => true)).callsFake((type, listener) => {
+		done[1](listener);
+	})
+	evStub.withArgs("message", sinon.match(() => true)).callsFake((type, listener) => {
+		done[2](listener);
+	})
+	evStub.withArgs("error", sinon.match(() => true)).callsFake((type, listener) => {
+		done[3](listener);
+	})
+	let ws = new HTTPgRPCWebSocket<FakeMessage, FakeResponse>("not a real URL", ParseFakeData, "TestWebsocket", console, () => fake);
+	await ws.init();
+	let [close, open, message, error] = await Promise.all(wait);
+	return {
+		ws,
+		close,
+		open,
+		message,
+		error
 	}
 }
