@@ -28,10 +28,17 @@ service ExposedApp {
     rpc GetConvertToString(stream ConvertInput) returns (stream ConvertOutput) {}
 }
 
+enum FeedType {
+    FEED_TYPE_UNKNOWN = 0;
+    FEED_TYPE_RED = 1;
+    FEED_TYPE_BLUE = 2;
+}
+
 message FeedData {
     string id = 1;
     uint64 data_type = 2;
     bytes raw_data = 3;
+    FeedType type = 4;
 }
 
 message FeedResponse {
