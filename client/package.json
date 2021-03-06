@@ -4,6 +4,7 @@
   "description": "Client wrappers for httpgrpc, specifically for websocket logic.",
   "main": "lib/index.js",
   "dependencies": {
+    "@llkennedy/sleep.js": "^1.0.1",
     "@types/node": "^14.14.31",
     "axios": "^0.21.1"
   },
