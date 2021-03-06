@@ -12,7 +12,7 @@ describe("Mutex", () => {
 			let f = new FakeMutex();
 			// Without a mutex, only one read-write is completed
 			assert.equal((await MutateMap(f)).get(countKey), 1);
-		})
+		});
 	})
 
 	describe("Real Mutex", () => {
@@ -21,6 +21,35 @@ describe("Mutex", () => {
 			// With a mutex, all operations are recorded
 			assert.equal((await MutateMap(m)).get(countKey), iterations);
 		});
+		it("Can handle partial failures", async () => {
+			let m = new Mutex();
+			let job1 = m.RunAsync(async () => {
+				sleep(100);
+				return;
+			})
+			let job2 = m.RunAsync(async () => {
+				throw new Error("something's wrong");
+			})
+			let job3 = m.RunAsync(async () => {
+				sleep(50);
+				return;
+			})
+			try {
+				await job1;
+			} catch (err) {
+				assert.fail(err)
+			}
+			try {
+				await job2;
+				assert.fail("Not supposed to succeed")
+			} catch (err) {
+			}
+			try {
+				await job3;
+			} catch (err) {
+				assert.fail(err)
+			}
+		})
 	});
 })
 

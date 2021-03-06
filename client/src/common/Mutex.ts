@@ -16,7 +16,15 @@ export class Mutex implements IMutex {
 		await this.RunAsync(next);
 	}
 	public async RunAsync(codeToRun: SafeActionAsync): Promise<void> {
-		this.current = this.current.finally(codeToRun)
-		await this.current;
+		await new Promise<void>((resolve, reject) => {
+			this.current = this.current.finally(async () => {
+				try {
+					await codeToRun();
+					resolve();
+				} catch (err) {
+					reject(err);
+				}
+			})
+		})
 	}
 }
