@@ -22,7 +22,7 @@ export async function SetIfNotNull(obj: Object, prop: string, set: (val: any) =>
 			if (!validTypes.includes(typeof val)) {
 				throw new Error(`invalid type for property ${prop}, exptected one of ${validTypes} but found ${typeof val}`);
 			}
-			set(val);
+			await set(val);
 		}
 	}
 }
