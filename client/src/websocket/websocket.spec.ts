@@ -76,18 +76,44 @@ describe("Websocket", () => {
 			await ws.init();
 			assert.deepEqual(evsCalled, [true, true, true, true]);
 		});
-		it("Send and Recv succeed", async () => {
+		it("Send works", async () => {
 			let mockedWs = await makeMockedWebsocket(sandbox);
 			let ws = mockedWs.ws;
 			let fake = mockedWs.fake;
 			sandbox.stub(fake, "send").callsFake(data => {
-				assert.equal(data, "{}")
+				assert.equal(data, `{"id":"abcd"}`)
 			})
 			mockedWs.open({} as any);
-			mockedWs.message({ data: "{}" } as any);
-			await ws.Send(new FakeMessage());
+			let msg = new FakeMessage();
+			msg.id = "abcd";
+			await ws.Send(msg);
+		});
+		it("Recv works", async () => {
+			let mockedWs = await makeMockedWebsocket(sandbox);
+			let ws = mockedWs.ws;
+			mockedWs.open({} as any);
+			mockedWs.message({ data: `{"resultData":"test"}` } as any);
 			let res = await ws.Recv();
-			assert.equal(res, new FakeResponse());
+			let expectedRes = new FakeResponse();
+			expectedRes.resultData = "test";
+			assert.deepEqual(res, expectedRes);
+		});
+		it("Send and Recv work together", async () => {
+			let mockedWs = await makeMockedWebsocket(sandbox);
+			let ws = mockedWs.ws;
+			let fake = mockedWs.fake;
+			sandbox.stub(fake, "send").callsFake(data => {
+				assert.equal(data, `{"id":"abcd"}`)
+			})
+			mockedWs.open({} as any);
+			mockedWs.message({ data: `{"resultData":"test"}` } as any);
+			let msg = new FakeMessage();
+			msg.id = "abcd";
+			await ws.Send(msg);
+			let res = await ws.Recv();
+			let expectedRes = new FakeResponse();
+			expectedRes.resultData = "test";
+			assert.deepEqual(res, expectedRes);
 		});
 	})
 

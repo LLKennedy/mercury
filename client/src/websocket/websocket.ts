@@ -123,27 +123,19 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	}
 	private async recv(finishing: boolean): Promise<ResT> {
 		let next: ResT | undefined;
-		do { next = await this.recvGetOne() } while (next === undefined && !finishing) {
-			try {
-				await this.messageAlert;
-			} catch (err) {
-				if (err instanceof EOFError) {
-					// closed but might still have a final message for us
-					finishing = true;
-				} else {
-					throw err;
-				}
+		do {
+			next = await this.recvGetOne();
+			if (next !== undefined) {
+				continue;
 			}
-		}
-		if (next === undefined) {
-			// Only way to be here is if we got EOF and there are no more messages in the buffer
-			throw new EOFError();
-		}
+			await this.messageAlert;
+		} while (next === undefined)
 		return next;
 	}
 	private async recvGetOne(): Promise<ResT | undefined> {
 		return await this.recvMutex.Run(() => {
-			return this.responseBuffer.shift();
+			let next = this.responseBuffer.shift();
+			return next;
 		})
 	}
 
