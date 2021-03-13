@@ -178,10 +178,10 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 func generateServices(services []*descriptorpb.ServiceDescriptorProto, content *strings.Builder) {
 SERVICE_LOOP:
 	for _, service := range services {
-		// TODO: check that each method starts with an HTTP method/follows general httpgrpc syntax, skip if not
+		innerContent := &strings.Builder{}
 		// TODO: get comment data somehow
 		comment := "A service client"
-		content.WriteString(fmt.Sprintf("/** %s */\nexport class %sClient extends httpgrpc.Client {\n", comment, service.GetName()))
+		innerContent.WriteString(fmt.Sprintf("/** %s */\nexport class %sClient extends httpgrpc.Client {\n", comment, service.GetName()))
 		for _, method := range service.GetMethod() {
 			methodString, procName, valid := proxy.MatchAndStripMethodName(method.GetName())
 			if !valid {
@@ -195,24 +195,34 @@ SERVICE_LOOP:
 			switch {
 			case clientStreaming && serverStreaming:
 				// Dual streaming
+				innerContent.WriteString(fmt.Sprintf(`	public async %s(): Promise<httpgrpc.IDualStream<%s, %s>> {
+		return this.StartDualStream<%s, %s>("/%s", %s.Parse);
+	}
+`, procName, reqMsgType, resMsgType, reqMsgType, resMsgType, procName, resMsgType))
 			case clientStreaming:
 				// Client streaming
+				innerContent.WriteString(fmt.Sprintf(`	public async %s(): Promise<httpgrpc.IClientStream<%s, %s>> {
+		return this.StartClientStream<%s, %s>("/%s", %s.Parse);
+	}
+`, procName, reqMsgType, resMsgType, reqMsgType, resMsgType, procName, resMsgType))
 			case serverStreaming:
 				// Server streaming
+				innerContent.WriteString(fmt.Sprintf(`	public async %s(req: %s): Promise<httpgrpc.IServerStream<%s>> {
+		return this.StartServerStream<%s, %s>("/%s", req, %s.Parse);
+	}
+`, procName, reqMsgType, resMsgType, reqMsgType, resMsgType, procName, resMsgType))
 			default:
 				// Unary
-				content.WriteString(fmt.Sprintf(`	public async %s(req: %s): Promise<%s> {
+				innerContent.WriteString(fmt.Sprintf(`	public async %s(req: %s): Promise<%s> {
 		return this.SendUnary<%s, %s>("/%s", httpgrpc.HTTPMethod.%s, req, %s.Parse);
 	}
 `, procName, reqMsgType, resMsgType, reqMsgType, resMsgType, procName, methodString, resMsgType))
 
 			}
 		}
-		// TODO: generate methods, e.g. working example below
-		// public async Feed(): Promise<httpgrpc.IClientStream<FeedData, FeedResponse>> {
-		// 	return this.StartClientStream<FeedData, FeedResponse>("/feed", FeedResponse.Parse);
-		// }
-		content.WriteString("}\n\n")
+		innerContent.WriteString("}\n\n")
+		// Commit
+		content.WriteString(innerContent.String())
 	}
 }
 

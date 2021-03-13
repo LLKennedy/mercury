@@ -11,11 +11,22 @@ import * as httpgrpc_packages from "__packages__/httpgrpc";
 import * as httpgrpc from "@llkennedy/httpgrpc";
 
 /** A service client */
-export class AppClient extends httpgrpc.Client {
-}
-
-/** A service client */
 export class ExposedAppClient extends httpgrpc.Client {
+	public async Random(req: httpgrpc_packages.service.RandomRequest): Promise<httpgrpc_packages.service.RandomResponse> {
+		return this.SendUnary<httpgrpc_packages.service.RandomRequest, httpgrpc_packages.service.RandomResponse>("/Random", httpgrpc.HTTPMethod.GET, req, httpgrpc_packages.service.RandomResponse.Parse);
+	}
+	public async UploadPhoto(req: httpgrpc_packages.service.UploadPhotoRequest): Promise<httpgrpc_packages.service.UploadPhotoResponse> {
+		return this.SendUnary<httpgrpc_packages.service.UploadPhotoRequest, httpgrpc_packages.service.UploadPhotoResponse>("/UploadPhoto", httpgrpc.HTTPMethod.POST, req, httpgrpc_packages.service.UploadPhotoResponse.Parse);
+	}
+	public async Feed(): Promise<httpgrpc.IClientStream<httpgrpc_packages.service.FeedData, httpgrpc_packages.service.FeedResponse>> {
+		return this.StartClientStream<httpgrpc_packages.service.FeedData, httpgrpc_packages.service.FeedResponse>("/Feed", httpgrpc_packages.service.FeedResponse.Parse);
+	}
+	public async Broadcast(req: httpgrpc_packages.service.BroadcastRequest): Promise<httpgrpc.IServerStream<httpgrpc_packages.service.BroadcastData>> {
+		return this.StartServerStream<httpgrpc_packages.service.BroadcastRequest, httpgrpc_packages.service.BroadcastData>("/Broadcast", req, httpgrpc_packages.service.BroadcastData.Parse);
+	}
+	public async ConvertToString(): Promise<httpgrpc.IDualStream<httpgrpc_packages.service.ConvertInput, httpgrpc_packages.service.ConvertOutput>> {
+		return this.StartDualStream<httpgrpc_packages.service.ConvertInput, httpgrpc_packages.service.ConvertOutput>("/ConvertToString", httpgrpc_packages.service.ConvertOutput.Parse);
+	}
 }
 
 /** A message */
