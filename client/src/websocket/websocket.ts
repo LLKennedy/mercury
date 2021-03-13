@@ -96,7 +96,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	public async Send(request: ReqT): Promise<void> {
 		await this.sendOpen;
 		return await this.sendMutex.RunAsync(async () => {
-			await this.send.bind(this)(request);
+			await this.send(request);
 		})
 	}
 	private async send(request: ReqT): Promise<void> {
@@ -142,7 +142,9 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	/** Close the sending direction of communications, any Send calls after this will throw an Error without writing to the websocket. */
 	public async CloseSend(): Promise<void> {
 		await this.sendOpen;
-		await this.mutex.RunAsync(this.closeSend);
+		await this.mutex.RunAsync(async () => {
+			await this.closeSend();
+		});
 	}
 	private async closeSend(): Promise<void> {
 		this.conn.send(EOFMessage);
