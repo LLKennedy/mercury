@@ -8,7 +8,7 @@ import (
 
 func validateMethod(apiMethod reflect.Method, serverType reflect.Type) (methodType string, procedureName string, pattern apiMethodPattern, err error) {
 	name := apiMethod.Name
-	httpType, trueName, valid := matchAndStrip(name)
+	httpType, trueName, valid := MatchAndStripMethodName(name)
 	if !valid {
 		err = fmt.Errorf("%s does not begin with a valid HTTP method", name)
 		return
@@ -47,8 +47,8 @@ var httpStrings = []string{
 	"PATCH",
 }
 
-// matchAndStrip returns the method name stripped of its HTTP method and a success flag for that operation
-func matchAndStrip(methodName string) (string, string, bool) {
+// MatchAndStripMethodName returns the method name stripped of its HTTP method and a success flag for that operation
+func MatchAndStripMethodName(methodName string) (string, string, bool) {
 	for _, httpType := range httpStrings {
 		if matchInsensitive(methodName, httpType) {
 			return httpType, stripInsensitive(methodName, httpType), true

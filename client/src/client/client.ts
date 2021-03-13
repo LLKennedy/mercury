@@ -17,10 +17,20 @@ export class Client {
 	 * @param {string} endpoint The API endpoint to send the message to
 	 * @param {ProtoJSONCompatible} request The message to convert to protojson then send
 	 */
-	protected async SendUnary<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, request: ReqT, parseResponse: Parser<ResT>): Promise<ResT> {
+	protected async SendUnary<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, method: HTTPMethod, request: ReqT, parseResponse: Parser<ResT>): Promise<ResT> {
 		let message = request.ToProtoJSON();
 		let url = this.BuildURL(endpoint, false);
-		let res = await this.axiosClient.post<Object>(url, message);
+		switch (method) {
+			case HTTPMethod.CONNECT:
+				throw new Error("CONNECT not implemented");
+			case HTTPMethod.TRACE:
+				throw new Error("TRACE not implemented");
+		}
+		let res = await this.axiosClient.request<Object>({
+			url: url,
+			method: method,
+			data: message
+		})
 		return parseResponse(res.data);
 	}
 	protected async StartClientStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, parseResponse: Parser<ResT>): Promise<IClientStream<ReqT, ResT>> {
@@ -72,6 +82,18 @@ export class Client {
 		}
 		return `${scheme}://${this.basePath}/${endpoint}`;
 	}
+}
+
+export enum HTTPMethod {
+	GET = "GET",
+	HEAD = "HEAD",
+	POST = "POST",
+	PUT = "PUT",
+	DELETE = "DELETE",
+	CONNECT = "CONNECT",
+	OPTIONS = "OPTIONS",
+	TRACE = "TRACE",
+	PATCH = "PATCH"
 }
 
 export default Client;

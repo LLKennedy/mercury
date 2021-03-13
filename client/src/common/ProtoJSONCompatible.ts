@@ -13,3 +13,14 @@ export interface ProtoJSONCompatible {
 	 * */
 	ToProtoJSON(): Object;
 }
+
+/**
+ * AssignFields is a shorthand for Object.Assign with a partial message. This acts as an automatically typed
+ * extension to the constructor, so you can call e.g. AssignFields(new MyMessageType(), {validField: "value"})
+ * with no additional codegen required.
+ * @param base 
+ * @param fields 
+ */
+export function AssignFields<T extends ProtoJSONCompatible>(base: T, fields: Partial<T>): T {
+	return Object.assign<T, Partial<T>>(base, fields);
+}

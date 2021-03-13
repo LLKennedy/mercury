@@ -2,10 +2,12 @@ package codegen
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
 	"github.com/LLKennedy/httpgrpc/internal/version"
+	"github.com/LLKennedy/httpgrpc/proxy"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
@@ -174,11 +176,38 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 }
 
 func generateServices(services []*descriptorpb.ServiceDescriptorProto, content *strings.Builder) {
+SERVICE_LOOP:
 	for _, service := range services {
 		// TODO: check that each method starts with an HTTP method/follows general httpgrpc syntax, skip if not
 		// TODO: get comment data somehow
 		comment := "A service client"
 		content.WriteString(fmt.Sprintf("/** %s */\nexport class %sClient extends httpgrpc.Client {\n", comment, service.GetName()))
+		for _, method := range service.GetMethod() {
+			methodString, procName, valid := proxy.MatchAndStripMethodName(method.GetName())
+			if !valid {
+				log.Printf("Method %s on service %s does not match httpgrpc exposed pattern, skipping service generation\n", method.GetName(), service.GetName())
+				continue SERVICE_LOOP
+			}
+			reqMsgType := formatMessageTypeName(method.GetInputType())
+			resMsgType := formatMessageTypeName(method.GetOutputType())
+			clientStreaming := method.GetClientStreaming()
+			serverStreaming := method.GetServerStreaming()
+			switch {
+			case clientStreaming && serverStreaming:
+				// Dual streaming
+			case clientStreaming:
+				// Client streaming
+			case serverStreaming:
+				// Server streaming
+			default:
+				// Unary
+				content.WriteString(fmt.Sprintf(`	public async %s(req: %s): Promise<%s> {
+		return this.SendUnary<%s, %s>("/%s", httpgrpc.HTTPMethod.%s, req, %s.Parse);
+	}
+`, procName, reqMsgType, resMsgType, reqMsgType, resMsgType, procName, methodString, resMsgType))
+
+			}
+		}
 		// TODO: generate methods, e.g. working example below
 		// public async Feed(): Promise<httpgrpc.IClientStream<FeedData, FeedResponse>> {
 		// 	return this.StartClientStream<FeedData, FeedResponse>("/feed", FeedResponse.Parse);
@@ -191,52 +220,14 @@ func generateComments(sourceCodeInfo *descriptorpb.SourceCodeInfo, content *stri
 
 }
 
-func getNativeTypeName(field *descriptorpb.FieldDescriptorProto, message *descriptorpb.DescriptorProto, pkgName string) string {
-	switch field.GetType() {
-	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE,
-		descriptorpb.FieldDescriptorProto_TYPE_FLOAT,
-		descriptorpb.FieldDescriptorProto_TYPE_INT64,
-		descriptorpb.FieldDescriptorProto_TYPE_UINT64,
-		descriptorpb.FieldDescriptorProto_TYPE_INT32,
-		descriptorpb.FieldDescriptorProto_TYPE_FIXED64,
-		descriptorpb.FieldDescriptorProto_TYPE_FIXED32,
-		descriptorpb.FieldDescriptorProto_TYPE_UINT32,
-		descriptorpb.FieldDescriptorProto_TYPE_SFIXED32,
-		descriptorpb.FieldDescriptorProto_TYPE_SFIXED64,
-		descriptorpb.FieldDescriptorProto_TYPE_SINT32,
-		descriptorpb.FieldDescriptorProto_TYPE_SINT64:
-		// Javascript only has one number format
-		return "number"
-	case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
-		return "boolean"
-	case descriptorpb.FieldDescriptorProto_TYPE_STRING:
-		return "string"
-	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
-		return "Uint8Array"
-	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
-		// TODO: this lookup is not efficient, but it'll do for now. building a map of known types by name as we go would be good
-		for _, nestedMessage := range message.GetNestedType() {
-			// FIXME: it is possible for this to misfire at least sometimes, though we'll see if it particularly matters
-			if nestedMessage.GetOptions().GetMapEntry() && strings.Contains(field.GetTypeName(), nestedMessage.GetName()) {
-				keyType := getNativeTypeName(nestedMessage.GetField()[0], nil, pkgName)
-				valType := getNativeTypeName(nestedMessage.GetField()[1], nil, pkgName)
-				return fmt.Sprintf("Map<%s, %s>", keyType, valType)
-			}
-		}
-		// Not a map
-		fallthrough
-	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
-		typeName := field.GetTypeName()
-		matches := packageReplacement.FindStringSubmatch(typeName)
-		if len(matches) != 3 {
-			panic(fmt.Errorf("type name did not match any valid pattern: %s, found %d instead of 3: %s", typeName, len(matches), matches))
-		}
-		pkgSection := fmt.Sprintf("packages.%s.", matches[1])
-		typeSection := strings.ReplaceAll(matches[2], ".", "__")
-		return fmt.Sprintf("%s%s", pkgSection, typeSection)
-	default:
-		panic(fmt.Errorf("unknown field type: %s", field))
+func formatMessageTypeName(msgType string) string {
+	matches := packageReplacement.FindStringSubmatch(msgType)
+	if len(matches) != 3 {
+		panic(fmt.Errorf("type name did not match any valid pattern: %s, found %d instead of 3: %s", msgType, len(matches), matches))
 	}
+	pkgSection := fmt.Sprintf("httpgrpc_packages.%s.", matches[1])
+	typeSection := strings.ReplaceAll(matches[2], ".", "__")
+	return fmt.Sprintf("%s%s", pkgSection, typeSection)
 }
 
 func getProtoJSONTypeName(field *descriptorpb.FieldDescriptorProto, nestedTypes []*descriptorpb.DescriptorProto) string {
