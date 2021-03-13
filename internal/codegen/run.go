@@ -130,8 +130,6 @@ func generateFullFile(f *descriptorpb.FileDescriptorProto, pkgMap map[string]str
 	content.WriteString("import * as httpgrpc_packages from \"__packages__/httpgrpc\";\n")
 	content.WriteString("import * as httpgrpc from \"@llkennedy/httpgrpc\";\n")
 	content.WriteString("\n")
-	// Enums
-	generateEnums(f.GetEnumType(), content)
 	// Messages
 	generateMessages(f.GetMessageType(), content, f.GetPackage())
 	// Services
@@ -142,50 +140,21 @@ func generateFullFile(f *descriptorpb.FileDescriptorProto, pkgMap map[string]str
 	return
 }
 
-func generateEnums(enums []*descriptorpb.EnumDescriptorProto, content *strings.Builder) {
-	for _, enum := range enums {
-		// TODO: get comment data somehow
-		comment := "An enum"
-		content.WriteString(fmt.Sprintf("/** %s */\nexport enum %s {\n", comment, enum.GetName()))
-		for _, value := range enum.GetValue() {
-			// We don't bother stripping the trailing comma on the last enum element because Typescript doesn't care
-			// TODO: get comment data somehow
-			comment = "An enum value"
-			if value.GetNumber() == 0 {
-				// Special case for 0, as it doesn't get written by protojson since it's the default value
-				content.WriteString(fmt.Sprintf("	/** %s */\n	%s = \"\",\n", comment, value.GetName()))
-			} else {
-				content.WriteString(fmt.Sprintf("	/** %s */\n	%s = \"%s\",\n", comment, value.GetName(), value.GetName()))
-			}
-		}
-		content.WriteString("}\n\n")
-	}
-}
-
 func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings.Builder, pkgName string) {
 	for _, message := range messages {
 		// TODO: get comment data somehow
 		comment := "A message"
 		content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, message.GetName(), pkgName, message.GetName()))
-		for _, field := range message.GetField() {
-			tsType := getNativeTypeName(field, message, pkgName)
-			// TODO: get comment data somehow
-			comment = "A field"
-			content.WriteString(fmt.Sprintf("	/** %s */\n	public %s?: %s;\n", comment, field.GetName(), tsType))
-		}
+
 		content.WriteString("}\n\n")
 
 		for _, nestedType := range message.GetNestedType() {
 			if !nestedType.GetOptions().GetMapEntry() {
 				// TODO: get comment data somehow
 				comment = "A message"
-				content.WriteString(fmt.Sprintf("/** %s */\nexport class %s__%s extends Object {\n", comment, message.GetName(), nestedType.GetName()))
-				for _, nestedField := range nestedType.GetField() {
-					tsType := getNativeTypeName(nestedField, nestedType, pkgName)
-					// TODO: get comment data somehow
-					comment = "A field"
-					content.WriteString(fmt.Sprintf("	/** %s */\n	public %s?: %s;\n", comment, nestedField.GetName(), tsType))
-				}
+				name := fmt.Sprintf("%s__%s", message.GetName(), nestedType.GetName())
+				content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, name, pkgName, name))
+
 				content.WriteString("}\n\n")
 			}
 		}

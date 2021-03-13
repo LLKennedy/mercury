@@ -1,7 +1,5 @@
-go get google.golang.org/protobuf/cmd/protoc-gen-go@v1.25.0
-go install google.golang.org/protobuf/cmd/protoc-gen-go
-go get google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.0.0
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.25.0
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.0.0
 go get google.golang.org/grpc@v1.34.0
 go install ./cmd/protoc-gen-httpgrpc
 $Directory = "./httpapi"
