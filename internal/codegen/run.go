@@ -145,7 +145,7 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 		// TODO: get comment data somehow
 		comment := "A message"
 		content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, message.GetName(), pkgName, message.GetName()))
-		content.WriteString(fmt.Sprintf(`	ToProtoJSON(): Object {
+		content.WriteString(fmt.Sprintf(`	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<%s> {
@@ -160,7 +160,7 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 				comment = "A message"
 				name := fmt.Sprintf("%s__%s", message.GetName(), nestedType.GetName())
 				content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, name, pkgName, name))
-				content.WriteString(fmt.Sprintf(`	ToProtoJSON(): Object {
+				content.WriteString(fmt.Sprintf(`	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<%s> {

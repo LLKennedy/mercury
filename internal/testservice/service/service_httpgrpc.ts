@@ -20,7 +20,7 @@ export class ExposedAppClient extends httpgrpc.Client {
 
 /** A message */
 export class FeedData extends packages.service.FeedData implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<FeedData> {
@@ -30,7 +30,7 @@ export class FeedData extends packages.service.FeedData implements httpgrpc.Prot
 
 /** A message */
 export class FeedResponse extends packages.service.FeedResponse implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<FeedResponse> {
@@ -40,7 +40,7 @@ export class FeedResponse extends packages.service.FeedResponse implements httpg
 
 /** A message */
 export class BroadcastRequest extends packages.service.BroadcastRequest implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<BroadcastRequest> {
@@ -50,7 +50,7 @@ export class BroadcastRequest extends packages.service.BroadcastRequest implemen
 
 /** A message */
 export class BroadcastData extends packages.service.BroadcastData implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<BroadcastData> {
@@ -60,7 +60,7 @@ export class BroadcastData extends packages.service.BroadcastData implements htt
 
 /** A message */
 export class ConvertInput extends packages.service.ConvertInput implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<ConvertInput> {
@@ -70,7 +70,7 @@ export class ConvertInput extends packages.service.ConvertInput implements httpg
 
 /** A message */
 export class ConvertOutput extends packages.service.ConvertOutput implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<ConvertOutput> {
@@ -80,7 +80,7 @@ export class ConvertOutput extends packages.service.ConvertOutput implements htt
 
 /** A message */
 export class FibonacciRequest extends packages.service.FibonacciRequest implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<FibonacciRequest> {
@@ -90,7 +90,7 @@ export class FibonacciRequest extends packages.service.FibonacciRequest implemen
 
 /** A message */
 export class FibonacciResponse extends packages.service.FibonacciResponse implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<FibonacciResponse> {
@@ -100,7 +100,7 @@ export class FibonacciResponse extends packages.service.FibonacciResponse implem
 
 /** A message */
 export class RandomRequest extends packages.service.RandomRequest implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<RandomRequest> {
@@ -110,7 +110,7 @@ export class RandomRequest extends packages.service.RandomRequest implements htt
 
 /** A message */
 export class RandomResponse extends packages.service.RandomResponse implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<RandomResponse> {
@@ -120,7 +120,7 @@ export class RandomResponse extends packages.service.RandomResponse implements h
 
 /** A message */
 export class UploadPhotoRequest extends packages.service.UploadPhotoRequest implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<UploadPhotoRequest> {
@@ -130,7 +130,7 @@ export class UploadPhotoRequest extends packages.service.UploadPhotoRequest impl
 
 /** A message */
 export class UploadPhotoResponse extends packages.service.UploadPhotoResponse implements httpgrpc.ProtoJSONCompatible {
-	ToProtoJSON(): Object {
+	public ToProtoJSON(): Object {
 		throw new Error("unimplemented")
 	}
 	public static async Parse(data: any): Promise<UploadPhotoResponse> {
