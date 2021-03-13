@@ -10,51 +10,119 @@ import * as packages from "__packages__";
 import * as httpgrpc_packages from "__packages__/httpgrpc";
 import * as httpgrpc from "@llkennedy/httpgrpc";
 
+/** A service client */
+export class AppClient extends httpgrpc.Client {
+}
+
+/** A service client */
+export class ExposedAppClient extends httpgrpc.Client {
+}
+
 /** A message */
 export class FeedData extends packages.service.FeedData implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<FeedData> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class FeedResponse extends packages.service.FeedResponse implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<FeedResponse> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class BroadcastRequest extends packages.service.BroadcastRequest implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<BroadcastRequest> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class BroadcastData extends packages.service.BroadcastData implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<BroadcastData> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class ConvertInput extends packages.service.ConvertInput implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<ConvertInput> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class ConvertOutput extends packages.service.ConvertOutput implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<ConvertOutput> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class FibonacciRequest extends packages.service.FibonacciRequest implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<FibonacciRequest> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class FibonacciResponse extends packages.service.FibonacciResponse implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<FibonacciResponse> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class RandomRequest extends packages.service.RandomRequest implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<RandomRequest> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class RandomResponse extends packages.service.RandomResponse implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<RandomResponse> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class UploadPhotoRequest extends packages.service.UploadPhotoRequest implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<UploadPhotoRequest> {
+			throw new Error("unimplemented");
+		}}
 
 /** A message */
 export class UploadPhotoResponse extends packages.service.UploadPhotoResponse implements httpgrpc.ProtoJSONCompatible {
-}
+	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<UploadPhotoResponse> {
+			throw new Error("unimplemented");
+		}}
 

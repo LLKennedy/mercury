@@ -130,10 +130,10 @@ func generateFullFile(f *descriptorpb.FileDescriptorProto, pkgMap map[string]str
 	content.WriteString("import * as httpgrpc_packages from \"__packages__/httpgrpc\";\n")
 	content.WriteString("import * as httpgrpc from \"@llkennedy/httpgrpc\";\n")
 	content.WriteString("\n")
-	// Messages
-	generateMessages(f.GetMessageType(), content, f.GetPackage())
 	// Services
 	generateServices(f.GetService(), content)
+	// Messages
+	generateMessages(f.GetMessageType(), content, f.GetPackage())
 	// Comments? unclear how to link them back to other elements
 	generateComments(f.GetSourceCodeInfo(), content)
 	out.Content = proto.String(content.String())
@@ -145,7 +145,12 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 		// TODO: get comment data somehow
 		comment := "A message"
 		content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, message.GetName(), pkgName, message.GetName()))
-
+		content.WriteString(fmt.Sprintf(`	ToProtoJSON(): Object {
+			throw new Error("unimplemented")
+		}
+		public static async Parse(data: any): Promise<%s> {
+			throw new Error("unimplemented");
+		}`, message.GetName()))
 		content.WriteString("}\n\n")
 
 		for _, nestedType := range message.GetNestedType() {
@@ -154,7 +159,12 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 				comment = "A message"
 				name := fmt.Sprintf("%s__%s", message.GetName(), nestedType.GetName())
 				content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, name, pkgName, name))
-
+				content.WriteString(fmt.Sprintf(`	ToProtoJSON(): Object {
+					throw new Error("unimplemented")
+				}
+				public static async Parse(data: any): Promise<%s> {
+					throw new Error("unimplemented");
+				}`, name))
 				content.WriteString("}\n\n")
 			}
 		}
@@ -162,7 +172,17 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 }
 
 func generateServices(services []*descriptorpb.ServiceDescriptorProto, content *strings.Builder) {
-
+	for _, service := range services {
+		// TODO: check that each method starts with an HTTP method/follows general httpgrpc syntax, skip if not
+		// TODO: get comment data somehow
+		comment := "A service client"
+		content.WriteString(fmt.Sprintf("/** %s */\nexport class %sClient extends httpgrpc.Client {\n", comment, service.GetName()))
+		// TODO: generate methods, e.g. working example below
+		// public async Feed(): Promise<httpgrpc.IClientStream<FeedData, FeedResponse>> {
+		// 	return this.StartClientStream<FeedData, FeedResponse>("/feed", FeedResponse.Parse);
+		// }
+		content.WriteString("}\n\n")
+	}
 }
 
 func generateComments(sourceCodeInfo *descriptorpb.SourceCodeInfo, content *strings.Builder) {
