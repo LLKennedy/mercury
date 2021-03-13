@@ -8,3 +8,95 @@
 
 import * as packages from "__packages__";
 
+import * as httpgrpc_packages from "__packages__/httpgrpc";
+
+/** An enum */
+export enum FeedType {
+	/** An enum value */
+	FEED_TYPE_UNKNOWN = "",
+	/** An enum value */
+	FEED_TYPE_RED = "FEED_TYPE_RED",
+	/** An enum value */
+	FEED_TYPE_BLUE = "FEED_TYPE_BLUE",
+}
+
+/** A message */
+export class FeedData extends Object {
+	/** A field */
+	public id?: string;
+	/** A field */
+	public data_type?: number;
+	/** A field */
+	public raw_data?: Uint8Array;
+	/** A field */
+	public type?: packages.service.FeedType;
+}
+
+/** A message */
+export class FeedResponse extends Object {
+	/** A field */
+	public received?: number;
+}
+
+/** A message */
+export class BroadcastRequest extends Object {
+	/** A field */
+	public id?: string;
+}
+
+/** A message */
+export class BroadcastData extends Object {
+	/** A field */
+	public raw_data?: Uint8Array;
+}
+
+/** A message */
+export class ConvertInput extends Object {
+	/** A field */
+	public raw_data?: Uint8Array;
+}
+
+/** A message */
+export class ConvertOutput extends Object {
+	/** A field */
+	public converted_data?: string;
+}
+
+/** A message */
+export class FibonacciRequest extends Object {
+	/** A field */
+	public n?: number;
+}
+
+/** A message */
+export class FibonacciResponse extends Object {
+	/** A field */
+	public number?: number;
+}
+
+/** A message */
+export class RandomRequest extends Object {
+	/** A field */
+	public lower_bound?: number;
+	/** A field */
+	public upper_bound?: number;
+}
+
+/** A message */
+export class RandomResponse extends Object {
+	/** A field */
+	public number?: number;
+}
+
+/** A message */
+export class UploadPhotoRequest extends Object {
+	/** A field */
+	public data?: Uint8Array;
+}
+
+/** A message */
+export class UploadPhotoResponse extends Object {
+	/** A field */
+	public uuid?: string;
+}
+
