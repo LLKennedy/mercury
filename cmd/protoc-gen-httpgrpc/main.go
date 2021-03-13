@@ -28,7 +28,7 @@ func main() {
 	if res == nil {
 		log.Printf("httpgrpc: codegen.Run returned an nil codegeneratorresponse, returning a static error.")
 		res = &pluginpb.CodeGeneratorResponse{
-			Error: proto.String("tsjson: codegen.Run incorrectly returned a nil response"),
+			Error: proto.String("httpgrpc: codegen.Run incorrectly returned a nil response"),
 		}
 	}
 	output, err := proto.Marshal(res)
