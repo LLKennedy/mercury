@@ -36,6 +36,14 @@ In this example, App would provide three GRPC endpoints, but only one would be e
 
 ## Basic Usage
 
+### In your Typescript UI
+
+#### Protobuf to TS types
+
+<!-- TODO -->
+##### Installation of protoc-gen-httpgrpc
+`go install github.com/LLKennedy/httpgrpc/cmd/protoc-gen-httpgrpc`
+
 ### In Your Web Proxy
 
 ```golang
