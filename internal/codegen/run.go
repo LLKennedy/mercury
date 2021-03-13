@@ -146,33 +146,32 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 	for _, message := range messages {
 		// TODO: get comment data somehow
 		comment := "A message"
-		content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, message.GetName(), pkgName, message.GetName()))
-		content.WriteString(fmt.Sprintf(`	public ToProtoJSON(): Object {
-		throw new Error("unimplemented")
-	}
-	public static async Parse(data: any): Promise<%s> {
-		throw new Error("unimplemented");
-	}
-`, message.GetName()))
-		content.WriteString("}\n\n")
-
+		generateMessage(message, comment, message.GetName(), pkgName, content)
 		for _, nestedType := range message.GetNestedType() {
 			if !nestedType.GetOptions().GetMapEntry() {
 				// TODO: get comment data somehow
 				comment = "A message"
 				name := fmt.Sprintf("%s__%s", message.GetName(), nestedType.GetName())
-				content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, name, pkgName, name))
-				content.WriteString(fmt.Sprintf(`	public ToProtoJSON(): Object {
-		throw new Error("unimplemented")
-	}
-	public static async Parse(data: any): Promise<%s> {
-		throw new Error("unimplemented");
-	}
-`, name))
-				content.WriteString("}\n\n")
+				generateMessage(nestedType, comment, name, pkgName, content)
 			}
 		}
 	}
+}
+
+func generateMessage(msg *descriptorpb.DescriptorProto, comment, name, pkgName string, content *strings.Builder) {
+	content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, name, pkgName, name))
+	protoJSONContent := &strings.Builder{}
+	protoJSONContent.WriteString(`		throw new Error("unimplemented");`)
+	parseContent := &strings.Builder{}
+	parseContent.WriteString(`		throw new Error("unimplemented");`)
+	content.WriteString(fmt.Sprintf(`	public ToProtoJSON(): Object {
+%s
+	}
+	public static async Parse(data: any): Promise<%s> {
+%s
+	}
+`, protoJSONContent.String(), name, parseContent.String()))
+	content.WriteString("}\n\n")
 }
 
 func generateServices(services []*descriptorpb.ServiceDescriptorProto, content *strings.Builder) {
