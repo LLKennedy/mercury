@@ -53,9 +53,9 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	/** Whether or not this class has been properly set up by its init() function */
 	private initialised: boolean = false;
 	/** Rejects if sending is not yet ready or has been closed after opening */
-	private sendOpen: Promise<void> = Promise.reject("socket is not yet open");
+	private sendOpen: Promise<Error | undefined> = Promise.resolve(new Error("socket is not yet open"));
 	/** Rejects if receiving is not yet ready or has been closed after opening */
-	private recvOpen: Promise<void> = Promise.reject("socket is not yet open");
+	private recvOpen: Promise<Error | undefined> = Promise.resolve(new Error("socket is not yet open"));
 	/** The raw connection object, or a placeholder if the connection is not yet open */
 	private conn: IWebSocket = new NoWebsocket();
 	/** Parsed responses waiting to be read by Recv calls */
@@ -67,7 +67,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	/** Mutex for receive operations, independent from sendMutex */
 	private recvMutex: IMutex = new Mutex();
 	/** Resolves when a message arrives */
-	private messageAlert: Promise<void> = Promise.reject("socket is not yet open");
+	private messageAlert: Promise<Error | undefined> = Promise.resolve(new Error("socket is not yet open"));
 	/** For use *only* by the message handler */
 	private messageArrived: () => void = () => { };
 	private messageFailed: (err: any) => void = () => { };
@@ -94,7 +94,10 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	//#region public methods
 	/** Wait until a message is successfully sent to the server. */
 	public async Send(request: ReqT): Promise<void> {
-		await this.sendOpen;
+		let openErr = await this.sendOpen;
+		if (openErr !== undefined) {
+			throw openErr;
+		}
 		return await this.sendMutex.RunAsync(async () => {
 			await this.send(request);
 		})
@@ -108,13 +111,10 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	/** Wait until a message is received from the server. */
 	public async Recv(): Promise<ResT> {
 		let finishing = false;
-		try {
-			await this.recvOpen;
-		} catch (err) {
-			// EOF error indicates the socket is closed, but there may be already-parsed messages still to receive
-			if (!(err instanceof EOFError)) {
-				// Any other error, just re-throw, you don't get to parse your data
-				throw err;
+		let recvErr = await this.recvOpen;
+		if (recvErr !== undefined) {
+			if (!(recvErr instanceof EOFError)) {
+				throw recvErr;
 			} else {
 				finishing = true;
 			}
@@ -128,7 +128,10 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 			if (next !== undefined) {
 				continue;
 			}
-			await this.messageAlert;
+			let messageErr = await this.messageAlert;
+			if (messageErr !== undefined) {
+				throw messageErr;
+			}
 		} while (next === undefined)
 		return next;
 	}
@@ -144,19 +147,25 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 
 	/** Close the sending direction of communications, any Send calls after this will throw an Error without writing to the websocket. */
 	public async CloseSend(): Promise<void> {
-		await this.sendOpen;
+		let openErr = await this.sendOpen;
+		if (openErr !== undefined) {
+			throw openErr;
+		}
 		await this.mutex.RunAsync(async () => {
 			await this.closeSend();
 		});
 	}
 	private async closeSend(): Promise<void> {
 		this.conn.send(EOFMessage);
-		this.sendOpen = Promise.reject("socket closed for sending");
+		this.sendOpen = Promise.resolve(new Error("socket closed for sending"));
 	}
 
 	/** Close terminates the websocket connection early, resulting in errors at the server's end. Any other calls after this point will throw an Error. */
 	public async Close(code?: number, reason?: string): Promise<void> {
-		await this.recvOpen;
+		let recvErr = await this.recvOpen;
+		if (recvErr !== undefined) {
+			throw recvErr;
+		}
 		await this.sendMutex.RunAsync(async () => {
 			await this.recvMutex.RunAsync(async () => {
 				await this.close(code, reason);
@@ -165,7 +174,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	}
 	private async close(code?: number, reason?: string): Promise<void> {
 		this.conn.close(code, reason);
-		this.sendOpen = Promise.reject("socket manually closed early");
+		this.sendOpen = Promise.resolve(new Error("socket manually closed early"));
 		this.recvOpen = this.sendOpen;
 	}
 	//#endregion public methods
@@ -191,17 +200,21 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		let newConn = this.websocketFactory(this.url);
 		this.conn = newConn;
 		// Websocket opened without error, let's set up event listeners
-		this.sendOpen = new Promise(async (resolve, reject) => {
+		this.sendOpen = new Promise(async (resolve) => {
 			newConn.addEventListener("open", async ev => {
 				let event = ev;
 				try {
 					await this.mutex.Run(() => {
 						this.openHandler(event);
 					})
-					resolve();
+					resolve(undefined);
 				} catch (err) {
 					this.logError(err, "caught error on open handler: ");
-					reject(`error opening websocket: ${JSON.stringify(parseError(err))}`);
+					if (err instanceof Error) {
+						resolve(err);
+					} else {
+						resolve(new Error(`opening websocket: ${err}`));
+					}
 				}
 			})
 		})
@@ -246,9 +259,15 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		return this;
 	}
 	private newMessageAlert() {
-		this.messageAlert = new Promise((resolve, reject) => {
-			this.messageArrived = resolve;
-			this.messageFailed = reject;
+		this.messageAlert = new Promise((resolve) => {
+			this.messageArrived = () => resolve(undefined);
+			this.messageFailed = err => {
+				if (err instanceof Error) {
+					resolve(err);
+				} else {
+					resolve(new Error(`receiving websocket message: ${err}`));
+				}
+			};
 		});
 	}
 	//#endregion init
@@ -264,8 +283,8 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 			this.logger.log(`${nameTag}closed cleanly with ${result}`);
 		}
 		this.conn = new NoWebsocket();
-		this.sendOpen = Promise.reject("socket has closed");
-		this.recvOpen = ev.wasClean ? Promise.reject(new EOFError()) : this.sendOpen;
+		this.sendOpen = Promise.resolve(new Error("socket has closed"));
+		this.recvOpen = Promise.resolve(new EOFError());
 		this.messageFailed(new EOFError());
 	}
 	private async openHandler(ev: Event): Promise<void> {
@@ -276,14 +295,14 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	private async errorHandler(ev: Event): Promise<void> {
 		this.logError(ev, "socket closed due to error: ");
 		this.conn = new NoWebsocket();
-		this.sendOpen = Promise.reject("socket has closed due to error");
+		this.sendOpen = Promise.resolve(new Error("socket has errored and closed"));
 		this.recvOpen = this.sendOpen;
 		this.messageFailed(ev);
 	}
 	private async messageHandler(ev: MessageEvent<any>): Promise<void> {
 		if (typeof ev.data === "string" && ev.data === EOFMessage) {
 			this.responseBuffer.push(new EOFError());
-			this.recvOpen = Promise.reject(new EOFError());
+			this.recvOpen = Promise.resolve(new EOFError());
 		} else {
 			try {
 				let parsed = await this.parser(ev.data);
