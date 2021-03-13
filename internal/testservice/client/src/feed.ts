@@ -23,8 +23,17 @@ export async function feed() {
 	await stream.Send(data1);
 	await stream.Send(data2);
 	await stream.Send(data3);
-	let response = await stream.CloseAndRecv();
-	console.log(JSON.stringify(response))
+	try {
+		let response = await stream.CloseAndRecv();
+		console.log(JSON.stringify(response))
+	} catch (err) {
+		if (err instanceof Error) {
+			console.error(`Caught error: ${err.message}`);
+			console.debug(`Error trace: ${err.stack}`);
+		} else {
+			throw new Error('caught error was not error? ' + err);
+		}
+	}
 }
 
 export default feed;

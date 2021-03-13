@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ProtoJSONCompatible } from 'src/common';
-import { HTTPgRPCWebSocket, IWebSocket } from './websocket';
+import { EOFError, EOFMessage, HTTPgRPCWebSocket, IWebSocket } from './websocket';
 
 class FakeMessage implements ProtoJSONCompatible {
 	id?: string;
@@ -114,6 +114,20 @@ describe("Websocket", () => {
 			let expectedRes = new FakeResponse();
 			expectedRes.resultData = "test";
 			assert.deepEqual(res, expectedRes);
+		});
+		it("EOF is handled", async () => {
+			let mockedWs = await makeMockedWebsocket(sandbox);
+			let ws = mockedWs.ws;
+			mockedWs.open({} as any);
+			mockedWs.message({ data: EOFMessage } as any);
+			try {
+				await ws.Recv();
+				assert.fail("should not have completed Recv")
+			} catch (err) {
+				if (!(err instanceof EOFError)) {
+					assert.fail("must be EOF error")
+				}
+			}
 		});
 	})
 

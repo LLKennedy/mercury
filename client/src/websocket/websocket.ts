@@ -1,7 +1,7 @@
 import { ProtoJSONCompatible, Parser, IMutex, Mutex } from "../common";
 import * as uuid from "uuid";
 
-const EOFMessage = "EOF";
+export const EOFMessage = "EOF";
 
 /** A logger that wraps the standard console log functions */
 export interface Logger {
@@ -59,7 +59,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	/** The raw connection object, or a placeholder if the connection is not yet open */
 	private conn: IWebSocket = new NoWebsocket();
 	/** Parsed responses waiting to be read by Recv calls */
-	private responseBuffer: ResT[] = [];
+	private responseBuffer: (ResT | Error)[] = [];
 	/** Core mutex for init calls */
 	private mutex: IMutex = new Mutex();
 	/** Mutex for send operations, independent from recvMutex */
@@ -135,6 +135,9 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	private async recvGetOne(): Promise<ResT | undefined> {
 		return await this.recvMutex.Run(() => {
 			let next = this.responseBuffer.shift();
+			if (next instanceof Error) {
+				throw next;
+			}
 			return next;
 		})
 	}
@@ -278,8 +281,21 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 		this.messageFailed(ev);
 	}
 	private async messageHandler(ev: MessageEvent<any>): Promise<void> {
-		let parsed = await this.parser(ev.data);
-		this.responseBuffer.push(parsed);
+		if (typeof ev.data === "string" && ev.data === EOFMessage) {
+			this.responseBuffer.push(new EOFError());
+			this.recvOpen = Promise.reject(new EOFError());
+		} else {
+			try {
+				let parsed = await this.parser(ev.data);
+				this.responseBuffer.push(parsed);
+			} catch (err) {
+				if (err instanceof Error) {
+					this.responseBuffer.push(err);
+				} else {
+					this.responseBuffer.push(new Error("caught non-Error error: " + err));
+				}
+			}
+		}
 	}
 	//#endregion event handlers
 
