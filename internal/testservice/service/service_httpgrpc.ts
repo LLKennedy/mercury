@@ -7,8 +7,8 @@
  */
 
 import * as packages from "__packages__";
-
 import * as httpgrpc_packages from "__packages__/httpgrpc";
+import * as httpgrpc from "@llkennedy/httpgrpc";
 
 /** An enum */
 export enum FeedType {
@@ -21,7 +21,7 @@ export enum FeedType {
 }
 
 /** A message */
-export class FeedData extends Object {
+export class FeedData extends packages.service.FeedData implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public id?: string;
 	/** A field */
@@ -33,49 +33,49 @@ export class FeedData extends Object {
 }
 
 /** A message */
-export class FeedResponse extends Object {
+export class FeedResponse extends packages.service.FeedResponse implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public received?: number;
 }
 
 /** A message */
-export class BroadcastRequest extends Object {
+export class BroadcastRequest extends packages.service.BroadcastRequest implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public id?: string;
 }
 
 /** A message */
-export class BroadcastData extends Object {
+export class BroadcastData extends packages.service.BroadcastData implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public raw_data?: Uint8Array;
 }
 
 /** A message */
-export class ConvertInput extends Object {
+export class ConvertInput extends packages.service.ConvertInput implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public raw_data?: Uint8Array;
 }
 
 /** A message */
-export class ConvertOutput extends Object {
+export class ConvertOutput extends packages.service.ConvertOutput implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public converted_data?: string;
 }
 
 /** A message */
-export class FibonacciRequest extends Object {
+export class FibonacciRequest extends packages.service.FibonacciRequest implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public n?: number;
 }
 
 /** A message */
-export class FibonacciResponse extends Object {
+export class FibonacciResponse extends packages.service.FibonacciResponse implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public number?: number;
 }
 
 /** A message */
-export class RandomRequest extends Object {
+export class RandomRequest extends packages.service.RandomRequest implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public lower_bound?: number;
 	/** A field */
@@ -83,19 +83,19 @@ export class RandomRequest extends Object {
 }
 
 /** A message */
-export class RandomResponse extends Object {
+export class RandomResponse extends packages.service.RandomResponse implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public number?: number;
 }
 
 /** A message */
-export class UploadPhotoRequest extends Object {
+export class UploadPhotoRequest extends packages.service.UploadPhotoRequest implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public data?: Uint8Array;
 }
 
 /** A message */
-export class UploadPhotoResponse extends Object {
+export class UploadPhotoResponse extends packages.service.UploadPhotoResponse implements httpgrpc.ProtoJSONCompatible {
 	/** A field */
 	public uuid?: string;
 }

@@ -126,8 +126,10 @@ func generateFullFile(f *descriptorpb.FileDescriptorProto, pkgMap map[string]str
 	content := &strings.Builder{}
 	content.WriteString(getCodeGenmarker(version.GetVersionString(), protocVersion, f.GetName()))
 	// Imports
-	content.WriteString("import * as packages from \"__packages__\";\n\n")
-	content.WriteString("import * as httpgrpc_packages from \"__packages__/httpgrpc\";\n\n")
+	content.WriteString("import * as packages from \"__packages__\";\n")
+	content.WriteString("import * as httpgrpc_packages from \"__packages__/httpgrpc\";\n")
+	content.WriteString("import * as httpgrpc from \"@llkennedy/httpgrpc\";\n")
+	content.WriteString("\n")
 	// Enums
 	generateEnums(f.GetEnumType(), content)
 	// Messages
@@ -164,7 +166,7 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 	for _, message := range messages {
 		// TODO: get comment data somehow
 		comment := "A message"
-		content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends Object {\n", comment, message.GetName()))
+		content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, message.GetName(), pkgName, message.GetName()))
 		for _, field := range message.GetField() {
 			tsType := getNativeTypeName(field, message, pkgName)
 			// TODO: get comment data somehow

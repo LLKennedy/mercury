@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "A fake service",
   "main": "__packages__/index.ts",
-  "dependencies": {},
+  "dependencies": {
+    "@llkennedy/httpgrpc": "^0.2.4"
+  },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
