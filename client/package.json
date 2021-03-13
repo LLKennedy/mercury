@@ -1,6 +1,6 @@
 {
   "name": "@llkennedy/httpgrpc",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Client wrappers for httpgrpc, specifically for websocket logic.",
   "main": "lib/index.js",
   "dependencies": {

@@ -102,10 +102,20 @@ export class FibonacciRequest extends packages.service.FibonacciRequest implemen
 /** A message */
 export class FibonacciResponse extends packages.service.FibonacciResponse implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			number: this.number?.toString()
+		};
 	}
 	public static async Parse(data: any): Promise<FibonacciResponse> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new FibonacciResponse();
+		if (objData.hasOwnProperty("number")) {
+			let resNum = objData["number"]
+			if (resNum !== null) {
+				res.number = Number(objData["number"]);
+			}
+		}
+		return res;
 	}
 }
 
