@@ -96,7 +96,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	public async Send(request: ReqT): Promise<void> {
 		await this.sendOpen;
 		return await this.sendMutex.RunAsync(async () => {
-			await this.send(request);
+			await this.send.bind(this)(request);
 		})
 	}
 	private async send(request: ReqT): Promise<void> {
