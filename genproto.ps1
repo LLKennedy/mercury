@@ -17,7 +17,7 @@ $ExcludeRUle = [Regex]'.*google.*|.*audit/.*'
 $PBPath = "./internal/testservice/service"
 $ProtoFiles = Get-ChildItem -path $Directory -Recurse -Include $IncludeRule | Where-Object FullName -NotMatch $ExcludeRUle
 foreach ($file in $ProtoFiles) {
-	protoc --proto_path="$($file.DirectoryName)" --go_out=paths=source_relative:$PBPath --go-grpc_out=paths=source_relative:$PBPath $file.FullName
+	protoc --proto_path="$($file.DirectoryName)" --go_out=paths=source_relative:$PBPath --go-grpc_out=paths=source_relative:$PBPath --tsjson_out=$PBPath $file.FullName
 }
 go build $PBPath
 go mod tidy
