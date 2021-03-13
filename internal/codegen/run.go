@@ -146,11 +146,12 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 		comment := "A message"
 		content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, message.GetName(), pkgName, message.GetName()))
 		content.WriteString(fmt.Sprintf(`	ToProtoJSON(): Object {
-			throw new Error("unimplemented")
-		}
-		public static async Parse(data: any): Promise<%s> {
-			throw new Error("unimplemented");
-		}`, message.GetName()))
+		throw new Error("unimplemented")
+	}
+	public static async Parse(data: any): Promise<%s> {
+		throw new Error("unimplemented");
+	}
+`, message.GetName()))
 		content.WriteString("}\n\n")
 
 		for _, nestedType := range message.GetNestedType() {
@@ -160,11 +161,12 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 				name := fmt.Sprintf("%s__%s", message.GetName(), nestedType.GetName())
 				content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, name, pkgName, name))
 				content.WriteString(fmt.Sprintf(`	ToProtoJSON(): Object {
-					throw new Error("unimplemented")
-				}
-				public static async Parse(data: any): Promise<%s> {
-					throw new Error("unimplemented");
-				}`, name))
+		throw new Error("unimplemented")
+	}
+	public static async Parse(data: any): Promise<%s> {
+		throw new Error("unimplemented");
+	}
+`, name))
 				content.WriteString("}\n\n")
 			}
 		}
