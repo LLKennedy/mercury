@@ -161,9 +161,10 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 func generateMessage(msg *descriptorpb.DescriptorProto, comment, name, pkgName string, content *strings.Builder) {
 	content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, name, pkgName, name))
 	protoJSONContent := &strings.Builder{}
-	protoJSONContent.WriteString(`		throw new Error("unimplemented");`)
+	protoJSONContent.WriteString(`		return {`)
 	parseContent := &strings.Builder{}
-	parseContent.WriteString(`		throw new Error("unimplemented");`)
+	parseContent.WriteString(fmt.Sprintf(`		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new %s();`, name))
 	content.WriteString(fmt.Sprintf(`	public ToProtoJSON(): Object {
 %s
 	}

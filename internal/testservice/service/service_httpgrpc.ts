@@ -109,6 +109,9 @@ export class FibonacciResponse extends packages.service.FibonacciResponse implem
 	public static async Parse(data: any): Promise<FibonacciResponse> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new FibonacciResponse();
+		await httpgrpc.SetIfNotNull(objData, "number", async val => {
+
+		}, ["string", "number"]);
 		if (objData.hasOwnProperty("number")) {
 			let resNum = objData["number"]
 			if (resNum !== null) {
