@@ -25,13 +25,12 @@ export function AnyToObject(res: any): Object {
 /** Runs the provided set function with the acquired value if the object has the specified property and the value is not null. Optionally throws an error if typeof returns an unsupported type */
 export async function ParseIfNotNull<T>(obj: Object, prop: string, set: (val: any) => Promise<T | undefined>, validTypes: TypeStrings[] = ["string", "object", "boolean", "number", "undefined", "bigint", "function", "symbol"]) {
 	if (obj.hasOwnProperty(prop)) {
-		let resNum = obj[prop]
-		if (resNum !== null) {
-			let val = obj[prop];
-			if (!validTypes.includes(typeof val)) {
-				throw new Error(`invalid type for property ${prop}, exptected one of ${validTypes} but found ${typeof val}`);
+		let foundProp = obj[prop];
+		if (foundProp !== null && foundProp !== undefined) {
+			if (!validTypes.includes(typeof foundProp)) {
+				throw new Error(`invalid type for property ${prop}, exptected one of ${validTypes} but found ${typeof foundProp}`);
 			}
-			return await set(val);
+			return await set(foundProp);
 		}
 	}
 	return undefined;
