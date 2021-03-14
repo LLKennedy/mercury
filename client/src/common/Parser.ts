@@ -2,6 +2,7 @@ import { EnumType } from "typescript";
 import { EnumMap } from "./Enums";
 import { base64 } from "rfc4648"
 import { google } from ".";
+import { ProtoJSONCompatible } from "./ProtoJSONCompatible";
 
 /** Converts an object  */
 export type Parser<T> = (res: any) => Promise<T>;
@@ -24,9 +25,16 @@ export function AnyToObject(res: any): Object {
 
 /** Runs the provided set function with the acquired value if the object has the specified property and the value is not null. Optionally throws an error if typeof returns an unsupported type */
 export async function ParseIfNotNull<T>(obj: Object, prop: string, set: (val: any) => Promise<T | undefined>, validTypes: TypeStrings[] = ["string", "object", "boolean", "number", "undefined", "bigint", "function", "symbol"]) {
-	if (obj.hasOwnProperty(prop)) {
+	let alternateSpelling = prop.replace(/_[a-zA-Z0-9]/, (match) => {
+		return match.replace("_", "").toUpperCase();
+	})
+	if (obj.hasOwnProperty(prop) || obj.hasOwnProperty(alternateSpelling)) {
 		let foundProp = obj[prop];
-		if (foundProp !== null && foundProp !== undefined) {
+		let foundAlternateProp = obj[alternateSpelling];
+		if ((foundProp !== null && foundProp !== undefined) || (foundAlternateProp !== null && foundAlternateProp !== undefined)) {
+			if (foundProp === undefined) {
+				foundProp = foundAlternateProp
+			}
 			if (!validTypes.includes(typeof foundProp)) {
 				throw new Error(`invalid type for property ${prop}, exptected one of ${validTypes} but found ${typeof foundProp}`);
 			}
@@ -34,6 +42,118 @@ export async function ParseIfNotNull<T>(obj: Object, prop: string, set: (val: an
 		}
 	}
 	return undefined;
+}
+
+/** Writing functions for all canonical gRPC JSON types
+ * 
+ * Definitions and behaviour according to:
+ * https://developers.google.com/protocol-buffers/docs/proto3#json
+*/
+export class ToProtoJSON {
+	/** Write a message object. This is just the same logic as using ToProtoJSON directly. */
+	public static Message<T extends ProtoJSONCompatible>(req?: T): Object | undefined {
+		return req?.ToProtoJSON()
+	}
+	/** Write an enum which could be either strings or numbers. This is NOT fully type safe, if EnumMap is not the Object.keys of the actual enum T, bad things will happen */
+	public static Enum<T extends EnumType>(map: EnumMap, val?: number): string | undefined {
+		if (val === undefined) {
+			return undefined;
+		}
+		return map[val];
+	}
+	/** Write a map, providing individual parsers for key and value instances */
+	public static Map<K, V, outV = any>(valToProtoJSON: (val: V) => outV, data?: ReadonlyMap<K, V>): { [key: string]: outV } | undefined {
+		if (data === undefined) {
+			return undefined;
+		}
+		let out: { [key: string]: outV } = {};
+		for (let [key, val] of data) {
+			out[`${key}`] = valToProtoJSON(val);
+		}
+		return out;
+	}
+	/** Write an array */
+	public static Repeated<T, outT = any>(valToProtoJSON: (val: T) => outT, data?: T[]): outT[] | undefined {
+		if (data === undefined) {
+			return undefined;
+		}
+		let out: outT[] = [];
+		for (let val of data) {
+			out.push(valToProtoJSON(val));
+		}
+		return out;
+	}
+	/** Write a boolean */
+	public static Bool(data?: boolean): boolean | undefined {
+		return data;
+	}
+	/** Write a string */
+	public static String(data?: string): string | undefined {
+		return data;
+	}
+	/** Write bytes */
+	public static Bytes(data?: Uint8Array): string | undefined {
+		if (data === undefined) {
+			return undefined;
+		}
+		return base64.stringify(data);
+	}
+	/** int32, fixed32, uint32, float, double */
+	public static Number(data?: number): number | string | undefined {
+		switch (data) {
+			case NaN:
+			case Infinity:
+			case -Infinity:
+				return data.toString();
+			default:
+				return data;
+		}
+	}
+	/** int64, fixed64, uint64 */
+	public static StringNumber(data?: number): string | undefined {
+		return data?.toString();
+	}
+	/** Write a google Any */
+	public static Any(data?: any): any | undefined {
+		return data;
+	}
+	/** Write a google Timestamp */
+	public static Timestamp(data?: Date): string | undefined {
+		return new google.Timestamp(data).ToProtoJSON();
+	}
+	/** Write a google Duration */
+	public static Duration(durationSeconds?: number): string | undefined {
+		return new google.Duration(durationSeconds).ToProtoJSON();
+	}
+	/** Write a google Struct */
+	public static Struct(data?: Object): Object | undefined {
+		return data;
+	}
+	/** Write a google Wrapper */
+	public static Wrapper(data?: any): any | undefined {
+		return new google.Wrapper().ToProtoJSON();
+	}
+	/** Write a google FieldMask */
+	public static FieldMask(data?: any): any | undefined {
+		return new google.FieldMask().ToProtoJSON();
+	}
+	/** Write a google ListValue */
+	public static ListValue(data?: any): any[] | undefined {
+		return new google.ListValue().ToProtoJSON();
+	}
+	/** Write a google Value */
+	public static Value(data?: any): any | undefined {
+		return data;
+	}
+	/** Write a google NullValue */
+	public static NullValue(): null {
+		// I don't know why anyone would ever use this type
+		return null;
+	}
+	/** Write a google Empty */
+	public static Empty(data?: {}): {} | undefined {
+		return data;
+	}
 }
 
 /** Parsing functions for all canonical gRPC JSON types
@@ -112,8 +232,8 @@ export class Parse {
 		return null
 	}
 	/** Parse a google Empty */
-	public static async Empty(obj: Object, prop: string): Promise<any | undefined> {
-		return ParseIfNotNull(obj, prop, google.Any.Parse)
+	public static async Empty(obj: Object, prop: string): Promise<{} | undefined> {
+		return ParseIfNotNull(obj, prop, google.Empty.Parse)
 	}
 }
 
