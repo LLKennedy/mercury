@@ -14,7 +14,7 @@ There are multiple implemenations that follow this basic intent already (HTTP+JS
 
 This differs, in that your GRPC services are only expected to be handling GRPC. The logic used by the reverse proxy to determine where to send the message is up to you, this library does not cover service discovery or decoding the URL to extract data such as procedure or service names.
 
-In order to expose a method to HTTP, the protobuf should define a service in which each method is prefixed by an HTTP method. The service application must then implement a version of that method without the method name. The easiest way to do this is to specify two service definitions, one with only exposed method matching the internal method, as below:
+In order to expose a method to HTTP, the protobuf should define a service in which each method is prefixed by an HTTP method. The service application must then implement a version of that method without the method name. The easiest way to do this is to specify two service definitions, one with only exposed methods matching the internal methods, as below:
 
 ```proto
 service App {
@@ -30,9 +30,19 @@ service ExposedApp {
 
 In this example, App would provide three GRPC endpoints, but only one would be exposed for HTTP methods from the proxy. Important to note is that you don't need to actually implement GetListThings in this example, simply defining it will allow httpgrpc to lookup the ListThings method on your real server.
 
+### Limitation: Streamed RPC HTTP Methods
+
+Due to the usage of WebSockets as the underlying implementation of all kinds of streamed endpoints, all RPCs with "stream" request or response messages **must** be exposed via the "Get" HTTP method, or not exposed at all. This is because the WebSocket handshake always begins with a GET request and then upgrades out of standard HTTP traffic, so there is no possibility of routing on any other method.
+
 ## Installation
 
+As a Go dependency:
+
 `go get "github.com/LLKennedy/httpgrpc"`
+
+As a JS/TS dependency:
+
+`npm install @llkennedy/httpgrpc`
 
 ## Basic Usage
 
