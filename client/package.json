@@ -7,6 +7,7 @@
     "@types/node": "^14.14.31",
     "@types/uuid": "^8.3.0",
     "axios": "^0.21.1",
+    "rfc4648": "^1.4.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

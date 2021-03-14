@@ -1,5 +1,6 @@
 import { EnumType } from "typescript";
 import { EnumMap } from "./Enums";
+import { base64 } from "rfc4648"
 
 /** Converts an object  */
 export type Parser<T> = (res: any) => Promise<T>;
@@ -122,6 +123,38 @@ export class PrimitiveParse {
 				throw new Error(`string type expected, found ${typeof raw} instead`);
 			}
 			return raw
+		}
+	}
+	public static Bytes(): Parser<Uint8Array> {
+		return async raw => {
+			if (typeof raw !== "string") {
+				throw new Error(`string type expected, found ${typeof raw} instead`);
+			}
+			return base64.parse(raw);
+		}
+	}
+	/** int32, fixed32, uint32, int64, fixed64, uint64, float, double - all work on identical logic other than range checking */
+	public static Number(rangeCheck?: (num: number) => boolean, allowSpecial: boolean = false): Parser<number> {
+		return async raw => {
+			if (typeof raw !== "number" && typeof raw !== "string") {
+				throw new Error(`string or number type expected`)
+			}
+			let parsed: number;
+			if (typeof raw === "number") {
+				parsed = raw;
+			} else {
+				parsed = Number(raw);
+			}
+			if (isNaN(parsed) || parsed === Infinity || parsed === -Infinity) {
+				if (allowSpecial) {
+					return parsed;
+				}
+				throw new Error("received special number (NaN or Infinity) when not allowed");
+			}
+			if (rangeCheck && !rangeCheck(parsed)) {
+				throw new Error("parsed number failed range check")
+			}
+			return parsed;
 		}
 	}
 }
