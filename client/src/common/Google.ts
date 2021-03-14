@@ -10,7 +10,7 @@ export class Any implements ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<Any> {
+	public static async Parse(data: any): Promise<any> {
 		throw new Error("unimplemented");
 	}
 }
@@ -20,7 +20,7 @@ export class Timestamp implements ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<Timestamp> {
+	public static async Parse(data: any): Promise<Date> {
 		throw new Error("unimplemented");
 	}
 }
@@ -30,7 +30,7 @@ export class Duration implements ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<Duration> {
+	public static async Parse(data: any): Promise<number> {
 		throw new Error("unimplemented");
 	}
 }
@@ -40,7 +40,7 @@ export class Struct implements ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<Struct> {
+	public static async Parse(data: any): Promise<any> {
 		throw new Error("unimplemented");
 	}
 }
@@ -49,7 +49,7 @@ export class Wrapper implements ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<Wrapper> {
+	public static async Parse(data: any): Promise<any> {
 		throw new Error("unimplemented");
 	}
 }
@@ -58,16 +58,17 @@ export class FieldMask implements ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<FieldMask> {
+	public static async Parse(data: any): Promise<any> {
 		throw new Error("unimplemented");
 	}
 }
 
 export class ListValue implements ProtoJSONCompatible {
+	public list?: any[];
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<ListValue> {
+	public static async Parse(data: any): Promise<any[]> {
 		throw new Error("unimplemented");
 	}
 }
@@ -77,7 +78,7 @@ export class Value implements ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<Value> {
+	public static async Parse(data: any): Promise<any> {
 		throw new Error("unimplemented");
 	}
 }
@@ -86,8 +87,8 @@ export class NullValue implements ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<NullValue> {
-		throw new Error("unimplemented");
+	public static async Parse(data: any): Promise<null> {
+		return null;
 	}
 }
 
@@ -95,7 +96,7 @@ export class Empty implements ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		throw new Error("unimplemented");
 	}
-	public static async Parse(data: any): Promise<Empty> {
-		throw new Error("unimplemented");
+	public static async Parse(data: any): Promise<{}> {
+		return {}
 	}
 }

@@ -1,6 +1,7 @@
 import { EnumType } from "typescript";
 import { EnumMap } from "./Enums";
 import { base64 } from "rfc4648"
+import { google } from ".";
 
 /** Converts an object  */
 export type Parser<T> = (res: any) => Promise<T>;
@@ -57,6 +58,63 @@ export class Parse {
 	/** Parse an array */
 	public static async Repeated<T>(obj: Object, prop: string, parser: Parser<T>): Promise<T[] | undefined> {
 		return ParseIfNotNull(obj, prop, PrimitiveParse.Repeated<T>(parser), ["object"]);
+	}
+	/** Parse a boolean */
+	public static async Bool(obj: Object, prop: string): Promise<boolean | undefined> {
+		return ParseIfNotNull(obj, prop, PrimitiveParse.Bool(), ["boolean"]);
+	}
+	/** Parse a string */
+	public static async String(obj: Object, prop: string): Promise<string | undefined> {
+		return ParseIfNotNull(obj, prop, PrimitiveParse.String(), ["string"]);
+	}
+	/** Parse bytes */
+	public static async Bytes(obj: Object, prop: string): Promise<Uint8Array | undefined> {
+		return ParseIfNotNull(obj, prop, PrimitiveParse.Bytes(), ["string"]);
+	}
+	/** Parse a number */
+	public static async Number(obj: Object, prop: string): Promise<number | undefined> {
+		return ParseIfNotNull(obj, prop, PrimitiveParse.Number(), ["string", "number"]);
+	}
+	/** Parse a google Any */
+	public static async Any(obj: Object, prop: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, google.Any.Parse)
+	}
+	/** Parse a google Timestamp */
+	public static async Timestamp(obj: Object, prop: string): Promise<Date | undefined> {
+		return ParseIfNotNull(obj, prop, google.Timestamp.Parse)
+	}
+	/** Parse a google Duration */
+	public static async Duration(obj: Object, prop: string): Promise<number | undefined> {
+		return ParseIfNotNull(obj, prop, google.Duration.Parse)
+	}
+	/** Parse a google Struct */
+	public static async Struct(obj: Object, prop: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, google.Struct.Parse)
+	}
+	/** Parse a google Wrapper */
+	public static async Wrapper(obj: Object, prop: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, google.Wrapper.Parse)
+	}
+	/** Parse a google FieldMask */
+	public static async FieldMask(obj: Object, prop: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, google.FieldMask.Parse)
+	}
+	/** Parse a google ListValue */
+	public static async ListValue(obj: Object, prop: string): Promise<any[] | undefined> {
+		return ParseIfNotNull(obj, prop, google.ListValue.Parse)
+	}
+	/** Parse a google Value */
+	public static async Value(obj: Object, prop: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, google.Value.Parse)
+	}
+	/** Parse a google NullValue */
+	public static async NullValue(obj: Object, prop: string): Promise<null> {
+		// I don't know why anyone would ever use this type
+		return null
+	}
+	/** Parse a google Empty */
+	public static async Empty(obj: Object, prop: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, google.Any.Parse)
 	}
 }
 
