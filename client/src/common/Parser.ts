@@ -3,6 +3,7 @@ import { EnumMap } from "./Enums";
 
 /** Converts an object  */
 export type Parser<T> = (res: any) => Promise<T>;
+export type RepeatedParser<T> = (res: any[]) => Promise<T[]>;
 
 /** These are all allowed basic types returned by the typeof accessor */
 export type TypeStrings = "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
@@ -20,7 +21,7 @@ export function AnyToObject(res: any): Object {
 }
 
 /** Runs the provided set function with the acquired value if the object has the specified property and the value is not null. Optionally throws an error if typeof returns an unsupported type */
-export async function SetIfNotNull<T>(obj: Object, prop: string, set: (val: any) => Promise<T | undefined>, validTypes: TypeStrings[] = ["string", "object", "boolean", "number", "undefined", "bigint", "function", "symbol"]) {
+export async function ParseIfNotNull<T>(obj: Object, prop: string, set: (val: any) => Promise<T | undefined>, validTypes: TypeStrings[] = ["string", "object", "boolean", "number", "undefined", "bigint", "function", "symbol"]) {
 	if (obj.hasOwnProperty(prop)) {
 		let resNum = obj[prop]
 		if (resNum !== null) {
@@ -42,33 +43,85 @@ export async function SetIfNotNull<T>(obj: Object, prop: string, set: (val: any)
 export class Parse {
 	/** Parse a message object. This is just the same logic as using parser directly. */
 	public static async Message<T>(obj: Object, prop: string, parser: Parser<T>): Promise<T | undefined> {
-		return SetIfNotNull(obj, prop, async raw => {
+		return ParseIfNotNull(obj, prop, PrimitiveParse.Message<T>(parser), ["object"]);
+	}
+	/** Parse an enum which could be either strings or numbers. This is NOT fully type safe, if EnumMap is not the Object.keys of the actual enum T, bad things will happen */
+	public static async Enum<T extends EnumType>(obj: Object, prop: string, map: EnumMap): Promise<T | undefined> {
+		return ParseIfNotNull(obj, prop, PrimitiveParse.Enum<T>(map), ["string", "number"]);
+	}
+	/** Parse a map, providing individual parsers for key and value instances */
+	public static async Map<K, V>(obj: Object, prop: string, keyParse: (key: string) => Promise<K>, valParse: (val: any) => Promise<V>): Promise<ReadonlyMap<K, V> | undefined> {
+		return ParseIfNotNull(obj, prop, PrimitiveParse.Map<K, V>(keyParse, valParse), ["object"]);
+	}
+	/** Parse an array */
+	public static async Repeated<T>(obj: Object, prop: string, parser: Parser<T>): Promise<T[] | undefined> {
+		return ParseIfNotNull(obj, prop, PrimitiveParse.Repeated<T>(parser), ["object"]);
+	}
+}
+
+export class PrimitiveParse {
+	public static Message<T>(parser: Parser<T>): Parser<T> {
+		return async raw => {
 			if (typeof raw !== "object") {
 				throw new Error(`message types must be objects, found ${typeof raw} instead`)
 			}
 			return parser(raw);
-		}, ["object"]);
-
+		}
 	}
-	/** Parse an enum which could be either strings or numbers. This is NOT fully type safe, if EnumMap is not the Object.keys of the actual enum T, bad things will happen */
-	public static async Enum<T extends EnumType>(obj: Object, prop: string, map: EnumMap): Promise<T | undefined> {
-		return SetIfNotNull(obj, prop, async raw => {
+	public static Enum<T extends EnumType>(map: EnumMap): Parser<T> {
+		return async raw => {
+			if (typeof raw === "string" && raw === "") {
+				// Empty string is the zero value
+				raw = 0;
+			}
 			switch (typeof raw) {
 				case "number":
+					let mappedStr = map[raw];
+					if (mappedStr === undefined) {
+						throw new Error(`undefined enum value: ${raw}`);
+					}
 					return raw as unknown as T;
 				case "string":
-					return map[raw] as unknown as T;
+					let mappedNum = map[raw] as unknown as T;
+					if (mappedNum === undefined) {
+						throw new Error(`undefined enum value: ${raw}`)
+					}
+					return mappedNum;
 				default:
 					throw new Error(`enum types must be strings or numbers, found ${typeof raw} instead`)
 			}
-		}, ["string", "number"]);
+		}
 	}
-	public static async Map<K, V>(obj: Object, prop: string, keyParse: (key: string) => Promise<K>, valParse: (val: any) => Promise<V>): Promise<ReadonlyMap<K, V> | undefined> {
-		return SetIfNotNull(obj, prop, async raw => {
+	public static Map<K, V>(keyParse: (key: string) => Promise<K>, valParse: (val: any) => Promise<V>): Parser<ReadonlyMap<K, V>> {
+		return async raw => {
 			if (typeof raw !== "object") {
 				throw new Error(`map types must be objects, found ${typeof raw} instead`)
 			}
 			throw new Error("unimplemented - we need to write all keyParse and valParse functions")
-		}, ["object"]);
+		}
+	}
+	public static Repeated<T>(parser: Parser<T>): RepeatedParser<T> {
+		return async raw => {
+			if (!(raw instanceof Array)) {
+				throw new Error(`array type expected, found ${raw} instead`)
+			}
+			throw new Error("unimplemented")
+		}
+	}
+	public static Bool(): Parser<boolean> {
+		return async raw => {
+			if (typeof raw !== "boolean") {
+				throw new Error(`boolean type expected, found ${typeof raw} instead`);
+			}
+			return raw
+		}
+	}
+	public static String(): Parser<string> {
+		return async raw => {
+			if (typeof raw !== "string") {
+				throw new Error(`string type expected, found ${typeof raw} instead`);
+			}
+			return raw
+		}
 	}
 }
