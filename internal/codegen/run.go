@@ -211,16 +211,16 @@ func generateMessage(msg *descriptorpb.DescriptorProto, comment, name, pkgName s
 		// FIXME: detect repeated/oneof
 		switch field.GetType() {
 		case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
-			parseContent.WriteString(fmt.Sprintf(`		res.%s = httpgrpc.Parse.Bool(objData, "%s", "%s");
+			parseContent.WriteString(fmt.Sprintf(`		res.%s = await httpgrpc.Parse.Bool(objData, "%s", "%s");
 `, field.GetJsonName(), field.GetJsonName(), field.GetName()))
 		case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
-			parseContent.WriteString(fmt.Sprintf(`		res.%s = httpgrpc.Parse.Bytes(objData, "%s", "%s");
+			parseContent.WriteString(fmt.Sprintf(`		res.%s = await httpgrpc.Parse.Bytes(objData, "%s", "%s");
 `, field.GetJsonName(), field.GetJsonName(), field.GetName()))
 		case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE, descriptorpb.FieldDescriptorProto_TYPE_FIXED32, descriptorpb.FieldDescriptorProto_TYPE_FIXED64, descriptorpb.FieldDescriptorProto_TYPE_FLOAT, descriptorpb.FieldDescriptorProto_TYPE_INT32, descriptorpb.FieldDescriptorProto_TYPE_INT64, descriptorpb.FieldDescriptorProto_TYPE_SFIXED32, descriptorpb.FieldDescriptorProto_TYPE_SFIXED64, descriptorpb.FieldDescriptorProto_TYPE_SINT32, descriptorpb.FieldDescriptorProto_TYPE_SINT64, descriptorpb.FieldDescriptorProto_TYPE_UINT32, descriptorpb.FieldDescriptorProto_TYPE_UINT64:
-			parseContent.WriteString(fmt.Sprintf(`		res.%s = httpgrpc.Parse.Number(objData, "%s", "%s");
+			parseContent.WriteString(fmt.Sprintf(`		res.%s = await httpgrpc.Parse.Number(objData, "%s", "%s");
 `, field.GetJsonName(), field.GetJsonName(), field.GetName()))
 		case descriptorpb.FieldDescriptorProto_TYPE_STRING:
-			parseContent.WriteString(fmt.Sprintf(`		res.%s = httpgrpc.Parse.String(objData, "%s", "%s");
+			parseContent.WriteString(fmt.Sprintf(`		res.%s = await httpgrpc.Parse.String(objData, "%s", "%s");
 `, field.GetJsonName(), field.GetJsonName(), field.GetName()))
 		case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
 			// TODO

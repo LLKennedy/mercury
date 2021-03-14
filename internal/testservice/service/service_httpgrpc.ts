@@ -41,9 +41,9 @@ export class FeedData extends packages.service.FeedData implements httpgrpc.Prot
 	public static async Parse(data: any): Promise<FeedData> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new FeedData();
-		res.id = httpgrpc.Parse.String(objData, "id", "id");
-		res.dataType = httpgrpc.Parse.Number(objData, "dataType", "data_type");
-		res.rawData = httpgrpc.Parse.Bytes(objData, "rawData", "raw_data");
+		res.id = await httpgrpc.Parse.String(objData, "id", "id");
+		res.dataType = await httpgrpc.Parse.Number(objData, "dataType", "data_type");
+		res.rawData = await httpgrpc.Parse.Bytes(objData, "rawData", "raw_data");
 		return res;
 	}
 }
@@ -58,7 +58,7 @@ export class FeedResponse extends packages.service.FeedResponse implements httpg
 	public static async Parse(data: any): Promise<FeedResponse> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new FeedResponse();
-		res.received = httpgrpc.Parse.Number(objData, "received", "received");
+		res.received = await httpgrpc.Parse.Number(objData, "received", "received");
 		return res;
 	}
 }
@@ -73,7 +73,7 @@ export class BroadcastRequest extends packages.service.BroadcastRequest implemen
 	public static async Parse(data: any): Promise<BroadcastRequest> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new BroadcastRequest();
-		res.id = httpgrpc.Parse.String(objData, "id", "id");
+		res.id = await httpgrpc.Parse.String(objData, "id", "id");
 		return res;
 	}
 }
@@ -88,7 +88,7 @@ export class BroadcastData extends packages.service.BroadcastData implements htt
 	public static async Parse(data: any): Promise<BroadcastData> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new BroadcastData();
-		res.rawData = httpgrpc.Parse.Bytes(objData, "rawData", "raw_data");
+		res.rawData = await httpgrpc.Parse.Bytes(objData, "rawData", "raw_data");
 		return res;
 	}
 }
@@ -103,7 +103,7 @@ export class ConvertInput extends packages.service.ConvertInput implements httpg
 	public static async Parse(data: any): Promise<ConvertInput> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new ConvertInput();
-		res.rawData = httpgrpc.Parse.Bytes(objData, "rawData", "raw_data");
+		res.rawData = await httpgrpc.Parse.Bytes(objData, "rawData", "raw_data");
 		return res;
 	}
 }
@@ -118,7 +118,7 @@ export class ConvertOutput extends packages.service.ConvertOutput implements htt
 	public static async Parse(data: any): Promise<ConvertOutput> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new ConvertOutput();
-		res.convertedData = httpgrpc.Parse.String(objData, "convertedData", "converted_data");
+		res.convertedData = await httpgrpc.Parse.String(objData, "convertedData", "converted_data");
 		return res;
 	}
 }
@@ -133,7 +133,7 @@ export class FibonacciRequest extends packages.service.FibonacciRequest implemen
 	public static async Parse(data: any): Promise<FibonacciRequest> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new FibonacciRequest();
-		res.n = httpgrpc.Parse.Number(objData, "n", "n");
+		res.n = await httpgrpc.Parse.Number(objData, "n", "n");
 		return res;
 	}
 }
@@ -148,7 +148,7 @@ export class FibonacciResponse extends packages.service.FibonacciResponse implem
 	public static async Parse(data: any): Promise<FibonacciResponse> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new FibonacciResponse();
-		res.number = httpgrpc.Parse.Number(objData, "number", "number");
+		res.number = await httpgrpc.Parse.Number(objData, "number", "number");
 		return res;
 	}
 }
@@ -164,8 +164,8 @@ export class RandomRequest extends packages.service.RandomRequest implements htt
 	public static async Parse(data: any): Promise<RandomRequest> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new RandomRequest();
-		res.lowerBound = httpgrpc.Parse.Number(objData, "lowerBound", "lower_bound");
-		res.upperBound = httpgrpc.Parse.Number(objData, "upperBound", "upper_bound");
+		res.lowerBound = await httpgrpc.Parse.Number(objData, "lowerBound", "lower_bound");
+		res.upperBound = await httpgrpc.Parse.Number(objData, "upperBound", "upper_bound");
 		return res;
 	}
 }
@@ -180,7 +180,7 @@ export class RandomResponse extends packages.service.RandomResponse implements h
 	public static async Parse(data: any): Promise<RandomResponse> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new RandomResponse();
-		res.number = httpgrpc.Parse.Number(objData, "number", "number");
+		res.number = await httpgrpc.Parse.Number(objData, "number", "number");
 		return res;
 	}
 }
@@ -195,7 +195,7 @@ export class UploadPhotoRequest extends packages.service.UploadPhotoRequest impl
 	public static async Parse(data: any): Promise<UploadPhotoRequest> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new UploadPhotoRequest();
-		res.data = httpgrpc.Parse.Bytes(objData, "data", "data");
+		res.data = await httpgrpc.Parse.Bytes(objData, "data", "data");
 		return res;
 	}
 }
@@ -210,7 +210,7 @@ export class UploadPhotoResponse extends packages.service.UploadPhotoResponse im
 	public static async Parse(data: any): Promise<UploadPhotoResponse> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new UploadPhotoResponse();
-		res.uuid = httpgrpc.Parse.String(objData, "uuid", "uuid");
+		res.uuid = await httpgrpc.Parse.String(objData, "uuid", "uuid");
 		return res;
 	}
 }
