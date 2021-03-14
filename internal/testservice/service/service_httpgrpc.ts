@@ -32,70 +32,109 @@ export class ExposedAppClient extends httpgrpc.Client {
 /** A message */
 export class FeedData extends packages.service.FeedData implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			id: httpgrpc.ToProtoJSON.String(this.id),
+			dataType: httpgrpc.ToProtoJSON.StringNumber(this.dataType),
+			rawData: httpgrpc.ToProtoJSON.Bytes(this.rawData),
+		};
 	}
 	public static async Parse(data: any): Promise<FeedData> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new FeedData();
+		res.id = httpgrpc.Parse.String(objData, "id", "id");
+		res.dataType = httpgrpc.Parse.Number(objData, "dataType", "data_type");
+		res.rawData = httpgrpc.Parse.Bytes(objData, "rawData", "raw_data");
+		return res;
 	}
 }
 
 /** A message */
 export class FeedResponse extends packages.service.FeedResponse implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			received: httpgrpc.ToProtoJSON.Number(this.received),
+		};
 	}
 	public static async Parse(data: any): Promise<FeedResponse> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new FeedResponse();
+		res.received = httpgrpc.Parse.Number(objData, "received", "received");
+		return res;
 	}
 }
 
 /** A message */
 export class BroadcastRequest extends packages.service.BroadcastRequest implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			id: httpgrpc.ToProtoJSON.String(this.id),
+		};
 	}
 	public static async Parse(data: any): Promise<BroadcastRequest> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new BroadcastRequest();
+		res.id = httpgrpc.Parse.String(objData, "id", "id");
+		return res;
 	}
 }
 
 /** A message */
 export class BroadcastData extends packages.service.BroadcastData implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			rawData: httpgrpc.ToProtoJSON.Bytes(this.rawData),
+		};
 	}
 	public static async Parse(data: any): Promise<BroadcastData> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new BroadcastData();
+		res.rawData = httpgrpc.Parse.Bytes(objData, "rawData", "raw_data");
+		return res;
 	}
 }
 
 /** A message */
 export class ConvertInput extends packages.service.ConvertInput implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			rawData: httpgrpc.ToProtoJSON.Bytes(this.rawData),
+		};
 	}
 	public static async Parse(data: any): Promise<ConvertInput> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new ConvertInput();
+		res.rawData = httpgrpc.Parse.Bytes(objData, "rawData", "raw_data");
+		return res;
 	}
 }
 
 /** A message */
 export class ConvertOutput extends packages.service.ConvertOutput implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			convertedData: httpgrpc.ToProtoJSON.String(this.convertedData),
+		};
 	}
 	public static async Parse(data: any): Promise<ConvertOutput> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new ConvertOutput();
+		res.convertedData = httpgrpc.Parse.String(objData, "convertedData", "converted_data");
+		return res;
 	}
 }
 
 /** A message */
 export class FibonacciRequest extends packages.service.FibonacciRequest implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			n: httpgrpc.ToProtoJSON.StringNumber(this.n),
+		};
 	}
 	public static async Parse(data: any): Promise<FibonacciRequest> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new FibonacciRequest();
+		res.n = httpgrpc.Parse.Number(objData, "n", "n");
+		return res;
 	}
 }
 
@@ -103,21 +142,13 @@ export class FibonacciRequest extends packages.service.FibonacciRequest implemen
 export class FibonacciResponse extends packages.service.FibonacciResponse implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
 		return {
-			number: this.number?.toString()
+			number: httpgrpc.ToProtoJSON.StringNumber(this.number),
 		};
 	}
 	public static async Parse(data: any): Promise<FibonacciResponse> {
 		let objData: Object = httpgrpc.AnyToObject(data);
 		let res = new FibonacciResponse();
-		await httpgrpc.SetIfNotNull(objData, "number", async val => {
-
-		}, ["string", "number"]);
-		if (objData.hasOwnProperty("number")) {
-			let resNum = objData["number"]
-			if (resNum !== null) {
-				res.number = Number(objData["number"]);
-			}
-		}
+		res.number = httpgrpc.Parse.Number(objData, "number", "number");
 		return res;
 	}
 }
@@ -125,40 +156,62 @@ export class FibonacciResponse extends packages.service.FibonacciResponse implem
 /** A message */
 export class RandomRequest extends packages.service.RandomRequest implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			lowerBound: httpgrpc.ToProtoJSON.StringNumber(this.lowerBound),
+			upperBound: httpgrpc.ToProtoJSON.StringNumber(this.upperBound),
+		};
 	}
 	public static async Parse(data: any): Promise<RandomRequest> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new RandomRequest();
+		res.lowerBound = httpgrpc.Parse.Number(objData, "lowerBound", "lower_bound");
+		res.upperBound = httpgrpc.Parse.Number(objData, "upperBound", "upper_bound");
+		return res;
 	}
 }
 
 /** A message */
 export class RandomResponse extends packages.service.RandomResponse implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			number: httpgrpc.ToProtoJSON.StringNumber(this.number),
+		};
 	}
 	public static async Parse(data: any): Promise<RandomResponse> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new RandomResponse();
+		res.number = httpgrpc.Parse.Number(objData, "number", "number");
+		return res;
 	}
 }
 
 /** A message */
 export class UploadPhotoRequest extends packages.service.UploadPhotoRequest implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			data: httpgrpc.ToProtoJSON.Bytes(this.data),
+		};
 	}
 	public static async Parse(data: any): Promise<UploadPhotoRequest> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new UploadPhotoRequest();
+		res.data = httpgrpc.Parse.Bytes(objData, "data", "data");
+		return res;
 	}
 }
 
 /** A message */
 export class UploadPhotoResponse extends packages.service.UploadPhotoResponse implements httpgrpc.ProtoJSONCompatible {
 	public ToProtoJSON(): Object {
-		throw new Error("unimplemented");
+		return {
+			uuid: httpgrpc.ToProtoJSON.String(this.uuid),
+		};
 	}
 	public static async Parse(data: any): Promise<UploadPhotoResponse> {
-		throw new Error("unimplemented");
+		let objData: Object = httpgrpc.AnyToObject(data);
+		let res = new UploadPhotoResponse();
+		res.uuid = httpgrpc.Parse.String(objData, "uuid", "uuid");
+		return res;
 	}
 }
 

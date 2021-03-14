@@ -158,13 +158,78 @@ func generateMessages(messages []*descriptorpb.DescriptorProto, content *strings
 	}
 }
 
+// /** A message */
+// export class FibonacciResponse extends packages.service.FibonacciResponse implements httpgrpc.ProtoJSONCompatible {
+// 	public ToProtoJSON(): Object {
+// 		return {
+// 			number: httpgrpc.ToProtoJSON.StringNumber(this.number),
+// 		};
+// 	}
+// 	public static async Parse(data: any): Promise<FibonacciResponse> {
+// 		let objData: Object = httpgrpc.AnyToObject(data);
+// 		let res = new FibonacciResponse();
+// 		res.number = await httpgrpc.Parse.Number(objData, "number", "number");
+// 		return res;
+// 	}
+// }
+
 func generateMessage(msg *descriptorpb.DescriptorProto, comment, name, pkgName string, content *strings.Builder) {
 	content.WriteString(fmt.Sprintf("/** %s */\nexport class %s extends packages.%s.%s implements httpgrpc.ProtoJSONCompatible {\n", comment, name, pkgName, name))
 	protoJSONContent := &strings.Builder{}
-	protoJSONContent.WriteString(`		return {`)
+	protoJSONContent.WriteString(`		return {
+`)
+	for _, field := range msg.GetField() {
+		// FIXME: detect repeated/oneof
+		switch field.GetType() {
+		case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
+			protoJSONContent.WriteString(fmt.Sprintf(`			%s: httpgrpc.ToProtoJSON.Bool(this.%s),
+`, field.GetJsonName(), field.GetJsonName()))
+		case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
+			protoJSONContent.WriteString(fmt.Sprintf(`			%s: httpgrpc.ToProtoJSON.Bytes(this.%s),
+`, field.GetJsonName(), field.GetJsonName()))
+		case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE, descriptorpb.FieldDescriptorProto_TYPE_FLOAT, descriptorpb.FieldDescriptorProto_TYPE_FIXED32, descriptorpb.FieldDescriptorProto_TYPE_INT32, descriptorpb.FieldDescriptorProto_TYPE_SFIXED32, descriptorpb.FieldDescriptorProto_TYPE_SINT32:
+			protoJSONContent.WriteString(fmt.Sprintf(`			%s: httpgrpc.ToProtoJSON.Number(this.%s),
+`, field.GetJsonName(), field.GetJsonName()))
+		case descriptorpb.FieldDescriptorProto_TYPE_FIXED64, descriptorpb.FieldDescriptorProto_TYPE_SFIXED64, descriptorpb.FieldDescriptorProto_TYPE_UINT64, descriptorpb.FieldDescriptorProto_TYPE_SINT64, descriptorpb.FieldDescriptorProto_TYPE_INT64:
+			protoJSONContent.WriteString(fmt.Sprintf(`			%s: httpgrpc.ToProtoJSON.StringNumber(this.%s),
+`, field.GetJsonName(), field.GetJsonName()))
+		case descriptorpb.FieldDescriptorProto_TYPE_STRING:
+			protoJSONContent.WriteString(fmt.Sprintf(`			%s: httpgrpc.ToProtoJSON.String(this.%s),
+`, field.GetJsonName(), field.GetJsonName()))
+		case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
+			// TODO
+		case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
+			// TODO
+		}
+	}
+	protoJSONContent.WriteString(`		};`)
 	parseContent := &strings.Builder{}
 	parseContent.WriteString(fmt.Sprintf(`		let objData: Object = httpgrpc.AnyToObject(data);
-		let res = new %s();`, name))
+		let res = new %s();
+`, name))
+	for _, field := range msg.GetField() {
+		// FIXME: detect repeated/oneof
+		switch field.GetType() {
+		case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
+			parseContent.WriteString(fmt.Sprintf(`		res.%s = httpgrpc.Parse.Bool(objData, "%s", "%s");
+`, field.GetJsonName(), field.GetJsonName(), field.GetName()))
+		case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
+			parseContent.WriteString(fmt.Sprintf(`		res.%s = httpgrpc.Parse.Bytes(objData, "%s", "%s");
+`, field.GetJsonName(), field.GetJsonName(), field.GetName()))
+		case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE, descriptorpb.FieldDescriptorProto_TYPE_FIXED32, descriptorpb.FieldDescriptorProto_TYPE_FIXED64, descriptorpb.FieldDescriptorProto_TYPE_FLOAT, descriptorpb.FieldDescriptorProto_TYPE_INT32, descriptorpb.FieldDescriptorProto_TYPE_INT64, descriptorpb.FieldDescriptorProto_TYPE_SFIXED32, descriptorpb.FieldDescriptorProto_TYPE_SFIXED64, descriptorpb.FieldDescriptorProto_TYPE_SINT32, descriptorpb.FieldDescriptorProto_TYPE_SINT64, descriptorpb.FieldDescriptorProto_TYPE_UINT32, descriptorpb.FieldDescriptorProto_TYPE_UINT64:
+			parseContent.WriteString(fmt.Sprintf(`		res.%s = httpgrpc.Parse.Number(objData, "%s", "%s");
+`, field.GetJsonName(), field.GetJsonName(), field.GetName()))
+		case descriptorpb.FieldDescriptorProto_TYPE_STRING:
+			parseContent.WriteString(fmt.Sprintf(`		res.%s = httpgrpc.Parse.String(objData, "%s", "%s");
+`, field.GetJsonName(), field.GetJsonName(), field.GetName()))
+		case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
+			// TODO
+		case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
+			// TODO
+		}
+	}
+	parseContent.WriteString(`		return res;`)
+
 	content.WriteString(fmt.Sprintf(`	public ToProtoJSON(): Object {
 %s
 	}

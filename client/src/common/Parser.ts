@@ -24,13 +24,10 @@ export function AnyToObject(res: any): Object {
 }
 
 /** Runs the provided set function with the acquired value if the object has the specified property and the value is not null. Optionally throws an error if typeof returns an unsupported type */
-export async function ParseIfNotNull<T>(obj: Object, prop: string, set: (val: any) => Promise<T | undefined>, validTypes: TypeStrings[] = ["string", "object", "boolean", "number", "undefined", "bigint", "function", "symbol"]) {
-	let alternateSpelling = prop.replace(/_[a-zA-Z0-9]/, (match) => {
-		return match.replace("_", "").toUpperCase();
-	})
-	if (obj.hasOwnProperty(prop) || obj.hasOwnProperty(alternateSpelling)) {
+export async function ParseIfNotNull<T>(obj: Object, prop: string, altProp: string, set: (val: any) => Promise<T | undefined>, validTypes: TypeStrings[] = ["string", "object", "boolean", "number", "undefined", "bigint", "function", "symbol"]) {
+	if (obj.hasOwnProperty(prop) || obj.hasOwnProperty(altProp)) {
 		let foundProp = obj[prop];
-		let foundAlternateProp = obj[alternateSpelling];
+		let foundAlternateProp = obj[altProp];
 		if ((foundProp !== null && foundProp !== undefined) || (foundAlternateProp !== null && foundAlternateProp !== undefined)) {
 			if (foundProp === undefined) {
 				foundProp = foundAlternateProp
@@ -167,77 +164,77 @@ export class ToProtoJSON {
  */
 export class Parse {
 	/** Parse a message object. This is just the same logic as using parser directly. */
-	public static async Message<T>(obj: Object, prop: string, parser: Parser<T>): Promise<T | undefined> {
-		return ParseIfNotNull(obj, prop, PrimitiveParse.Message<T>(parser), ["object"]);
+	public static async Message<T>(obj: Object, prop: string, altProp: string, parser: Parser<T>): Promise<T | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, PrimitiveParse.Message<T>(parser), ["object"]);
 	}
 	/** Parse an enum which could be either strings or numbers. This is NOT fully type safe, if EnumMap is not the Object.keys of the actual enum T, bad things will happen */
-	public static async Enum<T extends EnumType>(obj: Object, prop: string, map: EnumMap): Promise<T | undefined> {
-		return ParseIfNotNull(obj, prop, PrimitiveParse.Enum<T>(map), ["string", "number"]);
+	public static async Enum<T extends EnumType>(obj: Object, prop: string, altProp: string, map: EnumMap): Promise<T | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, PrimitiveParse.Enum<T>(map), ["string", "number"]);
 	}
 	/** Parse a map, providing individual parsers for key and value instances */
-	public static async Map<K, V>(obj: Object, prop: string, keyParse: (key: string) => Promise<K>, valParse: (val: any) => Promise<V | undefined>): Promise<ReadonlyMap<K, V | null> | undefined> {
-		return ParseIfNotNull(obj, prop, PrimitiveParse.Map<K, V>(keyParse, valParse), ["object"]);
+	public static async Map<K, V>(obj: Object, prop: string, altProp: string, keyParse: (key: string) => Promise<K>, valParse: (val: any) => Promise<V | undefined>): Promise<ReadonlyMap<K, V | null> | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, PrimitiveParse.Map<K, V>(keyParse, valParse), ["object"]);
 	}
 	/** Parse an array */
-	public static async Repeated<T>(obj: Object, prop: string, parser: Parser<T>): Promise<T[] | undefined> {
-		return ParseIfNotNull(obj, prop, PrimitiveParse.Repeated<T>(parser), ["object"]);
+	public static async Repeated<T>(obj: Object, prop: string, altProp: string, parser: Parser<T>): Promise<T[] | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, PrimitiveParse.Repeated<T>(parser), ["object"]);
 	}
 	/** Parse a boolean */
-	public static async Bool(obj: Object, prop: string): Promise<boolean | undefined> {
-		return ParseIfNotNull(obj, prop, PrimitiveParse.Bool(), ["boolean"]);
+	public static async Bool(obj: Object, prop: string, altProp: string): Promise<boolean | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, PrimitiveParse.Bool(), ["boolean"]);
 	}
 	/** Parse a string */
-	public static async String(obj: Object, prop: string): Promise<string | undefined> {
-		return ParseIfNotNull(obj, prop, PrimitiveParse.String(), ["string"]);
+	public static async String(obj: Object, prop: string, altProp: string): Promise<string | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, PrimitiveParse.String(), ["string"]);
 	}
 	/** Parse bytes */
-	public static async Bytes(obj: Object, prop: string): Promise<Uint8Array | undefined> {
-		return ParseIfNotNull(obj, prop, PrimitiveParse.Bytes(), ["string"]);
+	public static async Bytes(obj: Object, prop: string, altProp: string): Promise<Uint8Array | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, PrimitiveParse.Bytes(), ["string"]);
 	}
 	/** Parse a number */
-	public static async Number(obj: Object, prop: string): Promise<number | undefined> {
-		return ParseIfNotNull(obj, prop, PrimitiveParse.Number(), ["string", "number"]);
+	public static async Number(obj: Object, prop: string, altProp: string): Promise<number | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, PrimitiveParse.Number(), ["string", "number"]);
 	}
 	/** Parse a google Any */
-	public static async Any(obj: Object, prop: string): Promise<any | undefined> {
-		return ParseIfNotNull(obj, prop, google.Any.Parse)
+	public static async Any(obj: Object, prop: string, altProp: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, google.Any.Parse)
 	}
 	/** Parse a google Timestamp */
-	public static async Timestamp(obj: Object, prop: string): Promise<Date | undefined> {
-		return ParseIfNotNull(obj, prop, google.Timestamp.Parse)
+	public static async Timestamp(obj: Object, prop: string, altProp: string): Promise<Date | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, google.Timestamp.Parse)
 	}
 	/** Parse a google Duration */
-	public static async Duration(obj: Object, prop: string): Promise<number | undefined> {
-		return ParseIfNotNull(obj, prop, google.Duration.Parse)
+	public static async Duration(obj: Object, prop: string, altProp: string): Promise<number | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, google.Duration.Parse)
 	}
 	/** Parse a google Struct */
-	public static async Struct(obj: Object, prop: string): Promise<any | undefined> {
-		return ParseIfNotNull(obj, prop, google.Struct.Parse)
+	public static async Struct(obj: Object, prop: string, altProp: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, google.Struct.Parse)
 	}
 	/** Parse a google Wrapper */
-	public static async Wrapper(obj: Object, prop: string): Promise<any | undefined> {
-		return ParseIfNotNull(obj, prop, google.Wrapper.Parse)
+	public static async Wrapper(obj: Object, prop: string, altProp: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, google.Wrapper.Parse)
 	}
 	/** Parse a google FieldMask */
-	public static async FieldMask(obj: Object, prop: string): Promise<any | undefined> {
-		return ParseIfNotNull(obj, prop, google.FieldMask.Parse)
+	public static async FieldMask(obj: Object, prop: string, altProp: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, google.FieldMask.Parse)
 	}
 	/** Parse a google ListValue */
-	public static async ListValue(obj: Object, prop: string): Promise<any[] | undefined> {
-		return ParseIfNotNull(obj, prop, google.ListValue.Parse)
+	public static async ListValue(obj: Object, prop: string, altProp: string): Promise<any[] | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, google.ListValue.Parse)
 	}
 	/** Parse a google Value */
-	public static async Value(obj: Object, prop: string): Promise<any | undefined> {
-		return ParseIfNotNull(obj, prop, google.Value.Parse)
+	public static async Value(obj: Object, prop: string, altProp: string): Promise<any | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, google.Value.Parse)
 	}
 	/** Parse a google NullValue */
-	public static async NullValue(obj: Object, prop: string): Promise<null> {
+	public static async NullValue(obj: Object, prop: string, altProp: string): Promise<null> {
 		// I don't know why anyone would ever use this type
 		return null
 	}
 	/** Parse a google Empty */
-	public static async Empty(obj: Object, prop: string): Promise<{} | undefined> {
-		return ParseIfNotNull(obj, prop, google.Empty.Parse)
+	public static async Empty(obj: Object, prop: string, altProp: string): Promise<{} | undefined> {
+		return ParseIfNotNull(obj, prop, altProp, google.Empty.Parse)
 	}
 }
 
