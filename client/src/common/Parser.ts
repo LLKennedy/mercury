@@ -62,12 +62,16 @@ export class ToProtoJSON {
 		return map[val];
 	}
 	/** Write a map, providing individual parsers for key and value instances */
-	public static Map<K, V, outV = any>(valToProtoJSON: (val: V) => outV, data?: ReadonlyMap<K, V>): { [key: string]: outV } | undefined {
+	public static Map<K, V, outV = any>(valToProtoJSON: (val: V) => outV, data?: ReadonlyMap<K, V | null>): { [key: string]: outV | null } | undefined {
 		if (data === undefined) {
 			return undefined;
 		}
-		let out: { [key: string]: outV } = {};
+		let out: { [key: string]: outV | null } = {};
 		for (let [key, val] of data) {
+			if (val === null) {
+				out[`${key}`] = null;
+				continue;
+			}
 			out[`${key}`] = valToProtoJSON(val);
 		}
 		return out;
@@ -171,7 +175,7 @@ export class Parse {
 		return ParseIfNotNull(obj, prop, PrimitiveParse.Enum<T>(map), ["string", "number"]);
 	}
 	/** Parse a map, providing individual parsers for key and value instances */
-	public static async Map<K, V>(obj: Object, prop: string, keyParse: (key: string) => Promise<K>, valParse: (val: any) => Promise<V>): Promise<ReadonlyMap<K, V> | undefined> {
+	public static async Map<K, V>(obj: Object, prop: string, keyParse: (key: string) => Promise<K>, valParse: (val: any) => Promise<V | undefined>): Promise<ReadonlyMap<K, V | null> | undefined> {
 		return ParseIfNotNull(obj, prop, PrimitiveParse.Map<K, V>(keyParse, valParse), ["object"]);
 	}
 	/** Parse an array */
@@ -270,12 +274,16 @@ export class PrimitiveParse {
 			}
 		}
 	}
-	public static Map<K, V>(keyParse: (key: string) => Promise<K>, valParse: (val: any) => Promise<V>): Parser<ReadonlyMap<K, V>> {
+	public static Map<K, V>(keyParse: (key: string) => Promise<K>, valParse: (val: any) => Promise<V | undefined>): Parser<ReadonlyMap<K, V | null>> {
 		return async raw => {
 			if (typeof raw !== "object") {
 				throw new Error(`map types must be objects, found ${typeof raw} instead`)
 			}
-			throw new Error("unimplemented - we need to write all keyParse and valParse functions")
+			let out = new Map<K, V | null>();
+			for (let key in raw) {
+				out.set(await keyParse(key), await valParse(raw[key]) ?? null);
+			}
+			return out;
 		}
 	}
 	public static Repeated<T>(parser: Parser<T>): RepeatedParser<T> {
@@ -283,7 +291,11 @@ export class PrimitiveParse {
 			if (!(raw instanceof Array)) {
 				throw new Error(`array type expected, found ${raw} instead`)
 			}
-			throw new Error("unimplemented")
+			let out: T[] = [];
+			for (let val of raw) {
+				out.push(await parser(val));
+			}
+			return out;
 		}
 	}
 	public static Bool(): Parser<boolean> {
@@ -333,5 +345,17 @@ export class PrimitiveParse {
 			}
 			return parsed;
 		}
+	}
+}
+
+export class MapKeys {
+	public static async ParseString(raw: string): Promise<string> {
+		return raw;
+	}
+	public static async ParseBool(raw: string): Promise<boolean> {
+		return raw === "true";
+	}
+	public static async Number(raw: string): Promise<number> {
+		return Number(raw);
 	}
 }
