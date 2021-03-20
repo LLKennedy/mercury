@@ -1,4 +1,4 @@
-# mercury
+# Mercury
 
 [![GoDoc](https://godoc.org/github.com/LLKennedy/mercury?status.svg)](https://godoc.org/github.com/LLKennedy/mercury)
 [![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/LLKennedy/mercury)
@@ -8,7 +8,9 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/07f4a4d2a6a69c182e6c/maintainability)](https://codeclimate.com/github/LLKennedy/mercury/maintainability)
 [![GitHub](https://img.shields.io/github/license/LLKennedy/mercury.svg)](https://github.com/LLKennedy/mercury/blob/master/LICENSE)
 
-Golang API and Client to standardise conversion of HTTP requests to Google Remote Procedure Calls (GRPC). Allows a generic web proxy to talk to GRPC services via a standard message while still allowing each service to maintain its API using GRPC and protocol buffers.
+## HTTP -> gRPC = H -> g = Hg = Mercury
+
+A Golang API and Client + Typescript Browser Client to standardise conversion of HTTP requests to Google Remote Procedure Calls (GRPC). Allows a generic web proxy to talk to GRPC services via a standard message while still allowing each service to maintain its API using GRPC and protocol buffers.
 
 There are multiple implemenations that follow this basic intent already (HTTP+JSON reverse proxied to GRPC) but assume each service is directly handling external HTTP traffic, rather than sitting behind load-balanced webservers in a DMZ somewhere separate to your nice safe application servers. For example, [here](https://github.com/grpc-ecosystem/grpc-gateway) and [here](https://github.com/weaveworks/common/tree/master/mercury).
 
