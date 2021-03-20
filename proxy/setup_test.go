@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/mercury/httpapi"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
@@ -128,7 +128,7 @@ func TestNewServer(t *testing.T) {
 		{
 			name:    "empty",
 			want:    &Server{},
-			wantErr: "httpgrpc: caught panic creating new server: runtime error: invalid memory address or nil pointer dereference",
+			wantErr: "mercury: caught panic creating new server: runtime error: invalid memory address or nil pointer dereference",
 		},
 		{
 			name: "success",
@@ -199,12 +199,12 @@ func TestServer_Serve(t *testing.T) {
 	}{
 		{
 			name:    "empty",
-			wantErr: "httpgrpc: cannot serve on nil Server",
+			wantErr: "mercury: cannot serve on nil Server",
 		},
 		{
 			name:    "nil listener",
 			s:       &Server{grpcServer: grpc.NewServer()},
-			wantErr: "httpgrpc: cannot serve on nil Server",
+			wantErr: "mercury: cannot serve on nil Server",
 		},
 		{
 			name:     "bad listener",

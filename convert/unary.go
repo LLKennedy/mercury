@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
-	"github.com/LLKennedy/httpgrpc/logs"
+	"github.com/LLKennedy/mercury/httpapi"
+	"github.com/LLKennedy/mercury/logs"
 	"golang.org/x/net/websocket"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-// ProxyRequest proxies an HTTP(S) or WS(S) request through a GRPC connection compliant with httpgrpc/httpapi
+// ProxyRequest proxies an HTTP(S) or WS(S) request through a GRPC connection compliant with mercury/httpapi
 func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, procedure string, conn grpc.ClientConnInterface, txid string, loggers ...logs.Writer) {
 	remote := httpapi.NewExposedServiceClient(conn)
 	isWebsocket := false
@@ -49,7 +49,7 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 	if err != nil {
 		// GRPC call failed, let's log it, process an error status
 		for _, logger := range loggers {
-			logger.LogErrorf(txid, "httpgrpc: received error from target service: %v", err)
+			logger.LogErrorf(txid, "mercury: received error from target service: %v", err)
 		}
 		var ok bool
 		errStatus, ok = status.FromError(err)

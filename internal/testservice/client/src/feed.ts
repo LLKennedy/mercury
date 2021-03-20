@@ -1,9 +1,9 @@
 import { FeedData, FeedResponse, FeedType } from "./service";
-import { ClientStream, HTTPgRPCWebSocket } from "@llkennedy/httpgrpc"
+import { ClientStream, MercuryWebSocket } from "@llkennedy/mercury"
 import { base64 } from "rfc4648";
 
 export async function feed() {
-	let ws = new HTTPgRPCWebSocket<FeedData, FeedResponse>("ws://127.0.0.1:4848/Feed", FeedResponse.Parse, "FeedSocket", console);
+	let ws = new MercuryWebSocket<FeedData, FeedResponse>("ws://127.0.0.1:4848/Feed", FeedResponse.Parse, "FeedSocket", console);
 	await ws.init()
 	let stream = new ClientStream(ws);
 	let data1 = new FeedData();

@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"runtime/debug"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/mercury/httpapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

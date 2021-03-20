@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"runtime/debug"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/mercury/httpapi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -17,7 +17,7 @@ func (s *Server) ProxyStream(srv httpapi.ExposedService_ProxyStreamServer) (err 
 		if err == nil {
 			return nil
 		}
-		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
+		return status.Error(code, fmt.Sprintf("mercury: %v", err))
 	}
 	defer func() {
 		if r := recover(); r != nil {

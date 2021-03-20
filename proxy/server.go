@@ -4,7 +4,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/mercury/httpapi"
 	"google.golang.org/grpc"
 )
 

@@ -1,16 +1,17 @@
 {
-  "name": "@llkennedy/httpgrpc",
-  "version": "0.2.4",
-  "description": "Client wrappers for httpgrpc, specifically for websocket logic.",
+  "name": "@llkennedy/mercury",
+  "version": "0.1.0",
+  "description": "Client wrappers for mercury, specifically for websocket logic.",
   "main": "lib/index.js",
   "dependencies": {
-    "@llkennedy/sleep.js": "^1.0.1",
     "@types/node": "^14.14.31",
     "@types/uuid": "^8.3.0",
     "axios": "^0.21.1",
+    "rfc4648": "^1.4.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@llkennedy/sleep.js": "^1.0.1",
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.2.1",
     "@types/seedrandom": "^2.4.28",
@@ -34,7 +35,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/llkennedy/httpgrpc"
+    "url": "git+https://github.com/llkennedy/mercury"
   },
   "eslintConfig": {
     "extends": [

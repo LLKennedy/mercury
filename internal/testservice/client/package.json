@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@llkennedy/httpgrpc": "^0.2.4",
-    "@llkennedy/httpgrpc-client": "^0.2.5",
+    "@llkennedy/mercury": "^0.2.4",
+    "@llkennedy/mercury-client": "^0.2.5",
     "@llkennedy/sleep.js": "^1.0.1",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.5",

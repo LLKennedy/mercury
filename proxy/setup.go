@@ -5,7 +5,7 @@ import (
 	"net"
 	"reflect"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/mercury/httpapi"
 	"google.golang.org/grpc"
 )
 
@@ -15,7 +15,7 @@ import (
 func NewServer(api, server interface{}, listener *grpc.Server, skipForwardingMetadata bool) (s *Server, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("httpgrpc: caught panic creating new server: %v", r)
+			err = fmt.Errorf("mercury: caught panic creating new server: %v", r)
 		}
 	}()
 	s = new(Server)
@@ -23,7 +23,7 @@ func NewServer(api, server interface{}, listener *grpc.Server, skipForwardingMet
 	s.setSkipForwardingMetadata(skipForwardingMetadata)
 	err = s.setAPIConfig(api, server)
 	if err != nil {
-		err = fmt.Errorf("httpgrpc: %v", err)
+		err = fmt.Errorf("mercury: %v", err)
 	}
 	return s, err
 }
@@ -80,7 +80,7 @@ func (s *Server) setAPIConfig(api, server interface{}) (err error) {
 func (s *Server) Serve(listener net.Listener) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("httpgrpc: cannot serve on nil Server")
+			err = fmt.Errorf("mercury: cannot serve on nil Server")
 		}
 	}()
 	return s.grpcServer.Serve(listener)

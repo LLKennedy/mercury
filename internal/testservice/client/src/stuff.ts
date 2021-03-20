@@ -1,4 +1,4 @@
-import Client from "@llkennedy/httpgrpc-client";
+import Client from "@llkennedy/mercury-client";
 import axios from "axios";
 
 export const stuff = "";
