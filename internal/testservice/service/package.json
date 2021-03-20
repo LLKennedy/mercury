@@ -4,7 +4,7 @@
   "description": "A fake service",
   "main": "__packages__/index.ts",
   "dependencies": {
-    "@llkennedy/mercury": "^0.5.0"
+    "@llkennedy/mercury": "^0.1.0"
   },
   "devDependencies": {},
   "scripts": {
