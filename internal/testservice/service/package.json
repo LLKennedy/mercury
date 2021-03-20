@@ -4,7 +4,7 @@
   "description": "A fake service",
   "main": "__packages__/index.ts",
   "dependencies": {
-    "@llkennedy/httpgrpc": "^0.5.0"
+    "@llkennedy/mercury": "^0.5.0"
   },
   "devDependencies": {},
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LLKennedy/httpgrpc.git"
+    "url": "git+https://github.com/LLKennedy/mercury.git"
   },
   "keywords": [
     "test",
@@ -21,7 +21,7 @@
   "author": "Luke Kennedy",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/LLKennedy/httpgrpc/issues"
+    "url": "https://github.com/LLKennedy/mercury/issues"
   },
-  "homepage": "https://github.com/LLKennedy/httpgrpc#readme"
+  "homepage": "https://github.com/LLKennedy/mercury#readme"
 }

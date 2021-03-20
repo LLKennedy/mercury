@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/mercury/httpapi"
 	"github.com/peterbourgon/mergemap"
 )
 

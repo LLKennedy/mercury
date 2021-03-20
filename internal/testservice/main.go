@@ -4,8 +4,8 @@ import (
 	fmt "fmt"
 	"time"
 
-	"github.com/LLKennedy/httpgrpc/internal/testservice/proxy"
-	"github.com/LLKennedy/httpgrpc/internal/testservice/service"
+	"github.com/LLKennedy/mercury/internal/testservice/proxy"
+	"github.com/LLKennedy/mercury/internal/testservice/service"
 )
 
 func main() {

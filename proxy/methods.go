@@ -69,7 +69,7 @@ func matchInsensitive(methodName, httpType string) bool {
 // StripInsensitive returns the method name stripped of a prepending httpType, panics if that isn't possible
 func stripInsensitive(methodName, httpType string) string {
 	if !matchInsensitive(methodName, httpType) {
-		panic(fmt.Sprintf("httpgrpc: cannot strip invalid method name/type combination %s/%s", methodName, httpType))
+		panic(fmt.Sprintf("mercury: cannot strip invalid method name/type combination %s/%s", methodName, httpType))
 	}
 	return methodName[len(httpType):]
 }

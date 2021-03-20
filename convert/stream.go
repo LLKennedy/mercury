@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
-	"github.com/LLKennedy/httpgrpc/logs"
+	"github.com/LLKennedy/mercury/httpapi"
+	"github.com/LLKennedy/mercury/logs"
 	"golang.org/x/net/websocket"
 	"google.golang.org/grpc/status"
 )
@@ -153,7 +153,7 @@ type errorWriter struct {
 func (w errorWriter) writeWsErr(err error) {
 	// GRPC call failed, let's log it, process an error status
 	for _, logger := range w.loggers {
-		logger.LogErrorf(w.txid, "httpgrpc: writing error to websocket: %v", err)
+		logger.LogErrorf(w.txid, "mercury: writing error to websocket: %v", err)
 	}
 	errStatus, ok := status.FromError(err)
 	if !ok {

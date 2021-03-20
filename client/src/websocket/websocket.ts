@@ -38,7 +38,7 @@ export class EOFError extends Error {
  * Wrap this in one of the specialised gRPC streaming patterns if you wish to simplify the 
  * API and not have to worry about when to call CloseSend, etc.
  */
-export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
+export class MercuryWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	//#region properties
 	/** The logger used for all logs from this class */
 	public readonly logger: Logger = console;
@@ -194,7 +194,7 @@ export class HTTPgRPCWebSocket<ReqT extends ProtoJSONCompatible, ResT = any> {
 	}
 	private async initConnection(): Promise<EstablishedWebsocket<ReqT, ResT>> {
 		if (this.initialised) {
-			throw new Error("cannot initialise HTTPgRPCWebSocket twice");
+			throw new Error("cannot initialise MercuryWebSocket twice");
 		}
 		this.initialised = true;
 		let newConn = this.websocketFactory(this.url);

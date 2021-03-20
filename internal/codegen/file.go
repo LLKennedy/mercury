@@ -3,7 +3,7 @@ package codegen
 import (
 	"strings"
 
-	"github.com/LLKennedy/httpgrpc/internal/version"
+	"github.com/LLKennedy/mercury/internal/version"
 )
 
 type file struct {

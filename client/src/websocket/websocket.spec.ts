@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ProtoJSONCompatible } from 'src/common';
-import { EOFError, EOFMessage, HTTPgRPCWebSocket, IWebSocket } from './websocket';
+import { EOFError, EOFMessage, MercuryWebSocket, IWebSocket } from './websocket';
 
 class FakeMessage implements ProtoJSONCompatible {
 	id?: string;
@@ -72,7 +72,7 @@ describe("Websocket", () => {
 			evStub.withArgs("error", sinon.match(() => true)).callsFake(() => {
 				evsCalled[3] = true;
 			})
-			let ws = new HTTPgRPCWebSocket<FakeMessage, FakeResponse>("not a real URL", ParseFakeData, "TestWebsocket", console, () => fake);
+			let ws = new MercuryWebSocket<FakeMessage, FakeResponse>("not a real URL", ParseFakeData, "TestWebsocket", console, () => fake);
 			await ws.init();
 			assert.deepEqual(evsCalled, [true, true, true, true]);
 		});
@@ -148,7 +148,7 @@ class FakeWebsocket implements IWebSocket {
 }
 
 interface mockedWebsocket {
-	ws: HTTPgRPCWebSocket<FakeMessage, FakeResponse>;
+	ws: MercuryWebSocket<FakeMessage, FakeResponse>;
 	fake: IWebSocket;
 	close(ev: CloseEvent): void;
 	open(ev: Event): void;
@@ -186,7 +186,7 @@ async function makeMockedWebsocket(sandbox: sinon.SinonSandbox): Promise<mockedW
 	evStub.withArgs("error", sinon.match(() => true)).callsFake((type, listener) => {
 		done[3](listener);
 	})
-	let ws = new HTTPgRPCWebSocket<FakeMessage, FakeResponse>("not a real URL", ParseFakeData, "TestWebsocket", console, () => fake);
+	let ws = new MercuryWebSocket<FakeMessage, FakeResponse>("not a real URL", ParseFakeData, "TestWebsocket", console, () => fake);
 	await ws.init();
 	let [close, open, message, error] = await Promise.all(wait);
 	return {

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/mercury/httpapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
@@ -123,7 +123,7 @@ func TestServer_Proxy(t *testing.T) {
 			ctx:         new(mockContext),
 			req:         &httpapi.Request{},
 			want:        &httpapi.Response{},
-			expectedErr: fmt.Sprintf("%v", status.Error(codes.Unimplemented, "httpgrpc: unknown HTTP method")),
+			expectedErr: fmt.Sprintf("%v", status.Error(codes.Unimplemented, "mercury: unknown HTTP method")),
 		},
 		{
 			name: "unregistered method",
@@ -133,7 +133,7 @@ func TestServer_Proxy(t *testing.T) {
 				Method: httpapi.Method_POST,
 			},
 			want:        &httpapi.Response{},
-			expectedErr: fmt.Sprintf("%v", status.Error(codes.Unimplemented, "httpgrpc: no POST methods defined in api")),
+			expectedErr: fmt.Sprintf("%v", status.Error(codes.Unimplemented, "mercury: no POST methods defined in api")),
 		},
 		{
 			name: "unregistered method",
@@ -148,7 +148,7 @@ func TestServer_Proxy(t *testing.T) {
 				Procedure: "DoThing",
 			},
 			want:        &httpapi.Response{},
-			expectedErr: fmt.Sprintf("%v", status.Error(codes.Unimplemented, "httpgrpc: no procedure DoThing defined for POST method in api")),
+			expectedErr: fmt.Sprintf("%v", status.Error(codes.Unimplemented, "mercury: no procedure DoThing defined for POST method in api")),
 		},
 		// {
 		// 	name: "non-standard grpc call",
@@ -168,7 +168,7 @@ func TestServer_Proxy(t *testing.T) {
 		// 	want: &httpapi.Response{
 		// 		StatusCode: 501,
 		// 	},
-		// 	expectedErr: "httpgrpc: nonstandard grpc signature not implemented",
+		// 	expectedErr: "mercury: nonstandard grpc signature not implemented",
 		// },
 	}
 	for _, tt := range tests {

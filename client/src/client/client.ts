@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { ClientStream, DualStream, HTTPgRPCWebSocket, IClientStream, IDualStream, IServerStream, ServerStream } from "../websocket";
+import { ClientStream, DualStream, MercuryWebSocket, IClientStream, IDualStream, IServerStream, ServerStream } from "../websocket";
 import { ProtoJSONCompatible, Parser } from "../common";
 
 /** Client is an RPC client proxied over HTTP and websockets. It is recommended to wrap this in service-specific RPC definitions, 
@@ -35,14 +35,14 @@ export class Client {
 	}
 	protected async StartClientStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, parseResponse: Parser<ResT>): Promise<IClientStream<ReqT, ResT>> {
 		let url = this.BuildURL(endpoint, true);
-		let ws = new HTTPgRPCWebSocket(url, parseResponse);
+		let ws = new MercuryWebSocket(url, parseResponse);
 		// Establish the connection, set up event listeners, etc.
 		await ws.init();
 		return new ClientStream(ws);
 	}
 	protected async StartServerStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, request: ReqT, parseResponse: Parser<ResT>): Promise<IServerStream<ResT>> {
 		let url = this.BuildURL(endpoint, true);
-		let ws = new HTTPgRPCWebSocket(url, parseResponse);
+		let ws = new MercuryWebSocket(url, parseResponse);
 		// Establish the connection, set up event listeners, etc.
 		await ws.init();
 		let ss = new ServerStream(ws, request);
@@ -50,7 +50,7 @@ export class Client {
 	}
 	protected async StartDualStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, parseResponse: Parser<ResT>): Promise<IDualStream<ReqT, ResT>> {
 		let url = this.BuildURL(endpoint, true);
-		let ws = new HTTPgRPCWebSocket(url, parseResponse);
+		let ws = new MercuryWebSocket(url, parseResponse);
 		// Establish the connection, set up event listeners, etc.
 		await ws.init();
 		return new DualStream(ws);

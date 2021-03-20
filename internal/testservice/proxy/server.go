@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/LLKennedy/httpgrpc"
-	"github.com/LLKennedy/httpgrpc/logs"
+	"github.com/LLKennedy/mercury"
+	"github.com/LLKennedy/mercury/logs"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 )
@@ -31,5 +31,5 @@ func (h *Handle) Start() error {
 func (h *Handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	txid := uuid.New().String()
 	procedure := strings.TrimLeft(r.URL.Path, "/")
-	httpgrpc.ProxyRequest(r.Context(), w, r, procedure, h.conn, txid, logs.StdOutLogger{})
+	mercury.ProxyRequest(r.Context(), w, r, procedure, h.conn, txid, logs.StdOutLogger{})
 }

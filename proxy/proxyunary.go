@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/LLKennedy/httpgrpc/convert"
-	"github.com/LLKennedy/httpgrpc/httpapi"
+	"github.com/LLKennedy/mercury/convert"
+	"github.com/LLKennedy/mercury/httpapi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -20,7 +20,7 @@ func (s *Server) ProxyUnary(ctx context.Context, req *httpapi.Request) (res *htt
 		if err == nil {
 			return nil
 		}
-		return status.Error(code, fmt.Sprintf("httpgrpc: %v", err))
+		return status.Error(code, fmt.Sprintf("mercury: %v", err))
 	}
 	defer func() {
 		if r := recover(); r != nil {
@@ -82,14 +82,14 @@ func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procTyp
 	builtRequestPtr := builtRequest.Interface()
 	builtRequestMessage, ok := builtRequestPtr.(proto.Message)
 	if !ok {
-		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "httpgrpc: cannot convert json data to non-proto message using protojson")
+		return &httpapi.Response{}, status.Error(codes.InvalidArgument, "mercury: cannot convert json data to non-proto message using protojson")
 	}
 	if inputJSON == nil {
 		inputJSON = []byte("{}")
 	}
 	err = unmarshaller.Unmarshal(inputJSON, builtRequestMessage)
 	if err != nil {
-		return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("httpgrpc: %v", err))
+		return &httpapi.Response{}, status.Error(codes.InvalidArgument, fmt.Sprintf("mercury: %v", err))
 	}
 	if !s.getSkipForwardingMetadata() {
 		incoming, ok := metadata.FromIncomingContext(ctx)
@@ -111,7 +111,7 @@ func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procTyp
 	if returnValues[1].CanInterface() {
 		err, _ = returnValues[1].Interface().(error)
 	} else {
-		err = status.Errorf(codes.Internal, "httpgrpc: response error was not an error message?")
+		err = status.Errorf(codes.Internal, "mercury: response error was not an error message?")
 	}
 	// TODO: this error gets swallowed if the actual endpoint also returned an error, we should fix this somehow
 	if jsonErr != nil && err == nil {
@@ -129,7 +129,7 @@ func (s *Server) callStructStruct(ctx context.Context, inputJSON []byte, procTyp
 		sErr, ok := status.FromError(err)
 		if !ok {
 			res.StatusCode = http.StatusInternalServerError
-			res.Payload = []byte(fmt.Sprintf("httpgrpc: received non-gRPC error from endpoint: %v", err))
+			res.Payload = []byte(fmt.Sprintf("mercury: received non-gRPC error from endpoint: %v", err))
 		} else {
 			res.StatusCode = uint32(convert.GRPCStatusToHTTPStatusCode(sErr.Code()))
 			res.Payload = []byte(sErr.Message())
