@@ -1,5 +1,5 @@
 import axios, { AxiosInstance as AI } from "axios";
-import { ClientStream, DualStream, MercuryWebSocket, IClientStream, IDualStream, IServerStream, ServerStream } from "../websocket";
+import { ClientStream, DualStream, MercuryWebSocket, ServerStream } from "../websocket";
 import { ProtoJSONCompatible, Parser } from "@llkennedy/protoc-gen-tsjson";
 
 export interface AxiosInstance extends AI { };
