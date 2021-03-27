@@ -1,4 +1,4 @@
-import { ProtoJSONCompatible } from "../common";
+import { ProtoJSONCompatible } from "@llkennedy/protoc-gen-tsjson";
 import { EstablishedWebsocket } from "./websocket";
 
 /** ServerStream is a server-side streaming RPC */
@@ -19,7 +19,7 @@ export class ServerStream<ReqT extends ProtoJSONCompatible, ResT = any> {
 	 * 
 	 * Calling this a second time will always throw an error without doing anything else.
 	 */
-	public async init(): Promise<IServerStream<ResT>> {
+	public async init(): Promise<ServerStream<ReqT, ResT>> {
 		if (this.initialised) {
 			throw new Error("cannot initialise ServerStream twice");
 		}

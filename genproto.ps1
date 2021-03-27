@@ -12,7 +12,7 @@ foreach ($file in $ProtoFiles) {
 }
 $Directory = "./internal/testservice/service"
 $IncludeRule = "*.proto"
-$ExcludeRUle = [Regex]'.*google.*|.*audit/.*'
+$ExcludeRUle = [Regex]'.*google.*|.*audit/.*|.*node_modules.*'
 $PBPath = "./internal/testservice/service"
 $ProtoFiles = Get-ChildItem -path $Directory -Recurse -Include $IncludeRule | Where-Object FullName -NotMatch $ExcludeRUle
 foreach ($file in $ProtoFiles) {

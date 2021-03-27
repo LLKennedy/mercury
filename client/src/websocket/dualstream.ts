@@ -1,4 +1,4 @@
-import { ProtoJSONCompatible } from "../common";
+import { ProtoJSONCompatible } from "@llkennedy/protoc-gen-tsjson";
 import { EstablishedWebsocket } from "./websocket";
 
 /** DualStream is a dual streaming RPC */

@@ -3,6 +3,7 @@ module github.com/LLKennedy/mercury
 go 1.12
 
 require (
+	github.com/LLKennedy/protoc-gen-tsjson v0.5.0
 	github.com/golang/protobuf v1.4.2
 	github.com/google/uuid v1.1.2
 	github.com/peterbourgon/mergemap v0.0.0-20130613134717-e21c03b7a721
