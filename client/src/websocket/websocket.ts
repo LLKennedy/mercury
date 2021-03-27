@@ -1,4 +1,5 @@
-import { ProtoJSONCompatible, Parser, IMutex, Mutex } from "@llkennedy/protoc-gen-tsjson";
+import { ProtoJSONCompatible, Parser } from "@llkennedy/protoc-gen-tsjson";
+import { IMutex, Mutex } from "../common";
 import * as uuid from "uuid";
 
 export const EOFMessage = "EOF";
