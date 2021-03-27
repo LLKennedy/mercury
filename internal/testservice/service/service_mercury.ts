@@ -14,6 +14,18 @@ export class ExposedAppClient extends mercury.Client {
 		super(basePath, useTLS, client);
 	}
 	public async Random(req: RandomRequest): Promise<RandomResponse> {
-		return this.SendUnary("Random", mercury.HTTPMethod.GET, req, RandomResponse.Parse)
+		return this.SendUnary("Random", mercury.HTTPMethod.GET, req, RandomResponse.Parse);
+	}
+	public async UploadPhoto(req: UploadPhotoRequest): Promise<UploadPhotoResponse> {
+		return this.SendUnary("UploadPhoto", mercury.HTTPMethod.POST, req, UploadPhotoResponse.Parse);
+	}
+	public async Feed(): Promise<mercury.ClientStream<FeedData, FeedResponse>> {
+		return this.StartClientStream<FeedData, FeedResponse>("Feed", FeedResponse.Parse);
+	}
+	public async Broadcast(req: BroadcastRequest): Promise<mercury.ServerStream<BroadcastRequest, BroadcastData>> {
+		return this.StartServerStream<BroadcastRequest, BroadcastData>("Broadcast", req, BroadcastData.Parse);
+	}
+	public async ConvertToString(): Promise<mercury.DualStream<ConvertInput, ConvertOutput>> {
+		return this.StartDualStream<ConvertInput, ConvertOutput>("ConvertToString", ConvertOutput.Parse);
 	}
 }
