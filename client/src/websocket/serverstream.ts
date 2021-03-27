@@ -1,4 +1,4 @@
-import { ProtoJSONCompatible } from "../common";
+import { ProtoJSONCompatible } from "@llkennedy/protoc-gen-tsjson";
 import { EstablishedWebsocket } from "./websocket";
 
 /** ServerStream is a server-side streaming RPC */
