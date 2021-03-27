@@ -165,6 +165,8 @@ func generateFullFile(f *descriptorpb.FileDescriptorProto, impexp importsExports
 	content.WriteString(getCodeGenmarker(version.GetVersionString(), protocVersion, fileName))
 	// Imports
 	generateImports(f, content, impexp)
+	// Services
+	generateServices(f, content, impexp)
 	// Comments? unclear how to link them back to other elements
 	generateComments(f.GetSourceCodeInfo(), content)
 	out.Content = proto.String(content.String())
@@ -172,10 +174,10 @@ func generateFullFile(f *descriptorpb.FileDescriptorProto, impexp importsExports
 }
 
 func generateImports(f *descriptorpb.FileDescriptorProto, content *strings.Builder, impexp importsExports) {
-	// if len(f.GetMessageType()) > 0 {
-	// 	// All messages need the common imports
-	// 	content.WriteString("import * as tsjson from \"@llkennedy/protoc-gen-tsjson\";\n")
-	// }
+	if len(f.GetService()) > 0 {
+		// All messages need the common imports
+		content.WriteString("import * as mercury from \"@llkennedy/mercury\";\n")
+	}
 	importMap := make(map[string][]string)
 	useGoogle := false
 	for _, msg := range f.GetMessageType() {
@@ -195,6 +197,10 @@ func generateImports(f *descriptorpb.FileDescriptorProto, content *strings.Build
 		content.WriteString(fmt.Sprintf("import { %s } from \"%s\";\n", fullImportList.String(), importPath))
 	}
 	content.WriteString("\n")
+}
+
+func generateServices(f *descriptorpb.FileDescriptorProto, content *strings.Builder, impexp importsExports) {
+
 }
 
 func generateImportsForMessage(f *descriptorpb.FileDescriptorProto, msg *descriptorpb.DescriptorProto, importMap map[string][]string, content *strings.Builder, impexp importsExports) (useGoogle bool) {
