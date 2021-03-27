@@ -1,9 +1,10 @@
 {
   "name": "@llkennedy/mercury",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Client wrappers for mercury, specifically for websocket logic.",
   "main": "lib/index.js",
   "dependencies": {
+    "@llkennedy/protoc-gen-tsjson": "^0.5.0",
     "@types/node": "^14.14.31",
     "@types/uuid": "^8.3.0",
     "axios": "^0.21.1",

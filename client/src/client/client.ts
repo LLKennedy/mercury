@@ -1,6 +1,8 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance as AI } from "axios";
 import { ClientStream, DualStream, MercuryWebSocket, IClientStream, IDualStream, IServerStream, ServerStream } from "../websocket";
-import { ProtoJSONCompatible, Parser } from "../common";
+import { ProtoJSONCompatible, Parser } from "@llkennedy/protoc-gen-tsjson";
+
+export interface AxiosInstance extends AI { };
 
 /** Client is an RPC client proxied over HTTP and websockets. It is recommended to wrap this in service-specific RPC definitions, 
  * rather than relying on end-users to use the type parameters correctly. */

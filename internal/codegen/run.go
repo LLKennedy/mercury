@@ -200,6 +200,12 @@ func generateImports(f *descriptorpb.FileDescriptorProto, content *strings.Build
 }
 
 func generateServices(f *descriptorpb.FileDescriptorProto, content *strings.Builder, impexp importsExports) {
+	for _, service := range f.GetService() {
+		generateService(f, service, content, impexp)
+	}
+}
+
+func generateService(f *descriptorpb.FileDescriptorProto, service *descriptorpb.ServiceDescriptorProto, content *strings.Builder, impexp importsExports) {
 
 }
 
