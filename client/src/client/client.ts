@@ -3,6 +3,7 @@ import { ClientStream, DualStream, MercuryWebSocket, IClientStream, IDualStream,
 import { ProtoJSONCompatible, Parser } from "@llkennedy/protoc-gen-tsjson";
 
 export interface AxiosInstance extends AI { };
+export const DefaultAxios = axios;
 
 /** Client is an RPC client proxied over HTTP and websockets. It is recommended to wrap this in service-specific RPC definitions, 
  * rather than relying on end-users to use the type parameters correctly. */
@@ -35,22 +36,22 @@ export class Client {
 		})
 		return parseResponse(res.data);
 	}
-	protected async StartClientStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, parseResponse: Parser<ResT>): Promise<IClientStream<ReqT, ResT>> {
+	protected async StartClientStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, parseResponse: Parser<ResT>): Promise<ClientStream<ReqT, ResT>> {
 		let url = this.BuildURL(endpoint, true);
 		let ws = new MercuryWebSocket(url, parseResponse);
 		// Establish the connection, set up event listeners, etc.
 		await ws.init();
 		return new ClientStream(ws);
 	}
-	protected async StartServerStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, request: ReqT, parseResponse: Parser<ResT>): Promise<IServerStream<ResT>> {
+	protected async StartServerStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, request: ReqT, parseResponse: Parser<ResT>): Promise<ServerStream<ReqT, ResT>> {
 		let url = this.BuildURL(endpoint, true);
 		let ws = new MercuryWebSocket(url, parseResponse);
 		// Establish the connection, set up event listeners, etc.
 		await ws.init();
-		let ss = new ServerStream(ws, request);
+		let ss = new ServerStream<ReqT, ResT>(ws, request);
 		return ss.init();
 	}
-	protected async StartDualStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, parseResponse: Parser<ResT>): Promise<IDualStream<ReqT, ResT>> {
+	protected async StartDualStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, parseResponse: Parser<ResT>): Promise<DualStream<ReqT, ResT>> {
 		let url = this.BuildURL(endpoint, true);
 		let ws = new MercuryWebSocket(url, parseResponse);
 		// Establish the connection, set up event listeners, etc.

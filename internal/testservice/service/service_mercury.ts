@@ -10,10 +10,10 @@ import * as mercury from "@llkennedy/mercury";
 import { RandomRequest, RandomResponse, UploadPhotoRequest, UploadPhotoResponse, FeedData, FeedResponse, BroadcastRequest, BroadcastData, ConvertInput, ConvertOutput } from "service";
 
 export class ExposedAppClient extends mercury.Client {
-	constructor(basePath: string = "localhost/api", useTLS: boolean = true, client: AxiosInstance = axios) {
-		this.client = new __ExposedAppClient(client);
+	constructor(basePath: string | undefined = "localhost/api", useTLS: boolean | undefined = true, client: mercury.AxiosInstance | undefined = undefined) {
+		super(basePath, useTLS, client);
 	}
 	public async Random(req: RandomRequest): Promise<RandomResponse> {
-		return await this.client.SendUnary("Random", mercury.HTTPMethod.GET, req, RandomResponse.Parse)
+		return this.SendUnary("Random", mercury.HTTPMethod.GET, req, RandomResponse.Parse)
 	}
 }

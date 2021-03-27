@@ -1,6 +1,6 @@
 {
   "name": "@llkennedy/mercury",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Client wrappers for mercury, specifically for websocket logic.",
   "main": "lib/index.js",
   "dependencies": {

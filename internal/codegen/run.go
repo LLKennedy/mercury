@@ -206,7 +206,8 @@ func generateServices(f *descriptorpb.FileDescriptorProto, content *strings.Buil
 }
 
 func generateService(f *descriptorpb.FileDescriptorProto, service *descriptorpb.ServiceDescriptorProto, content *strings.Builder, impexp importsExports) {
-
+	name := service.GetName()
+	content.WriteString()
 }
 
 func generateImportsForMessage(f *descriptorpb.FileDescriptorProto, msg *descriptorpb.DescriptorProto, importMap map[string][]string, content *strings.Builder, impexp importsExports) (useGoogle bool) {
