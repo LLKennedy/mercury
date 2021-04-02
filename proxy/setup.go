@@ -5,7 +5,6 @@ import (
 	"net"
 	"reflect"
 
-	"github.com/LLKennedy/mercury/httpapi"
 	"google.golang.org/grpc"
 )
 
@@ -38,7 +37,6 @@ func (s *Server) SetExceptionHandler(handler ExceptionHandler) {
 // register registers the server
 func (s *Server) register(listener *grpc.Server) {
 	s.setGrpcServer(listener)
-	httpapi.RegisterExposedServiceServer(s.getGrpcServer(), s)
 }
 
 // setAPIConfig validates and sets the inner api and endpoint config

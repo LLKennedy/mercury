@@ -37,7 +37,7 @@ func validateArgs(expected, found reflect.Type, pattern apiMethodPattern) error 
 		// API: req, stream_server -> error
 		// Client: ctx, req, opts -> stream_client, error
 		if expectedInLen != 3 || expectedOutLen != 1 || foundInLen != 4 || foundOutLen != 2 {
-			return fmt.Errorf("pattern was server-side streaming but real function did not meet that. expected api_in=3,api_out=1,real_in=4,real_out2, got api_in=%d,api_out=%d,real_in=%d,real_out=%d", expectedInLen, expectedOutLen, foundInLen, foundOutLen)
+			return fmt.Errorf("pattern was server-side streaming but real function did not meet that. expected api_in=3,api_out=1,real_in=4,real_out=2, got api_in=%d,api_out=%d,real_in=%d,real_out=%d", expectedInLen, expectedOutLen, foundInLen, foundOutLen)
 		}
 		// TODO: better more-specific type-checking all round, maybe? Though this should all be used through code-gen
 		return nil
