@@ -1,4 +1,4 @@
-import axios, { AxiosInstance as AI } from "axios";
+import axios, { AxiosInstance as AI, AxiosRequestConfig } from "axios";
 import { ClientStream, DualStream, MercuryWebSocket, ServerStream } from "../websocket";
 import { ProtoJSONCompatible, Parser } from "@llkennedy/protoc-gen-tsjson";
 
@@ -23,17 +23,22 @@ export class Client {
 	protected async SendUnary<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, method: HTTPMethod, request: ReqT, parseResponse: Parser<ResT>): Promise<ResT> {
 		let message = request.ToProtoJSON();
 		let url = this.BuildURL(endpoint, false);
+		let req: AxiosRequestConfig = {
+			url: url,
+		}
 		switch (method) {
 			case HTTPMethod.CONNECT:
 				throw new Error("CONNECT not implemented");
 			case HTTPMethod.TRACE:
 				throw new Error("TRACE not implemented");
+			case HTTPMethod.GET:
+				req.params = message;
+				break;
+			default:
+				req.data = message;
 		}
-		let res = await this.axiosClient.request<Object>({
-			url: url,
-			method: method,
-			data: message
-		})
+		req.method = method;
+		let res = await this.axiosClient.request<Object>(req);
 		return parseResponse(res.data);
 	}
 	protected async StartClientStream<ReqT extends ProtoJSONCompatible, ResT = any>(endpoint: string, parseResponse: Parser<ResT>): Promise<ClientStream<ReqT, ResT>> {
