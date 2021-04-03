@@ -8,16 +8,37 @@ import (
 	"github.com/peterbourgon/mergemap"
 )
 
+func parseQuery(query map[string]*httpapi.MultiVal) map[string]interface{} {
+	js := map[string]interface{}{}
+	for key, value := range query {
+		// TODO: don't ignore/overwrite duplicate keys here
+		merged := ""
+		for _, merged = range value.GetValues() {
+		}
+		parsed := parseQueryString(merged)
+		js[key] = parsed
+	}
+	return js
+}
+
+func parseQueryString(part string) interface{} {
+	js := map[string]interface{}{}
+	err := json.Unmarshal([]byte(part), &js)
+	if err == nil {
+		for key, value := range js {
+			strVal, ok := value.(string)
+			if ok {
+				js[key] = parseQueryString(strVal)
+			}
+		}
+		return js
+	}
+	return part
+}
+
 func parseRequest(req *httpapi.Request) (finalJSON []byte, err error) {
 	// First we convert query parameters to a map
-	queryMap := map[string]interface{}{}
-	for key, value := range req.GetParams() {
-		// TODO: don't ignore/overwrite duplicate keys here
-		passedValue := ""
-		for _, passedValue = range value.GetValues() {
-		}
-		queryMap[key] = passedValue
-	}
+	queryMap := parseQuery(req.GetParams())
 	switch req.GetMethod() {
 	case httpapi.Method_CONNECT, httpapi.Method_GET, httpapi.Method_HEAD, httpapi.Method_OPTIONS, httpapi.Method_TRACE:
 		// No request body, only query params are possible
