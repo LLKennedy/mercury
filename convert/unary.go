@@ -70,7 +70,11 @@ func ProxyRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 		}
 	}
 	if errStatus == nil {
-		w.Write(res.GetPayload())
+		if len(res.GetPayload()) < 1 {
+			w.Write([]byte("{}"))
+		} else {
+			w.Write(res.GetPayload())
+		}
 	} else {
 		w.Write([]byte(errStatus.Message()))
 	}
