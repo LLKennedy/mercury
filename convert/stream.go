@@ -36,7 +36,7 @@ func (h stream) Serve(c *websocket.Conn) {
 	}
 	client, err := h.remote.ProxyStream(h.ctx)
 	if err != nil {
-		errWriter.writeWsErr(fmt.Errorf("error initialising: %v", err))
+		errWriter.writeWsErr("error initialising: ", err)
 		return
 	}
 	routingInfo := &httpapi.RoutingInformation{
@@ -61,26 +61,26 @@ func (h stream) Serve(c *websocket.Conn) {
 	select {
 	case err := <-up:
 		if err != nil && err != io.EOF {
-			errWriter.writeWsErr(fmt.Errorf("error on upstream: %v", err))
+			errWriter.writeWsErr("error on upstream: ", err)
 			return
 		}
 		// Upstream is closed, just wait on downstream
 		err = <-down
 		if err != nil && err != io.EOF {
-			errWriter.writeWsErr(fmt.Errorf("error on downstream: %v", err))
+			errWriter.writeWsErr("error on downstream: ", err)
 			return
 		}
 		c.WriteClose(http.StatusOK)
 		return
 	case err := <-down:
 		if err != nil && err != io.EOF {
-			errWriter.writeWsErr(fmt.Errorf("error on downstream: %v", err))
+			errWriter.writeWsErr("error on downstream: ", err)
 			return
 		}
 		// Downstream is closed, just wait on upstream
 		err = <-up
 		if err != nil && err != io.EOF {
-			errWriter.writeWsErr(fmt.Errorf("error on upstream: %v", err))
+			errWriter.writeWsErr("error on upstream: ", err)
 			return
 		}
 		c.WriteClose(http.StatusOK)
@@ -150,7 +150,7 @@ type errorWriter struct {
 	txid    string
 }
 
-func (w errorWriter) writeWsErr(err error) {
+func (w errorWriter) writeWsErr(extraMessage string, err error) {
 	// GRPC call failed, let's log it, process an error status
 	for _, logger := range w.loggers {
 		logger.LogErrorf(w.txid, "mercury: writing error to websocket: %v", err)
@@ -159,10 +159,10 @@ func (w errorWriter) writeWsErr(err error) {
 	if !ok {
 		// TODO: how to write these in such a way that parsers can catch them?
 		// Can't get proper status code, return bad gateway
-		w.c.Write([]byte(fmt.Sprintf("%v", err)))
+		w.c.Write([]byte(fmt.Sprintf("%s%v", extraMessage, err)))
 		w.c.WriteClose(http.StatusBadGateway)
 	} else {
-		w.c.Write([]byte(errStatus.Message()))
+		w.c.Write([]byte(fmt.Sprintf("%s%v", extraMessage, errStatus.Message())))
 		w.c.WriteClose(GRPCStatusToHTTPStatusCode(errStatus.Code()))
 	}
 }
