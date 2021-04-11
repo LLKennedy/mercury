@@ -66,6 +66,9 @@ func (h stream) Serve(c *websocket.Conn) {
 		}
 		// Upstream is closed, just wait on downstream
 		err = <-down
+		if err == io.EOF {
+			c.Write([]byte(EOFMessage))
+		}
 		if err != nil && err != io.EOF {
 			errWriter.writeWsErr("error on downstream: ", err)
 			return
@@ -73,6 +76,9 @@ func (h stream) Serve(c *websocket.Conn) {
 		c.WriteClose(http.StatusOK)
 		return
 	case err := <-down:
+		if err == io.EOF {
+			c.Write([]byte(EOFMessage))
+		}
 		if err != nil && err != io.EOF {
 			errWriter.writeWsErr("error on downstream: ", err)
 			return
