@@ -220,11 +220,12 @@ func generateImports(f *descriptorpb.FileDescriptorProto, content *strings.Build
 		fullImportList := &strings.Builder{}
 		for i, imp := range imports {
 			if i != 0 {
-				fullImportList.WriteString(", ")
+				fullImportList.WriteString(",")
 			}
+			fullImportList.WriteString("\n	")
 			fullImportList.WriteString(imp)
 		}
-		content.WriteString(fmt.Sprintf("import { %s } from \"%s\";\n", fullImportList.String(), importPath))
+		content.WriteString(fmt.Sprintf("import { %s\n} from \"%s\";\n", fullImportList.String(), importPath))
 	}
 	content.WriteString("\n")
 }
@@ -278,7 +279,6 @@ func generateService(f *descriptorpb.FileDescriptorProto, service *descriptorpb.
 	for _, method := range service.GetMethod() {
 		parseMethodTypeName := func(name string) string {
 			typeName := strings.TrimLeft(name, ".")
-			log.Println(typeName)
 			if len(typeName) >= len(googleProtobufPrefix) && typeName[:len(googleProtobufPrefix)] == googleProtobufPrefix {
 				// This is a google well-known type
 				return typeName
@@ -427,7 +427,6 @@ func getNativeTypeName(field *descriptorpb.FieldDescriptorProto, message *descri
 			}
 		}
 		fieldTypeName := strings.TrimLeft(field.GetTypeName(), ".")
-		log.Println(fieldTypeName)
 		if len(fieldTypeName) >= len(googleProtobufPrefix) && fieldTypeName[:len(googleProtobufPrefix)] == googleProtobufPrefix {
 			// This is a google well-known type
 			return fieldTypeName + repeatedStr
