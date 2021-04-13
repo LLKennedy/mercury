@@ -210,7 +210,7 @@ func generateImports(f *descriptorpb.FileDescriptorProto, content *strings.Build
 			continue
 		}
 		for _, method := range service.GetMethod() {
-			useGoogle = useGoogle || generateImportsForMethod(method, f.GetPackage(), f.GetName(), importMap, content, impexp)
+			useGoogle = generateImportsForMethod(method, f.GetPackage(), f.GetName(), importMap, content, impexp) || useGoogle
 		}
 	}
 	if useGoogle {
@@ -276,17 +276,22 @@ func generateService(f *descriptorpb.FileDescriptorProto, service *descriptorpb.
 	}
 `, name, name))
 	for _, method := range service.GetMethod() {
-		reqTParts := strings.Split(method.GetInputType(), ".")
-		resTParts := strings.Split(method.GetOutputType(), ".")
-		reqPkg, resPkg := "", ""
-		if len(reqTParts) > 0 {
-			reqPkg = strings.Join(reqTParts[1:len(reqTParts)-1], "__") + "__"
+		parseMethodTypeName := func(name string) string {
+			typeName := strings.TrimLeft(name, ".")
+			log.Println(typeName)
+			if len(typeName) >= len(googleProtobufPrefix) && typeName[:len(googleProtobufPrefix)] == googleProtobufPrefix {
+				// This is a google well-known type
+				return typeName
+			}
+			parts := strings.Split(name, ".")
+			pkg := ""
+			if len(parts) > 0 {
+				pkg = strings.Join(parts[1:len(parts)-1], "__") + "__"
+			}
+			return pkg + parts[len(parts)-1]
 		}
-		if len(resTParts) > 0 {
-			resPkg = strings.Join(resTParts[1:len(resTParts)-1], "__") + "__"
-		}
-		reqT := reqPkg + reqTParts[len(reqTParts)-1]
-		resT := resPkg + resTParts[len(resTParts)-1]
+		reqT := parseMethodTypeName(method.GetInputType())
+		resT := parseMethodTypeName(method.GetOutputType())
 		methodName := method.GetName()
 		clientStreaming := method.GetClientStreaming()
 		serverStreaming := method.GetServerStreaming()
@@ -422,6 +427,7 @@ func getNativeTypeName(field *descriptorpb.FieldDescriptorProto, message *descri
 			}
 		}
 		fieldTypeName := strings.TrimLeft(field.GetTypeName(), ".")
+		log.Println(fieldTypeName)
 		if len(fieldTypeName) >= len(googleProtobufPrefix) && fieldTypeName[:len(googleProtobufPrefix)] == googleProtobufPrefix {
 			// This is a google well-known type
 			return fieldTypeName + repeatedStr
