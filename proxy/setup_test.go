@@ -111,7 +111,7 @@ func TestSetExceptionHandler(t *testing.T) {
 	})
 }
 
-func TestNewServer(t *testing.T) {
+func TestNewServerNoInterceptorSupport(t *testing.T) {
 	gS := grpc.NewServer()
 	type args struct {
 		api                interface{}
@@ -153,7 +153,7 @@ func TestNewServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewServer(tt.args.api, tt.args.server, tt.args.listener, tt.args.bypassInterceptors)
+			got, err := NewServerNoInterceptorSupport(tt.args.api, tt.args.server, tt.args.listener)
 			if tt.want == nil {
 				assert.Nil(t, got)
 			} else {
