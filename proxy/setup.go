@@ -8,10 +8,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-// NewServer creates a proxy from HTTP(S) traffic to server using the methods defined by api
+// NewServerNoInterceptorSupport creates a proxy from HTTP(S) traffic to server using the methods defined by api
 // api should be the Unimplemented<ServiceName> struct compiled by the protobuf. All methods defined on api MUST start with an HTTP method name
 // server MUST implement the same methods as api without the prepended method names, though it may have others without exposing them to HTTP(S) traffic
-func NewServer(api, server interface{}, listener *grpc.Server, skipForwardingMetadata bool) (s *Server, err error) {
+func NewServerNoInterceptorSupport(api, server interface{}, listener *grpc.Server) (s *Server, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("mercury: caught panic creating new server: %v", r)
@@ -19,12 +19,40 @@ func NewServer(api, server interface{}, listener *grpc.Server, skipForwardingMet
 	}()
 	s = new(Server)
 	s.register(listener)
-	s.setSkipForwardingMetadata(skipForwardingMetadata)
+	s.setSkipForwardingMetadata(false)
 	err = s.setAPIConfig(api, server)
 	if err != nil {
 		err = fmt.Errorf("mercury: %v", err)
 	}
 	return s, err
+}
+
+// NewServer creates a proxy from HTTP(S) traffic to a self-connection using the methods defined by api
+// api should be the Unimplemented<ServiceName> struct compiled by the protobuf. All methods defined on api MUST start with an HTTP method name
+// server MUST implement the same methods as api without the prepended method names, though it may have others without exposing them to HTTP(S) traffic
+func NewServer(api, listener *grpc.Server) (s *Server, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("mercury: caught panic creating new server: %v", r)
+		}
+	}()
+	s = new(Server)
+	s.register(listener)
+	s.setSkipForwardingMetadata(true)
+	s.rawAPI = api
+	return s, err
+}
+
+// SetSelfConnection sets the self-connection to which requests should be proxied.
+func (s *Server) SetSelfConnection(selfConnection interface{}) (err error) {
+	if s == nil || s.rawAPI == nil {
+		return fmt.Errorf("mercury: invalid server state for SetSelfConnection")
+	}
+	err = s.setAPIConfig(s.rawAPI, selfConnection)
+	if err != nil {
+		err = fmt.Errorf("mercury: %v", err)
+	}
+	return
 }
 
 // SetExceptionHandler sets a function which is called before auto-proxying a request.
