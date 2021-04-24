@@ -30,7 +30,7 @@ func NewServerNoInterceptorSupport(api, server interface{}, listener *grpc.Serve
 // NewServer creates a proxy from HTTP(S) traffic to a self-connection using the methods defined by api
 // api should be the Unimplemented<ServiceName> struct compiled by the protobuf. All methods defined on api MUST start with an HTTP method name
 // server MUST implement the same methods as api without the prepended method names, though it may have others without exposing them to HTTP(S) traffic
-func NewServer(api, listener *grpc.Server) (s *Server, err error) {
+func NewServer(api interface{}, listener *grpc.Server) (s *Server, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("mercury: caught panic creating new server: %v", r)
