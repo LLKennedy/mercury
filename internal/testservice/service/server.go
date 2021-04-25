@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"net"
 
-	"github.com/LLKennedy/mercury"
+	"github.com/LLKennedy/mercury/proxy"
 	"google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,7 +43,7 @@ func (h *Handle) Start() error {
 	client := NewAppClient(conn)
 	// client.Broadcast()
 	// h.Broadcast()
-	h.proxy, err = mercury.NewServer(&UnimplementedExposedAppServer{}, client, h.server, false)
+	h.proxy, err = proxy.NewServerNoInterceptorSupport(&UnimplementedExposedAppServer{}, client, h.server)
 	if err != nil {
 		return err
 	}

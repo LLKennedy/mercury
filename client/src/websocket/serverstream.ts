@@ -1,13 +1,13 @@
 import { ProtoJSONCompatible } from "@llkennedy/protoc-gen-tsjson";
+import { StreamBase } from "./streambase";
 import { EstablishedWebsocket } from "./websocket";
 
 /** ServerStream is a server-side streaming RPC */
-export class ServerStream<ReqT extends ProtoJSONCompatible, ResT = any> {
-	private ws: EstablishedWebsocket<ReqT, ResT>;
+export class ServerStream<ReqT extends ProtoJSONCompatible, ResT = any> extends StreamBase<ReqT, ResT> {
 	private request: ReqT;
 	private initialised: boolean = false;
 	constructor(ws: EstablishedWebsocket<ReqT, ResT>, request: ReqT) {
-		this.ws = ws;
+		super(ws);
 		this.request = request;
 	}
 	/** Sends the first request.
@@ -34,7 +34,4 @@ export class ServerStream<ReqT extends ProtoJSONCompatible, ResT = any> {
 }
 
 /** ServerStream is a server-side streaming RPC */
-export interface IServerStream<ResT = any> {
-	/** Wait until a message is received from the server. */
-	Recv(): Promise<ResT>;
-}
+export interface IServerStream<ReqT extends ProtoJSONCompatible, ResT = any> extends ServerStream<ReqT, ResT> { }
